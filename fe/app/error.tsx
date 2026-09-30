@@ -1,0 +1,3 @@
+'use client'
+import Link from 'next/link'
+export default function ErrorPage({ reset }: { reset: () => void }) { return <main className="grid min-h-screen place-items-center bg-background px-6 text-center"><div><div className="mx-auto grid size-20 place-items-center rounded-3xl bg-secondary text-4xl">▱</div><h1 className="mt-6 font-display text-4xl font-bold">The truck took a wrong turn.</h1><p className="mt-3 text-muted-foreground">Something interrupted this page. Your work is safe.</p><div className="mt-7 flex justify-center gap-3"><button className="button-primary" onClick={() => reset()}>Try again</button><Link href="/" className="button-secondary">Home</Link></div></div></main> }
