@@ -1,0 +1,27 @@
+{
+  "kicker": "TRADE LEDGER",
+  "title": "Sabha Trade History.",
+  "subtitle": "Audit trail of all multi-agent trade recommendations, freight deductions, and verified buyer slips.",
+  "export_csv": "Export CSV",
+  "export_alert": "Exporting all trade records to Excel CSV...",
+  "stats": {
+    "total_gain": "Total Realized Gain",
+    "total_gain_sub": "Direct surplus pocketed by choosing optimal mandis",
+    "sessions_held": "Sessions Convened",
+    "sessions_held_sub": "100% verified digital audit records",
+    "top_mandi": "Primary Mandi Partner",
+    "top_mandi_sub": "Highest dispatch frequency this season"
+  },
+  "search_placeholder": "Search sabha by crop, mandi or ID...",
+  "all_crops": "All Crops",
+  "table": {
+    "col_session": "Session & Date",
+    "col_crop": "Crop & Volume",
+    "col_mandi": "Winning Mandi",
+    "col_gain": "Net Surplus",
+    "col_status": "Status",
+    "col_action": "Action",
+    "action_receipt": "Receipt",
+    "action_print": "Print Pass"
+  }
+}

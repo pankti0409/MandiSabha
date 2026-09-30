@@ -1,0 +1,73 @@
+{
+  "kicker": "DASHBOARD OVERVIEW",
+  "greeting": "Good morning, {{name}}.",
+  "pulse_badge": "Surat mandi onion up +4.2% · Best dispatch window open",
+  "start_new_sabha": "Start New Sabha",
+  "stats": {
+    "total_extra": "Total Extra Earned",
+    "total_extra_sub": "Direct net gain after freight deductions",
+    "vs_local": "+22% vs Local",
+    "sabhas_convened": "Sabhas Convened",
+    "sessions_count": "{{count}} Sessions",
+    "sabhas_cycle_sub": "+2 sessions this harvest cycle",
+    "top_mandi": "Top Mandi Partner",
+    "win_rate": "50% Win Rate",
+    "top_mandi_sub": "Avg. +₹410/q higher than Nashik local",
+    "agmarknet_sync": "Agmarknet Sync",
+    "mandis_unit": "Mandis",
+    "live_feed": "Live Feed",
+    "sync_sub": "Real-time prices refreshed 8 mins ago"
+  },
+  "chart": {
+    "kicker": "Financial Growth",
+    "title": "Extra Realized Over Time",
+    "subtitle": "Cumulative profit unlocked by multi-agent logistics & price arbitrage",
+    "range_3m": "3M",
+    "range_6m": "6M",
+    "range_1y": "1Y",
+    "tooltip": "+{{amount}} · {{sabhas}} sabhas",
+    "net_profit": "Net Realized Profit",
+    "local_baseline": "Local Baseline",
+    "peak_month": "Peak month: {{month}} (+{{amount}})"
+  },
+  "winners": {
+    "kicker": "Arbitrage Performance",
+    "title": "Where You Win",
+    "subtitle": "Best dispatch recommendations by Mandi",
+    "gain": "{{gain}} gain",
+    "best_crop": "Best crop: {{crop}}",
+    "top_notice": "Surat remains #1 highest return",
+    "explore": "Explore mandis"
+  },
+  "radar": {
+    "kicker": "Live Commodity Radar",
+    "title": "Today's Modal Prices",
+    "view_all": "View All 24 Mandis",
+    "best_at": "Best at {{mandi}}",
+    "analyze": "Analyze {{crop}}"
+  },
+  "sessions": {
+    "kicker": "Audit Trail",
+    "title": "Recent Sabha Sessions",
+    "subtitle": "Every negotiated trade, route calculation, and verified gain record",
+    "view_history": "View Full History",
+    "empty_title": "No sabhas yet",
+    "empty_subtitle": "Convene your first multi-agent sabha to compare mandi prices.",
+    "col_session_crop": "Session & Crop",
+    "col_quantity": "Quantity",
+    "col_destination": "Destination Mandi",
+    "col_distance": "Distance",
+    "col_modal_price": "Modal Price",
+    "col_crop": "Commodity",
+    "col_extra": "Net Extra Earned",
+    "col_status": "Status",
+    "col_action": "Action",
+    "view_slip": "View Slip",
+    "action_view": "View Sabha",
+    "action_open": "Open",
+    "ready_to_dispatch": "Ready to Dispatch",
+    "completed": "Completed",
+    "quintals": "{{count}} quintals",
+    "approx_kg": "≈ {{count}} kg"
+  }
+}

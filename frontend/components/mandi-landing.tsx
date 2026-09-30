@@ -331,10 +331,13 @@ export default function MandiLanding() {
               </div>
               <Link
                 href="/signup"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-white/20 bg-white px-6 text-sm font-bold text-brand hover:bg-white/90 transition-all shadow-md active:scale-[.98] cursor-pointer"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-white px-6 text-sm font-bold !text-emerald-950 hover:bg-emerald-50 hover:!text-emerald-900 transition-all shadow-md active:scale-[.98] cursor-pointer"
+                style={{ color: '#064e3b' }}
               >
-                <span>Join Mandi Sabha</span>
-                <ArrowRight className="size-4" />
+                <span className="font-bold !text-emerald-950" style={{ color: '#064e3b' }}>
+                  Join Mandi Sabha
+                </span>
+                <ArrowRight className="size-4 !text-emerald-950" style={{ color: '#064e3b' }} />
               </Link>
             </div>
           </section>

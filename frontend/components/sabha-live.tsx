@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { 
   ArrowRight, 
@@ -23,6 +24,7 @@ import {
 } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { formatINR, formatNumber } from '@/lib/api/sabha'
+import { useLocale } from '@/components/locale-provider'
 import { cn } from '@/lib/utils'
 import { LiveRouteMap } from '@/components/live-route-map'
 
@@ -34,15 +36,43 @@ const mandis: Mandi[] = [
   { name: 'Lasalgaon (Local)', state: 'Maharashtra', price: 1620, freight: 1400, net: 31000, distance: '35 km', color: '#EA580C', advantage: 0 },
 ]
 
-const agents = [
-  { name: 'Price Scout', role: 'Mandi Arbitrage', desc: 'Comparing Surat, Pune, Ahmedabad live books' },
-  { name: 'Route Planner', role: 'Logistics & Fuel', desc: 'Calculating NH48 tolls, diesel & driver freight' },
-  { name: 'Weather Watch', role: 'Risk & Moisture', desc: 'Monitoring humidity & rainfall across transport corridor' },
-  { name: 'Buyer Network', role: 'APMC Clearing', desc: 'Verifying verified commission agent cash settlements' },
-  { name: 'Advisor Chair', role: 'Consensus Engine', desc: 'Synthesizing net payoff vs transit risks' },
-]
-
 export function SabhaLive({ id }: { id: string }) {
+  const { t, tData, formatCurrency } = useLocale()
+  const searchParams = useSearchParams()
+  const [activeCrop, setActiveCrop] = useState('Onion')
+  const [activeQty, setActiveQty] = useState(20)
+  const [activeOrigin, setActiveOrigin] = useState('Nashik')
+
+  useEffect(() => {
+    let cropVal = searchParams?.get('crop')
+    let qtyVal = searchParams?.get('quantity')
+    let locVal = searchParams?.get('location')
+
+    if (!cropVal && typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('latest_sabha')
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          if (parsed.crop) cropVal = parsed.crop
+          if (parsed.quantity) qtyVal = parsed.quantity
+          if (parsed.location) locVal = parsed.location
+        }
+      } catch (e) {}
+    }
+
+    if (cropVal) setActiveCrop(cropVal)
+    if (qtyVal && !isNaN(Number(qtyVal))) setActiveQty(Number(qtyVal))
+    if (locVal) setActiveOrigin(locVal.split(',')[0].trim())
+  }, [searchParams])
+
+  const agents = [
+    { name: t('sabha.agents.price_scout.name'), role: t('sabha.agents.price_scout.role'), desc: t('sabha.agents.price_scout.desc') },
+    { name: t('sabha.agents.route_planner.name'), role: t('sabha.agents.route_planner.role'), desc: t('sabha.agents.route_planner.desc') },
+    { name: t('sabha.agents.weather_watch.name'), role: t('sabha.agents.weather_watch.role'), desc: t('sabha.agents.weather_watch.desc') },
+    { name: t('sabha.agents.buyer_network.name'), role: t('sabha.agents.buyer_network.role'), desc: t('sabha.agents.buyer_network.desc') },
+    { name: t('sabha.agents.advisor_chair.name'), role: t('sabha.agents.advisor_chair.role'), desc: t('sabha.agents.advisor_chair.desc') },
+  ]
+
   const [progress, setProgress] = useState(15)
   const [paused, setPaused] = useState(false)
   const [done, setDone] = useState(false)
@@ -71,21 +101,21 @@ export function SabhaLive({ id }: { id: string }) {
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
-              <span className="section-kicker">Live Multi-Agent Sabha</span>
+              <span className="section-kicker">{t('sabha.live.kicker')}</span>
               <span>·</span>
               <span className="font-mono">#{id.replace('demo-', '').slice(0, 8)}</span>
             </div>
             <h1 className="page-title">
-              Finding Your Best Mandi Deal.
+              {t('sabha.live.title')}
             </h1>
             <p className="page-subtitle">
-              Analyzing 20 quintals of Onions from Nashik · {progress}% computed
+              {t('sabha.live.subtitle', { qty: activeQty, crop: tData('crop', activeCrop), origin: activeOrigin, progress })}
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-              <span className="status-pulse !size-2" /> 5 Agents Active
+              <span className="status-pulse !size-2" /> {t('sabha.live.agents_active_badge')}
             </span>
 
             <button
@@ -93,7 +123,7 @@ export function SabhaLive({ id }: { id: string }) {
               className="button-secondary !min-h-[42px] !px-4 text-xs font-bold"
             >
               {paused ? <Play className="size-3.5" /> : <Pause className="size-3.5" />}
-              <span>{paused ? 'Resume' : 'Pause'}</span>
+              <span>{paused ? t('sabha.live.resume') : t('sabha.live.pause')}</span>
             </button>
           </div>
         </header>
@@ -103,7 +133,7 @@ export function SabhaLive({ id }: { id: string }) {
           <div className="flex items-center justify-between text-xs font-bold font-mono">
             <span className="text-primary flex items-center gap-1.5">
               <Sparkles className="size-3.5" />
-              {done ? 'Consensus Reached!' : `Agent ${activeAgentIndex + 1} of 5: ${agents[activeAgentIndex].name} processing`}
+              {done ? t('sabha.live.consensus_reached') : t('sabha.live.progress_header', { index: activeAgentIndex + 1, name: agents[activeAgentIndex].name })}
             </span>
             <span className="text-muted-foreground">{progress}%</span>
           </div>
@@ -121,9 +151,9 @@ export function SabhaLive({ id }: { id: string }) {
           <section className="card-luxury lg:col-span-3 flex flex-col gap-3.5">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-sm text-foreground">Sabha Agents</span>
+                <span className="font-bold text-sm text-foreground">{t('sabha.live.agents_panel_title')}</span>
                 <span className="rounded-full bg-primary/10 border border-primary/20 px-2 py-0.5 text-[10px] font-mono font-bold text-primary">
-                  {done ? '5/5 Done' : `${activeAgentIndex + 1}/5 Active`}
+                  {done ? t('sabha.live.agents_done_badge', { done: 5 }) : t('sabha.live.agents_active_badge_sm', { active: activeAgentIndex + 1 })}
                 </span>
               </div>
               <Users className="size-4 text-muted-foreground" />
@@ -192,7 +222,7 @@ export function SabhaLive({ id }: { id: string }) {
             <div className="rounded-lg bg-card/70 border border-border/70 p-2.5 text-[11px] text-muted-foreground flex items-center justify-between">
               <span className="flex items-center gap-1.5 font-medium">
                 <span className={cn('size-1.5 rounded-full', done ? 'bg-emerald-500' : 'bg-primary animate-pulse')} />
-                {done ? 'Consensus Validated' : 'Simulating Arbitrage'}
+                {done ? t('sabha.live.status_consensus_valid') : t('sabha.live.status_simulating')}
               </span>
               <span className="font-mono text-[10px] font-bold text-primary">
                 {done ? '100% Ready' : `${progress}%`}
@@ -206,10 +236,10 @@ export function SabhaLive({ id }: { id: string }) {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border">
                 <div>
                   <span className="font-bold text-sm text-foreground">
-                    {tab === 'Race' ? 'Race to Maximum Net Profit' : 'Live Highway Corridor Radar'}
+                    {tab === 'Race' ? t('sabha.live.race_title') : t('sabha.live.corridor_title')}
                   </span>
                   <p className="text-[11px] text-muted-foreground">
-                    {tab === 'Race' ? 'Revenue minus freight, tolls, and loading' : 'Interactive GIS telemetry & FASTag route'}
+                    {tab === 'Race' ? t('sabha.live.race_subtitle') : t('sabha.live.corridor_subtitle')}
                   </p>
                 </div>
                 
@@ -223,7 +253,7 @@ export function SabhaLive({ id }: { id: string }) {
                       tab === 'Race' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                     )}
                   >
-                    Profit Race
+                    {t('sabha.live.tab_race')}
                   </button>
                   <button
                     type="button"
@@ -233,7 +263,7 @@ export function SabhaLive({ id }: { id: string }) {
                       tab === 'Routes' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                     )}
                   >
-                    <span>Corridor Radar</span>
+                    <span>{t('sabha.live.tab_corridor')}</span>
                     <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   </button>
                 </div>
@@ -254,14 +284,14 @@ export function SabhaLive({ id }: { id: string }) {
                             >
                               {idx + 1}
                             </span>
-                            {mandi.name} ({mandi.distance})
+                            {tData('mandi', mandi.name)} ({mandi.distance})
                           </span>
                           <div className="flex items-center gap-3">
                             <span className="text-muted-foreground font-mono text-[11px]">
-                              {formatINR(mandi.price)}/q
+                              {formatCurrency(mandi.price)}/q
                             </span>
                             <span className="font-mono font-extrabold text-foreground">
-                              {formatINR(mandi.net)}
+                              {formatCurrency(mandi.net)}
                             </span>
                           </div>
                         </div>
@@ -277,10 +307,10 @@ export function SabhaLive({ id }: { id: string }) {
                         </div>
 
                         <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                          <span>Freight: {formatINR(mandi.freight)}</span>
+                          <span>Freight: {formatCurrency(mandi.freight)}</span>
                           {mandi.advantage > 0 && (
                             <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                              +{formatINR(mandi.advantage)} vs Local
+                              +{formatCurrency(mandi.advantage)} vs Local
                             </span>
                           )}
                         </div>
@@ -297,7 +327,7 @@ export function SabhaLive({ id }: { id: string }) {
 
             <div className="mt-6 p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-center gap-2.5 text-xs text-muted-foreground">
               <MapPin className="size-4 text-primary shrink-0" />
-              <span>Direct highway routes Nashik → Surat NH48 verified clear of transit delays.</span>
+              <span>{`Direct highway routes ${activeOrigin} → Surat NH48 verified clear of transit delays.`}</span>
             </div>
           </section>
 
@@ -311,10 +341,10 @@ export function SabhaLive({ id }: { id: string }) {
 
               <div className="flex flex-col gap-2.5 max-h-[280px] overflow-y-auto pr-1">
                 {[
-                  { sender: 'Price Scout', text: 'Surat APMC onion modal surged to ₹2,140/q on high export demand.' },
-                  { sender: 'Route Planner', text: 'Nashik-Surat freight estimated at ₹6,200 via 1.5T pickup.' },
+                  { sender: 'Price Scout', text: `Surat APMC ${tData('crop', activeCrop)} modal steady on high buyer demand.` },
+                  { sender: 'Route Planner', text: `${activeOrigin}-Surat freight estimated at ₹6,200 via 1.5T pickup.` },
                   { sender: 'Weather Watch', text: 'Clear weather on Western corridor. Zero rainfall risk.' },
-                  { sender: 'Advisor Chair', text: 'Surat net payout ₹36,600 delivers +₹8,200 pure surplus.' },
+                  { sender: 'Advisor Chair', text: 'Surat net payout delivers optimal pure surplus over local mandis.' },
                   ...chatMessages,
                 ]
                   .slice(0, Math.max(1, Math.ceil((progress / 100) * 4) + chatMessages.length))
@@ -361,7 +391,7 @@ export function SabhaLive({ id }: { id: string }) {
                   href={`/sabha/${id}/result`}
                   className="button-primary !min-h-[44px] w-full text-xs font-bold shadow-lg shadow-primary/25 hover:scale-105"
                 >
-                  <span>Inspect Final Recommendation</span>
+                  <span>{t('sabha.live.decision_title')}</span>
                   <ArrowRight className="size-4" />
                 </Link>
               </div>
@@ -374,6 +404,34 @@ export function SabhaLive({ id }: { id: string }) {
 }
 
 export function ResultPage({ id }: { id: string }) {
+  const { t, tData, formatCurrency } = useLocale()
+  const searchParams = useSearchParams()
+  const [activeCrop, setActiveCrop] = useState('Onion')
+  const [activeQty, setActiveQty] = useState(20)
+  const [activeOrigin, setActiveOrigin] = useState('Nashik')
+
+  useEffect(() => {
+    let cropVal = searchParams?.get('crop')
+    let qtyVal = searchParams?.get('quantity')
+    let locVal = searchParams?.get('location')
+
+    if (!cropVal && typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('latest_sabha')
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          if (parsed.crop) cropVal = parsed.crop
+          if (parsed.quantity) qtyVal = parsed.quantity
+          if (parsed.location) locVal = parsed.location
+        }
+      } catch (e) {}
+    }
+
+    if (cropVal) setActiveCrop(cropVal)
+    if (qtyVal && !isNaN(Number(qtyVal))) setActiveQty(Number(qtyVal))
+    if (locVal) setActiveOrigin(locVal.split(',')[0].trim())
+  }, [searchParams])
+
   return (
     <AppShell>
       <div className="flex flex-col gap-8">
@@ -381,15 +439,15 @@ export function ResultPage({ id }: { id: string }) {
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border/80">
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-              <span className="section-kicker !mb-0">CONSENSUS VERDICT</span>
+              <span className="section-kicker !mb-0">{t('sabha.live.kicker')}</span>
               <span>·</span>
               <span className="font-mono">#{id.replace('demo-', '').slice(0, 8)}</span>
             </div>
             <h1 className="page-title">
-              Surat APMC is Your Winning Move.
+              {t('sabha.live.decision_winner', { mandi: tData('mandi', 'Surat APMC') })}
             </h1>
             <p className="page-subtitle">
-              Delivers maximum in-hand return with lowest transit degradation risk.
+              {t('sabha.live.subtitle', { qty: activeQty, crop: tData('crop', activeCrop), origin: activeOrigin, progress: 100 })}
             </p>
           </div>
 
@@ -399,14 +457,14 @@ export function ResultPage({ id }: { id: string }) {
               className="button-secondary !min-h-[36px] !px-3 text-xs font-semibold"
             >
               <Printer className="size-3.5" />
-              <span>Print Slip</span>
+              <span>{t('sabha.live.btn_print')}</span>
             </button>
             <Link
               href="/sabha/new"
               className="button-primary !min-h-[36px] !px-4 text-xs font-semibold"
             >
               <RotateCcw className="size-3.5" />
-              <span>New Sabha</span>
+              <span>{t('dashboard.start_new_sabha')}</span>
             </Link>
           </div>
         </header>
@@ -417,28 +475,28 @@ export function ResultPage({ id }: { id: string }) {
           <div className="card-luxury lg:col-span-8 bg-gradient-to-r from-card via-card to-primary/5 p-4 sm:p-5 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between">
-                <span className="section-kicker">Primary Destination</span>
+                <span className="section-kicker">{t('sabha.live.decision_title')}</span>
                 <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                  <CheckCircle2 className="size-3" /> 100% Agent Unanimity
+                  <CheckCircle2 className="size-3" /> {t('sabha.live.status_consensus_valid')}
                 </span>
               </div>
 
               <div className="mt-3 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
                 <div>
                   <h2 className="font-display text-xl sm:text-2xl font-normal text-foreground">
-                    Surat APMC
+                    {tData('mandi', 'Surat APMC')}
                   </h2>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    20 quintals Onion · ₹2,140/q modal rate · 142 km via NH48
+                    {activeQty} {t('common.units.quintals')} {tData('crop', activeCrop)} · {formatCurrency(2140)}/q · 142 km via NH48
                   </p>
                 </div>
 
                 <div className="text-left sm:text-right">
                   <span className="block text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                    {formatINR(36600)}
+                    {formatCurrency(36600)}
                   </span>
                   <span className="text-xs font-semibold text-primary">
-                    +₹8,200 surplus vs local Nashik sale
+                    {t('sabha.live.decision_advantage', { amount: formatCurrency(8200) })}
                   </span>
                 </div>
               </div>
@@ -447,15 +505,15 @@ export function ResultPage({ id }: { id: string }) {
             <div className="mt-4 pt-3 border-t border-border/70 grid gap-3 sm:grid-cols-3 text-xs">
               <div>
                 <span className="text-muted-foreground block text-[11px]">Gross Revenue</span>
-                <strong className="text-sm font-semibold text-foreground tabular-nums">{formatINR(42800)}</strong>
+                <strong className="text-sm font-semibold text-foreground tabular-nums">{formatCurrency(42800)}</strong>
               </div>
               <div>
                 <span className="text-muted-foreground block text-[11px]">Transport & Tolls</span>
-                <strong className="text-sm font-semibold text-orange-600 tabular-nums">- {formatINR(6200)}</strong>
+                <strong className="text-sm font-semibold text-orange-600 tabular-nums">- {formatCurrency(6200)}</strong>
               </div>
               <div>
                 <span className="text-muted-foreground block text-[11px]">Net In-Hand Payout</span>
-                <strong className="text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{formatINR(36600)}</strong>
+                <strong className="text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{formatCurrency(36600)}</strong>
               </div>
             </div>
           </div>
@@ -505,7 +563,7 @@ export function ResultPage({ id }: { id: string }) {
               Winning Corridor Radar & Logistics Route
             </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Verified route from Nashik farm hub to Surat APMC Gate 2 via NH48 Express corridor
+              {`Verified route from ${activeOrigin} farm hub to Surat APMC Gate 2 via NH48 Express corridor`}
             </p>
           </div>
           <LiveRouteMap targetMandi="Surat APMC" initialHeight="h-[390px]" />
@@ -541,17 +599,17 @@ export function ResultPage({ id }: { id: string }) {
                     <td>
                       <div className="flex items-center gap-2">
                         {idx === 0 && <span className="rounded-md bg-primary px-1.5 py-0.5 text-[10px] text-white uppercase font-mono font-bold">Best</span>}
-                        <span className="text-foreground">{m.name}</span>
+                        <span className="text-foreground">{tData('mandi', m.name)}</span>
                       </div>
                     </td>
-                    <td className="text-xs text-muted-foreground">{m.state} ({m.distance})</td>
-                    <td className="font-mono text-foreground">{formatINR(m.price)}/q</td>
-                    <td className="font-mono text-foreground">{formatINR(m.price * 20)}</td>
-                    <td className="font-mono text-orange-600">- {formatINR(m.freight)}</td>
-                    <td className="font-mono font-extrabold text-foreground">{formatINR(m.net)}</td>
+                    <td className="text-xs text-muted-foreground">{tData('geo', m.state)} ({m.distance})</td>
+                    <td className="font-mono text-foreground">{formatCurrency(m.price)}/q</td>
+                    <td className="font-mono text-foreground">{formatCurrency(m.price * activeQty)}</td>
+                    <td className="font-mono text-orange-600">- {formatCurrency(m.freight)}</td>
+                    <td className="font-mono font-extrabold text-foreground">{formatCurrency(m.net)}</td>
                     <td>
                       <span className={cn('font-mono font-bold', m.advantage > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground')}>
-                        {m.advantage > 0 ? `+${formatINR(m.advantage)}` : 'Baseline'}
+                        {m.advantage > 0 ? `+${formatCurrency(m.advantage)}` : 'Baseline'}
                       </span>
                     </td>
                   </tr>

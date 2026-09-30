@@ -5,11 +5,13 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowRight, Check, ChevronLeft, ShieldCheck, Sparkles, Smartphone, KeyRound, Leaf } from 'lucide-react'
 import { useAuth } from '@/components/auth-provider'
+import { useLocale } from '@/components/locale-provider'
 import { mobileSchema } from '@/lib/api/auth'
 import { GoogleSignInButton } from '@/components/google-sign-in-button'
 
 function LoginForm() {
   const router = useRouter()
+  const { t } = useLocale()
   const params = useSearchParams()
   const next = params.get('next') || '/dashboard'
   const queryError = params.get('error')
@@ -33,7 +35,7 @@ function LoginForm() {
     e.preventDefault()
     const clean = mobile.replace(/\D/g, '').slice(-10)
     if (!mobileSchema.safeParse(clean).success) {
-      return setError('Enter a valid 10-digit mobile number.')
+      return setError(t('auth.validation.invalid_mobile'))
     }
     setBusy(true)
     setError('')
@@ -42,7 +44,7 @@ function LoginForm() {
       setMobile(clean)
       setStep('otp')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to send code')
+      setError(err instanceof Error ? err.message : t('auth.login.btn_sending'))
     } finally {
       setBusy(false)
     }
@@ -56,7 +58,7 @@ function LoginForm() {
       await verifyOtp(mobile, otp)
       router.push(next)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'That code does not match. Try again.')
+      setError(err instanceof Error ? err.message : t('auth.validation.invalid_otp'))
     } finally {
       setBusy(false)
     }
@@ -85,20 +87,20 @@ function LoginForm() {
         {/* Minimalist Card Container */}
         <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
           <div className="mb-6">
-            <span className="section-kicker">Secure Verification</span>
+            <span className="section-kicker">Mandi Sabha</span>
             <h1 className="mt-1 font-display text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              {step === 'mobile' ? 'Welcome back.' : 'Check your phone.'}
+              {step === 'mobile' ? t('auth.login.title') : t('auth.login.otp_title')}
             </h1>
             <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
               {step === 'mobile'
-                ? 'Sign in to access your live mandi arbitrage intelligence and sabhas.'
-                : `We sent a 6-digit verification code to +91 ${mobile.slice(0, 2)}••••••${mobile.slice(-2)}.`}
+                ? t('auth.login.subtitle')
+                : t('auth.login.otp_subtitle', { mobile })}
             </p>
           </div>
 
           {step === 'mobile' ? (
             <div className="flex flex-col gap-5">
-              <GoogleSignInButton text="Sign in with Google" />
+              <GoogleSignInButton text={t('auth.login.google_signin')} />
 
               <div className="relative flex items-center justify-center">
                 <div className="absolute inset-0 flex items-center">
@@ -112,7 +114,7 @@ function LoginForm() {
               <form onSubmit={send} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="login-mobile" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Mobile Number
+                  {t('auth.login.mobile_label')}
                 </label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3.5 flex items-center gap-1.5 text-xs font-mono font-bold text-muted-foreground border-r border-border pr-2.5">
@@ -124,7 +126,7 @@ function LoginForm() {
                     inputMode="numeric"
                     value={mobile}
                     onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                    placeholder="98765 43210"
+                    placeholder={t('auth.login.mobile_placeholder')}
                     className="h-12 w-full rounded-xl border border-border bg-background pl-16 pr-4 font-mono text-sm font-semibold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
@@ -135,7 +137,7 @@ function LoginForm() {
                 disabled={busy || mobile.length < 10}
                 className="button-primary min-h-12 w-full justify-center text-sm font-bold shadow-sm disabled:opacity-50"
               >
-                <span>{busy ? 'Sending OTP…' : 'Continue with OTP'}</span>
+                <span>{busy ? t('auth.login.btn_sending') : t('auth.login.btn_continue')}</span>
                 <ArrowRight className="size-4" />
               </button>
             </form>
@@ -145,14 +147,14 @@ function LoginForm() {
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
                   <label htmlFor="login-otp" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    6-Digit One-Time Code
+                    {t('auth.login.otp_title')}
                   </label>
                   <button
                     type="button"
                     onClick={handleFillDemo}
                     className="text-[11px] font-mono font-bold text-primary hover:underline cursor-pointer"
                   >
-                    Use Demo Code (123456)
+                    {t('auth.login.demo_code')}
                   </button>
                 </div>
                 <input
@@ -173,7 +175,7 @@ function LoginForm() {
                 disabled={busy || otp.length !== 6}
                 className="button-primary min-h-12 w-full justify-center text-sm font-bold shadow-sm disabled:opacity-50"
               >
-                <span>{busy ? 'Verifying…' : 'Verify and Enter Dashboard'}</span>
+                <span>{busy ? t('auth.login.btn_sending') : t('auth.login.btn_verify')}</span>
                 <Check className="size-4" />
               </button>
 
@@ -186,7 +188,7 @@ function LoginForm() {
                 }}
               >
                 <ChevronLeft className="size-3.5" />
-                <span>Change mobile number</span>
+                <span>{t('auth.login.btn_change')}</span>
               </button>
             </form>
           )}
@@ -198,9 +200,9 @@ function LoginForm() {
           )}
 
           <div className="mt-6 border-t border-border pt-5 text-center text-xs text-muted-foreground">
-            Don&apos;t have an account yet?{' '}
+            {t('auth.login.no_account')}{' '}
             <Link className="font-bold text-primary hover:underline ml-1" href="/signup">
-              Create your account
+              {t('auth.login.link_signup')}
             </Link>
           </div>
         </div>

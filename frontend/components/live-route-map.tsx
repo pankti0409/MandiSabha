@@ -313,14 +313,17 @@ export function LiveRouteMap({
 
       mapInstanceRef.current = map
 
-      const tileUrls = {
-        voyager: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
-        dark: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+      const tileUrls: Record<string, string> = {
+        voyager: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+        dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
         satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       }
 
-      const tileLayer = L.tileLayer(tileUrls[mapStyle], {
-        maxZoom: 18,
+      const initialUrl = tileUrls[mapStyle] || tileUrls.voyager
+      const tileLayer = L.tileLayer(initialUrl, {
+        maxZoom: 19,
+        subdomains: 'abcd',
+        attribution: '&copy; CARTO &copy; OpenStreetMap',
       }).addTo(map)
       tileLayerRef.current = tileLayer
 
@@ -358,25 +361,32 @@ export function LiveRouteMap({
     }
   }, [])
 
-  // Update Tile Layer when style changes
+  // Update Tile Layer immediately when style changes
   useEffect(() => {
-    if (!mapInstanceRef.current || !tileLayerRef.current) return
+    const tileUrls: Record<string, string> = {
+      voyager: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+      dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    }
 
-    import('leaflet').then((LModule) => {
-      const L = LModule.default
-      const tileUrls = {
-        voyager: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
-        dark: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-        satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      }
+    const newUrl = tileUrls[mapStyle]
+    if (!newUrl) return
 
-      if (tileLayerRef.current && mapInstanceRef.current) {
-        mapInstanceRef.current.removeLayer(tileLayerRef.current)
-        tileLayerRef.current = L.tileLayer(tileUrls[mapStyle], {
-          maxZoom: 18,
+    if (tileLayerRef.current && typeof tileLayerRef.current.setUrl === 'function') {
+      tileLayerRef.current.setUrl(newUrl)
+      tileLayerRef.current.redraw?.()
+    } else if (mapInstanceRef.current) {
+      import('leaflet').then((LModule) => {
+        const L = LModule.default
+        if (tileLayerRef.current && mapInstanceRef.current) {
+          mapInstanceRef.current.removeLayer(tileLayerRef.current)
+        }
+        tileLayerRef.current = L.tileLayer(newUrl, {
+          maxZoom: 19,
+          subdomains: 'abcd',
         }).addTo(mapInstanceRef.current)
-      }
-    })
+      })
+    }
   }, [mapStyle])
 
   // Update Route Polyline and Markers when corridor changes

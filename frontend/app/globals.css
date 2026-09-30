@@ -214,14 +214,16 @@ select option {
   }
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-  transition: color 0.2s, opacity 0.2s, transform 0.2s;
-}
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s, opacity 0.2s, transform 0.2s;
+  }
 
-a:hover {
-  opacity: 0.88;
+  a:hover {
+    opacity: 0.88;
+  }
 }
 
 button {

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { allCrops, formatINR } from '@/lib/api/sabha'
+import { useLocale } from '@/components/locale-provider'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
@@ -50,6 +51,7 @@ const mandiDatabase: MandiRow[] = [
 ]
 
 export default function ExplorePage() {
+  const { t, tData, formatCurrency } = useLocale()
   const [search, setSearch] = useState('')
   const [selectedCrop, setSelectedCrop] = useState<string>('Onion')
   const [selectedState, setSelectedState] = useState<string>('All')
@@ -95,12 +97,12 @@ export default function ExplorePage() {
         {/* ── Page Header ─────────────────────────────────────────────── */}
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border/80">
           <div>
-            <span className="section-kicker">ARBITRAGE RADAR</span>
+            <span className="section-kicker">{t('explore.kicker')}</span>
             <h1 className="page-title">
-              Mandi Price Explorer.
+              {t('explore.title')}
             </h1>
             <p className="page-subtitle">
-              Real-time modal prices, freight-deducted net spreads, and inter-mandi arbitrage windows.
+              {t('explore.subtitle')}
             </p>
           </div>
 
@@ -109,7 +111,7 @@ export default function ExplorePage() {
               href="/sabha/new"
               className="button-primary !min-h-[36px] !px-4 text-xs font-semibold"
             >
-              <span>Convene Sabha for This Crop</span>
+              <span>{t('explore.convene_cta')}</span>
               <ArrowRight className="size-3.5" />
             </Link>
           </div>
@@ -120,54 +122,54 @@ export default function ExplorePage() {
           <div className="card-luxury p-4 flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <span className="stat-label-clean">
-                Highest Modal Rate
+                {t('explore.highlights.highest_rate')}
               </span>
               <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                Surat APMC
+                {tData('mandi', 'Surat APMC')}
               </span>
             </div>
             <div className="mt-1 flex items-baseline gap-1 stat-number-clean">
-              {formatINR(highestModal)}
-              <span className="text-xs font-normal text-muted-foreground">/quintal</span>
+              {formatCurrency(highestModal)}
+              <span className="text-xs font-normal text-muted-foreground">/q</span>
             </div>
             <p className="mt-0.5 text-[11px] text-primary font-medium">
-              +4.2% daily surge (Agmarknet verified)
+              {t('explore.highlights.daily_surge')}
             </p>
           </div>
 
           <div className="card-luxury p-4 flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <span className="stat-label-clean">
-                Regional Average
+                {t('explore.highlights.regional_average')}
               </span>
               <span className="text-[11px] font-medium text-muted-foreground">
-                {sorted.length} Mandis
+                {t('explore.highlights.mandis_count', { count: sorted.length })}
               </span>
             </div>
             <div className="mt-1 flex items-baseline gap-1 stat-number-clean">
-              {formatINR(avgModal)}
-              <span className="text-xs font-normal text-muted-foreground">/quintal</span>
+              {formatCurrency(avgModal)}
+              <span className="text-xs font-normal text-muted-foreground">/q</span>
             </div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Weighted across Western corridor
+              {t('explore.highlights.weighted_sub')}
             </p>
           </div>
 
           <div className="card-luxury p-4 flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <span className="stat-label-clean">
-                Peak Arbitrage Spread
+                {t('explore.highlights.peak_spread')}
               </span>
               <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-accent">
-                Surat vs Lasalgaon
+                {tData('mandi', 'Surat APMC')} vs {tData('mandi', 'Lasalgaon APMC')}
               </span>
             </div>
             <div className="mt-1 flex items-baseline gap-1 stat-number-clean text-emerald-600 dark:text-emerald-400">
-              +₹520
-              <span className="text-xs font-normal text-muted-foreground">/q spread</span>
+              +{formatCurrency(520)}
+              <span className="text-xs font-normal text-muted-foreground">/q</span>
             </div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Net +₹410/q after ₹110/q freight deduction
+              {t('explore.highlights.net_spread_sub')}
             </p>
           </div>
         </section>
@@ -176,14 +178,14 @@ export default function ExplorePage() {
         <section className="card-luxury bg-gradient-to-r from-card via-card to-primary/5 flex flex-col gap-4 p-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border/70">
             <div>
-              <span className="section-kicker">Arbitrage Comparison</span>
+              <span className="section-kicker">{t('explore.duel.kicker')}</span>
               <h2 className="text-xs sm:text-sm font-semibold text-foreground">
-                Interactive Mandi Arbitrage Duel
+                {t('explore.duel.title')}
               </h2>
             </div>
             <div className="flex items-center gap-2 text-xs font-medium">
-              <span className="text-muted-foreground">Volume:</span>
-              <span className="text-primary font-bold">{compareQty} quintals</span>
+              <span className="text-muted-foreground">{t('explore.duel.volume_label')}</span>
+              <span className="text-primary font-bold">{compareQty} {t('common.units.quintals')}</span>
             </div>
           </div>
 
@@ -191,31 +193,31 @@ export default function ExplorePage() {
             {/* Mandi A Selection */}
             <div className="lg:col-span-5 rounded-xl border border-primary/30 bg-primary/5 p-3.5 flex flex-col gap-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-[10.5px] font-semibold uppercase tracking-wider text-primary">Destination A</span>
+                <span className="text-[10.5px] font-semibold uppercase tracking-wider text-primary">{t('explore.duel.destination_a')}</span>
                 <select
                   value={compareA}
                   onChange={(e) => setCompareA(e.target.value)}
                   className="rounded-lg border border-border bg-card px-2 py-1 text-xs font-semibold text-foreground outline-none cursor-pointer"
                 >
                   {mandiDatabase.map((m) => (
-                    <option key={m.mandi} value={m.mandi}>{m.mandi} ({m.state})</option>
+                    <option key={m.mandi} value={m.mandi}>{tData('mandi', m.mandi)} ({tData('geo', m.state)})</option>
                   ))}
                 </select>
               </div>
 
               <div>
                 <div className="text-base font-bold text-foreground tabular-nums block">
-                  {formatINR(mandiAData.modal)}/q
+                  {formatCurrency(mandiAData.modal)}/q
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Distance: {mandiAData.distanceKm} km · Freight: -₹{mandiAData.freightEst}/q
+                  {t('explore.duel.distance_freight', { distance: mandiAData.distanceKm, freight: mandiAData.freightEst })}
                 </p>
               </div>
 
               <div className="pt-2 border-t border-border/70 flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Net Payoff ({compareQty}q):</span>
+                <span className="text-muted-foreground">{t('explore.duel.net_payoff', { qty: compareQty })}</span>
                 <span className="font-bold text-primary text-sm tabular-nums">
-                  {formatINR(netRealizedA)}
+                  {formatCurrency(netRealizedA)}
                 </span>
               </div>
             </div>
@@ -226,41 +228,41 @@ export default function ExplorePage() {
                 <ArrowRightLeft className="size-3.5" />
               </div>
               <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Net Spread
+                {t('explore.duel.net_spread')}
               </span>
               <span className={cn('text-xs font-bold tabular-nums', arbitrageSpread >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-orange-600')}>
-                {arbitrageSpread >= 0 ? `+${formatINR(arbitrageSpread)}` : `-${formatINR(Math.abs(arbitrageSpread))}`}
+                {arbitrageSpread >= 0 ? `+${formatCurrency(arbitrageSpread)}` : `-${formatCurrency(Math.abs(arbitrageSpread))}`}
               </span>
             </div>
 
             {/* Mandi B Selection */}
             <div className="lg:col-span-5 rounded-xl border border-border bg-card p-3.5 flex flex-col gap-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">Destination B</span>
+                <span className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">{t('explore.duel.destination_b')}</span>
                 <select
                   value={compareB}
                   onChange={(e) => setCompareB(e.target.value)}
                   className="rounded-lg border border-border bg-background px-2 py-1 text-xs font-semibold text-foreground outline-none cursor-pointer"
                 >
                   {mandiDatabase.map((m) => (
-                    <option key={m.mandi} value={m.mandi}>{m.mandi} ({m.state})</option>
+                    <option key={m.mandi} value={m.mandi}>{tData('mandi', m.mandi)} ({tData('geo', m.state)})</option>
                   ))}
                 </select>
               </div>
 
               <div>
                 <div className="text-base font-bold text-foreground tabular-nums block">
-                  {formatINR(mandiBData.modal)}/q
+                  {formatCurrency(mandiBData.modal)}/q
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Distance: {mandiBData.distanceKm} km · Freight: -₹{mandiBData.freightEst}/q
+                  {t('explore.duel.distance_freight', { distance: mandiBData.distanceKm, freight: mandiBData.freightEst })}
                 </p>
               </div>
 
               <div className="pt-2 border-t border-border/70 flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Net Payoff ({compareQty}q):</span>
+                <span className="text-muted-foreground">{t('explore.duel.net_payoff', { qty: compareQty })}</span>
                 <span className="font-bold text-foreground text-sm tabular-nums">
-                  {formatINR(netRealizedB)}
+                  {formatCurrency(netRealizedB)}
                 </span>
               </div>
             </div>
@@ -275,7 +277,7 @@ export default function ExplorePage() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search mandi, district or state..."
+              placeholder={t('explore.filters.search_placeholder')}
               className="w-full bg-transparent text-xs outline-none"
             />
           </div>
@@ -293,7 +295,7 @@ export default function ExplorePage() {
                     : 'bg-muted/50 text-muted-foreground hover:text-foreground'
                 )}
               >
-                {crop}
+                {crop === 'All' ? t('explore.filters.all_crops') : tData('crop', crop)}
               </button>
             ))}
           </div>
@@ -305,11 +307,11 @@ export default function ExplorePage() {
               onChange={(e) => setSelectedState(e.target.value)}
               className="h-9 rounded-lg border border-border bg-background px-2.5 text-xs font-semibold text-foreground outline-none cursor-pointer"
             >
-              <option value="All">All States (India)</option>
-              <option value="Gujarat">Gujarat</option>
-              <option value="Maharashtra">Maharashtra</option>
-              <option value="Madhya Pradesh">Madhya Pradesh</option>
-              <option value="Rajasthan">Rajasthan</option>
+              <option value="All">{t('explore.filters.all_states')}</option>
+              <option value="Gujarat">{tData('geo', 'Gujarat')}</option>
+              <option value="Maharashtra">{tData('geo', 'Maharashtra')}</option>
+              <option value="Madhya Pradesh">{tData('geo', 'Madhya Pradesh')}</option>
+              <option value="Rajasthan">{tData('geo', 'Rajasthan')}</option>
             </select>
           </div>
         </section>
@@ -318,31 +320,31 @@ export default function ExplorePage() {
         <section className="card-luxury flex flex-col gap-3">
           <div className="flex items-center justify-between pb-3 border-b border-border/70">
             <div>
-              <span className="section-kicker">Live Quotations</span>
+              <span className="section-kicker">{t('explore.table.kicker')}</span>
               <h2 className="text-xs sm:text-sm font-semibold text-foreground">
-                Active Mandi Auctions ({sorted.length})
+                {t('explore.table.title', { count: sorted.length })}
               </h2>
             </div>
 
             <div className="flex items-center gap-2 text-xs">
-              <span className="text-muted-foreground font-semibold">Sort by:</span>
+              <span className="text-muted-foreground font-semibold">{t('explore.filters.sort_by')}</span>
               <button
                 onClick={() => setSortBy('modal')}
                 className={cn('font-bold px-2 py-1 rounded-lg', sortBy === 'modal' ? 'bg-primary/10 text-primary' : 'text-muted-foreground')}
               >
-                Price
+                {t('explore.filters.sort_modal')}
               </button>
               <button
                 onClick={() => setSortBy('change')}
                 className={cn('font-bold px-2 py-1 rounded-lg', sortBy === 'change' ? 'bg-primary/10 text-primary' : 'text-muted-foreground')}
               >
-                Change
+                {t('explore.filters.sort_change')}
               </button>
               <button
                 onClick={() => setSortBy('volume')}
                 className={cn('font-bold px-2 py-1 rounded-lg', sortBy === 'volume' ? 'bg-primary/10 text-primary' : 'text-muted-foreground')}
               >
-                Volume
+                {t('explore.filters.sort_volume')}
               </button>
             </div>
           </div>
@@ -351,14 +353,14 @@ export default function ExplorePage() {
             <table className="table-modern">
               <thead>
                 <tr>
-                  <th>Mandi & Location</th>
-                  <th>Commodity</th>
-                  <th>Modal Price</th>
-                  <th>Day Range (Min–Max)</th>
-                  <th>24h Movement</th>
-                  <th>Arrival Volume</th>
-                  <th>Distance & Freight</th>
-                  <th className="text-right">Action</th>
+                  <th>{t('explore.table.col_mandi')}</th>
+                  <th>{t('explore.table.col_crop')}</th>
+                  <th>{t('explore.table.col_modal')}</th>
+                  <th>{t('explore.table.col_range')}</th>
+                  <th>{t('explore.table.col_trend')}</th>
+                  <th>{t('explore.table.col_volume')}</th>
+                  <th>{t('explore.table.col_freight')}</th>
+                  <th className="text-right">{t('explore.table.col_action')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -372,27 +374,27 @@ export default function ExplorePage() {
                             <MapPin className="size-4" />
                           </span>
                           <div>
-                            <span className="font-bold text-foreground block">{row.mandi}</span>
+                            <span className="font-bold text-foreground block">{tData('mandi', row.mandi)}</span>
                             <span className="text-xs text-muted-foreground">
-                              {row.district}, {row.state}
+                              {tData('geo', row.district)}, {tData('geo', row.state)}
                             </span>
                           </div>
                         </div>
                       </td>
                       <td>
                         <span className="rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-bold text-foreground">
-                          {row.crop}
+                          {tData('crop', row.crop)}
                         </span>
                       </td>
                       <td>
                         <span className="font-bold text-sm text-foreground tabular-nums">
-                          {formatINR(row.modal)}
+                          {formatCurrency(row.modal)}
                           <span className="ml-0.5 text-xs text-muted-foreground font-normal">/q</span>
                         </span>
                       </td>
                       <td>
                         <span className="text-xs text-muted-foreground tabular-nums">
-                          {formatINR(row.min)} – {formatINR(row.max)}
+                          {formatCurrency(row.min)} – {formatCurrency(row.max)}
                         </span>
                       </td>
                       <td>
@@ -413,7 +415,7 @@ export default function ExplorePage() {
                         <div className="text-xs text-muted-foreground">
                           <span>{row.distanceKm} km</span>
                           <span className="block text-[10.5px] text-muted-foreground">
-                            -₹{row.freightEst}/q freight
+                            {t('explore.table.freight_sub', { freight: row.freightEst })}
                           </span>
                         </div>
                       </td>
@@ -422,7 +424,7 @@ export default function ExplorePage() {
                           href={`/sabha/new?crop=${row.crop}&targetMandi=${row.mandi}`}
                           className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1 text-xs font-semibold text-white shadow-2xs hover:bg-primary-hover transition-all"
                         >
-                          <span>Start Sabha</span>
+                          <span>{t('explore.table.action_convene')}</span>
                           <ArrowRight className="size-3" />
                         </Link>
                       </td>

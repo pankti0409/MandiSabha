@@ -1,0 +1,98 @@
+{
+  "wizard": {
+    "kicker": "નવું AI સભા સત્ર",
+    "title": "તમારી મંડી સભા બોલાવો.",
+    "subtitle": "5 AI એજન્ટ ભાવ, ભાડું, હવામાન અને રોકડ ચુકવણીની ચકાસણી કરી શ્રેષ્ઠ મંડી શોધશે.",
+    "voice_btn": "અવાજ દ્વારા બોલીને જણાવો",
+    "step_crop": "1. તમારો પાક પસંદ કરો",
+    "step_quantity": "2. કુલ પાકનો જથ્થો",
+    "step_origin": "3. ખેતર / ગામનું સ્થળ",
+    "step_origin_placeholder": "ગામ, જિલ્લો",
+    "gps_locate": "GPS દ્વારા શોધો",
+    "step_timing": "4. માલ મોકલવાની તારીખ",
+    "preset_today": "આજે, તાત્કાલિક",
+    "preset_tomorrow": "આવતીકાલે",
+    "preset_soon": "3 દિવસમાં",
+    "preset_week": "આ અઠવાડિયે",
+    "preset_custom": "કેલેન્ડરમાંથી તારીખ પસંદ કરો",
+    "step_quality": "5. પાકની ગુણવત્તા (ગ્રેડ)",
+    "grade_a_title": "ગ્રેડ A (ઉચ્ચ ગુણવત્તા)",
+    "grade_a_desc": "સ્વચ્છ અને સારો દાણો, સરખો આકાર, ઓછો ભેજ",
+    "grade_b_title": "ગ્રેડ B (સામાન્ય મંડી ગ્રેડ)",
+    "grade_b_desc": "સરેરાશ ગુણવત્તા (FAQ), માનક મંડી આવક",
+    "grade_c_title": "ગ્રેડ C (પ્રોસેસિંગ માટે)",
+    "grade_c_desc": "નાનો અથવા મિશ્રિત દાણો, સ્થાનિક વપરાશ",
+    "step_vehicle": "6. પરિવહન વાહન",
+    "vehicle_pickup": "પિકઅપ / બોલેરો",
+    "vehicle_pickup_desc": "25 ક્વિન્ટલ સુધી · ગ્રામીણ રસ્તાઓ માટે ઝડપી",
+    "vehicle_truck": "ટ્રક (6-ટાયર)",
+    "vehicle_truck_desc": "90 ક્વિન્ટલ સુધી · સૌથી સસ્તો ભાડા દર",
+    "vehicle_heavy": "મોટો મલ્ટી-એક્સલ ટ્રક",
+    "vehicle_heavy_desc": "સહકારી અથવા સામૂહિક મોટો જથ્થો",
+    "step_radius": "7. શોધવાનો વિસ્તાર ({{radius}} કિમી)",
+    "target_mandi_preview": "સૂચિત મંડી: {{mandi}} (આશરે {{distance}} કિમી)",
+    "submit_convene": "મંડી સભા શરૂ કરો",
+    "submitting": "5 AI એજન્ટ ગણતરી કરી રહ્યાં છે...",
+    "effective_rate": "અસરકારક ભાવ: {{rate}}",
+    "payoff_title": "લાઇવ નફો કેલ્ક્યુલેટર",
+    "gross_value": "કુલ મૂલ્ય ({{qty}}ક્વિં. @ {{rate}})",
+    "est_freight": "અંદાજિત ભાડું ({{distance}} કિમી)",
+    "local_baseline": "સ્થાનિક મંડીનો મૂળ ભાવ",
+    "est_net": "હાથમાં આવતો ચોખ્ખો અંદાજિત નફો",
+    "arbitrage_surplus": "ચોખ્ખો વધારાનો નફો:"
+  },
+  "live": {
+    "kicker": "લાઇવ AI મંડી સભા",
+    "title": "તમારા માટે શ્રેષ્ઠ મંડીની શોધ.",
+    "subtitle": "{{origin}} થી {{crop}} ના {{qty}} ક્વિન્ટલનું વિશ્લેષણ · {{progress}}% પૂર્ણ",
+    "agents_active_badge": "5 એજન્ટ સક્રિય",
+    "pause": "અટકાવો",
+    "resume": "ચાલુ કરો",
+    "progress_header": "એજન્ટ {{index}}/5: {{name}} વિશ્લેષણ કરી રહ્યાં છે",
+    "consensus_reached": "સર્વસંમતિ થઈ ગઈ!",
+    "agents_panel_title": "સભાના એજન્ટ્સ",
+    "agents_done_badge": "{{done}}/5 પૂર્ણ",
+    "agents_active_badge_sm": "{{active}}/5 સક્રિય",
+    "tab_race": "નફાની દોડ",
+    "tab_corridor": "હાઇવે રડાર",
+    "race_title": "મહત્તમ ચોખ્ખા નફાની સરખામણી",
+    "race_subtitle": "કુલ વેચાણ કિંમતમાંથી ભાડું, ટોલ અને મજૂરી બાદ કરીને",
+    "corridor_title": "લાઇવ હાઇવે અને ટોલ રડાર",
+    "corridor_subtitle": "ફાસ્ટેગ રૂટ અને જીઆઈએસ અંતર",
+    "status_consensus_valid": "ભલામણ તૈયાર છે",
+    "status_simulating": "ભાવ વિશ્લેષણ ચાલુ છે",
+    "decision_title": "સભાનો અંતિમ નિર્ણય",
+    "decision_winner": "શ્રેષ્ઠ મંડી: {{mandi}}",
+    "decision_advantage": "સ્થાનિક મંડી કરતા +{{amount}} નો ચોખ્ખો વધારાનો નફો",
+    "btn_commit": "{{mandi}} માટે પાકું કરો",
+    "btn_print": "લોડિંગ પાસ પ્રિન્ટ કરો",
+    "btn_share": "ડ્રાઈવર સાથે શેર કરો"
+  },
+  "agents": {
+    "price_scout": {
+      "name": "ભાવ શોધક",
+      "role": "મંડી ભાવ સરખામણી",
+      "desc": "સુરત, પુણે, અમદાવાદના તાજા સોદાઓની સરખામણી"
+    },
+    "route_planner": {
+      "name": "રૂટ આયોજક",
+      "role": "ભાડું અને ઇંધણ",
+      "desc": "NH48 ટોલ, ડીઝલ અને ડ્રાઇવર ભાડાની સચોટ ગણતરી"
+    },
+    "weather_watch": {
+      "name": "હવામાન રક્ષક",
+      "role": "રસ્તાનું હવામાન અને જોખમ",
+      "desc": "પરિવહન માર્ગમાં વરસાદ અને ભેજની દેખરેખ"
+    },
+    "buyer_network": {
+      "name": "વેપારી નેટવર્ક",
+      "role": "મંડી દલાલ ચકાસણી",
+      "desc": "વિશ્વસનીય આડતિયા અને રોકડ ચુકવણીની ખાતરી"
+    },
+    "advisor_chair": {
+      "name": "સભા અધ્યક્ષ",
+      "role": "અંતિમ નિર્ણય",
+      "desc": "બધા જોખમો અને નફાને તોળીને શ્રેષ્ઠ નિર્ણય"
+    }
+  }
+}

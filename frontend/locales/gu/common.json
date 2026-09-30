@@ -1,0 +1,73 @@
+{
+  "units": {
+    "quintal": "ક્વિન્ટલ",
+    "quintals": "ક્વિન્ટલ",
+    "quintal_short": "ક્વિં.",
+    "kg": "કિલો",
+    "ton": "ટન",
+    "km": "કિમી",
+    "hrs": "કલાક",
+    "mins": "મિનિટ",
+    "rate_per_q": "/ક્વિન્ટલ",
+    "rate_per_km": "/કિમી",
+    "spread_per_q": "/ક્વિં. નફો"
+  },
+  "actions": {
+    "save": "સાચવો",
+    "saving": "સાચવી રહ્યાં છીએ...",
+    "save_information": "માહિતી સાચવો",
+    "cancel": "રદ કરો",
+    "confirm": "ખાતરી કરો",
+    "delete": "કાઢી નાખો",
+    "done": "સંપૂર્ણ",
+    "continue": "આગળ વધો",
+    "back": "પાછા જાઓ",
+    "apply": "લાગુ કરો",
+    "refresh": "તાજું કરો",
+    "close": "બંધ કરો",
+    "retry": "ફરી પ્રયાસ કરો",
+    "export_csv": "CSV ડાઉનલોડ કરો",
+    "print": "પ્રિન્ટ કરો",
+    "share": "શેર કરો",
+    "view": "જુઓ",
+    "convene": "સભા બોલાવો",
+    "search": "શોધો"
+  },
+  "status": {
+    "live": "લાઇવ",
+    "active": "સક્રિય",
+    "ready": "તૈયાર",
+    "queued": "કતારમાં",
+    "completed": "સફળ",
+    "pending": "બાકી",
+    "verified": "ચકાસાયેલ",
+    "saved": "સાચવેલ",
+    "success": "સફળ"
+  },
+  "labels": {
+    "all": "બધા",
+    "date": "તારીખ",
+    "time": "સમય",
+    "volume": "જથ્થો",
+    "quantity": "જથ્થો",
+    "distance": "અંતર",
+    "commodity": "પાક",
+    "crop": "પાક",
+    "mandi": "મંડી",
+    "state": "રાજ્ય",
+    "district": "જિલ્લો",
+    "village": "ગામ",
+    "name": "નામ",
+    "freight": "ભાડું",
+    "net_rate": "ચોખ્ખો ભાવ",
+    "modal_rate": "મોડલ ભાવ",
+    "trend": "વલણ",
+    "today": "આજે"
+  },
+  "errors": {
+    "generic": "કંઈક ખોટું થયું. કૃપા કરી ફરી પ્રયાસ કરો.",
+    "network": "ઇન્ટરનેટ જોડાણમાં ખલેલ. તમારું નેટવર્ક તપાસો.",
+    "page_not_found": "પૃષ્ઠ મળ્યું નથી",
+    "server_error": "સર્વર સમસ્યા. તમારો ડેટા સુરક્ષિત છે."
+  }
+}

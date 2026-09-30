@@ -1,0 +1,73 @@
+{
+  "units": {
+    "quintal": "क्विंटल",
+    "quintals": "क्विंटल",
+    "quintal_short": "क्विं.",
+    "kg": "किलो",
+    "ton": "टन",
+    "km": "किमी",
+    "hrs": "घंटे",
+    "mins": "मिनट",
+    "rate_per_q": "/क्विंटल",
+    "rate_per_km": "/किमी",
+    "spread_per_q": "/क्विं. फ़ायदा"
+  },
+  "actions": {
+    "save": "सहेजें",
+    "saving": "सहेजा जा रहा है...",
+    "save_information": "जानकारी सहेजें",
+    "cancel": "रद्द करें",
+    "confirm": "पुष्टि करें",
+    "delete": "हटाएं",
+    "done": "पूर्ण",
+    "continue": "आगे बढ़ें",
+    "back": "पीछे जाएं",
+    "apply": "लागू करें",
+    "refresh": "ताज़ा करें",
+    "close": "बंद करें",
+    "retry": "पुनः प्रयास करें",
+    "export_csv": "CSV डाउनलोड करें",
+    "print": "प्रिंट करें",
+    "share": "साझा करें",
+    "view": "देखें",
+    "convene": "सभा शुरू करें",
+    "search": "खोजें"
+  },
+  "status": {
+    "live": "लाइव",
+    "active": "सक्रिय",
+    "ready": "तैयार",
+    "queued": "कतार में",
+    "completed": "सफल",
+    "pending": "प्रतीक्षारत",
+    "verified": "सत्यापित",
+    "saved": "सहेजा गया",
+    "success": "सफल"
+  },
+  "labels": {
+    "all": "सभी",
+    "date": "दिनांक",
+    "time": "समय",
+    "volume": "मात्रा",
+    "quantity": "मात्रा",
+    "distance": "दूरी",
+    "commodity": "फसल",
+    "crop": "फसल",
+    "mandi": "मंडी",
+    "state": "राज्य",
+    "district": "ज़िला",
+    "village": "गांव",
+    "name": "नाम",
+    "freight": "भाड़ा",
+    "net_rate": "शुद्ध भाव",
+    "modal_rate": "मॉडल भाव",
+    "trend": "रुझान",
+    "today": "आज"
+  },
+  "errors": {
+    "generic": "कुछ समस्या हुई। कृपया दोबारा प्रयास करें।",
+    "network": "इंटरनेट संपर्क में रुकावट। अपना कनेक्शन जांचें।",
+    "page_not_found": "पृष्ठ नहीं मिला",
+    "server_error": "सर्वर त्रुटि। आपका डेटा सुरक्षित है।"
+  }
+}
