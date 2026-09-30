@@ -9,14 +9,12 @@ import {
   MapPin, 
   Minus, 
   Plus, 
-  Search, 
-  Sparkles,
+  Search,
   Truck,
   Layers,
   ShieldCheck,
   TrendingUp,
   AlertCircle,
-  Mic,
   Navigation,
   CloudRain,
   Sliders,
@@ -155,26 +153,15 @@ export default function NewSabhaPage() {
         />
 
         {/* ── Page Header with Voice Trigger ───────────────────────────── */}
-        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-border">
+        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-border/80">
           <div>
-            <span className="section-kicker">Multi-Agent Negotiation Desk</span>
-            <h1 className="mt-1 font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-              Start a New Mandi Sabha
+            <span className="section-kicker">NEW SESSION CONVENER</span>
+            <h1 className="page-title">
+              Start a New Mandi Sabha.
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="page-subtitle">
               Provide your crop specifications. 5 AI agents will simultaneously analyze price spreads, weather risks, and transport logistics.
             </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setVoiceOpen(true)}
-              className="flex items-center gap-2.5 rounded-2xl border border-primary/40 bg-gradient-to-r from-primary/15 to-emerald-500/10 px-5 py-3 text-xs sm:text-sm font-bold text-primary shadow-sm hover:scale-105 transition-all shimmer-badge"
-            >
-              <Mic className="size-4 animate-bounce text-accent" />
-              <span>🎙️ Bolkar Shuru Karein (Voice AI)</span>
-            </button>
           </div>
         </header>
 
@@ -273,7 +260,7 @@ export default function NewSabhaPage() {
                       max="1000"
                       value={quantity}
                       onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
-                      className="w-20 bg-transparent text-center font-mono text-2xl font-extrabold outline-none text-foreground"
+                      className="w-20 bg-transparent text-center text-xl font-bold tabular-nums outline-none text-foreground"
                     />
                     <span className="text-xs font-bold text-muted-foreground ml-1">quintals</span>
                   </div>
@@ -456,46 +443,45 @@ export default function NewSabhaPage() {
 
             {/* Live Financial Breakdown Card */}
             <div className="card-luxury relative overflow-hidden bg-gradient-to-b from-card to-primary/5 flex flex-col gap-4">
-              <div className="flex items-center gap-2 text-sm font-bold text-foreground pb-3 border-b border-border">
-                <Sparkles className="size-4 text-accent" />
-                <span>Live Payoff Calculator</span>
-              </div>
+              <h3 className="text-xs sm:text-sm font-semibold text-foreground pb-3 border-b border-border">
+                Live Payoff Calculator
+              </h3>
 
-              <div className="flex flex-col gap-3.5">
-                <div className="flex items-center justify-between text-sm">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Gross Value ({quantity}q @ {formatINR(baseRate)}/q)</span>
-                  <strong className="font-mono text-base font-bold text-foreground">{formatINR(grossEstimated)}</strong>
+                  <span className="font-semibold text-foreground tabular-nums">{formatINR(grossEstimated)}</span>
                 </div>
 
-                <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Estimated Freight ({distanceKm} km)</span>
-                  <strong className="font-mono text-sm text-orange-600">- {formatINR(estimatedFreight)}</strong>
+                  <span className="font-semibold text-orange-600 tabular-nums">- {formatINR(estimatedFreight)}</span>
                 </div>
 
-                <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Local Mandi Baseline</span>
-                  <strong className="font-mono text-sm text-muted-foreground">{formatINR(localBenchmark)}</strong>
+                  <span className="font-medium text-muted-foreground tabular-nums">{formatINR(localBenchmark)}</span>
                 </div>
 
-                <div className="pt-3 border-t border-border flex flex-col gap-1">
-                  <div className="flex items-end justify-between">
-                    <span className="text-sm font-bold text-foreground">Estimated Net In-Hand</span>
-                    <strong className="font-mono text-3xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
+                <div className="pt-3 border-t border-border/70 flex flex-col gap-1">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-xs font-bold text-foreground">Estimated Net In-Hand</span>
+                    <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
                       {formatINR(netEstimated)}
-                    </strong>
+                    </span>
                   </div>
-                  <div className="flex items-center justify-between text-xs font-bold text-primary mt-1">
+                  <div className="flex items-center justify-between text-xs font-semibold text-primary mt-0.5">
                     <span>Pure Arbitrage Surplus:</span>
-                    <span className="font-mono text-sm font-extrabold">+{formatINR(netSurplus)}</span>
+                    <span className="tabular-nums font-bold">+{formatINR(netSurplus)}</span>
                   </div>
                 </div>
               </div>
 
               {/* Radius Range Slider */}
-              <div className="pt-4 border-t border-border flex flex-col gap-2">
-                <div className="flex items-center justify-between text-xs font-bold">
+              <div className="pt-3 border-t border-border/70 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between text-xs font-semibold">
                   <span className="text-foreground">Search Radius Filter</span>
-                  <span className="font-mono text-primary font-extrabold">{radius} km</span>
+                  <span className="text-primary font-bold">{radius} km</span>
                 </div>
                 <input
                   type="range"
@@ -513,14 +499,14 @@ export default function NewSabhaPage() {
                 type="button"
                 onClick={submit}
                 disabled={loading}
-                className="button-primary !min-h-[52px] w-full mt-2 text-sm font-extrabold shadow-xl shadow-primary/25 hover:scale-[1.02] active:scale-[0.98]"
+                className="button-primary !min-h-[40px] w-full mt-1 text-xs font-semibold"
               >
                 {loading ? (
                   <span>Calling Mandi Sabha Agents…</span>
                 ) : (
                   <>
                     <span>Convene 5-Agent Sabha</span>
-                    <ArrowRight className="size-4 stroke-[3]" />
+                    <ArrowRight className="size-3.5" />
                   </>
                 )}
               </button>

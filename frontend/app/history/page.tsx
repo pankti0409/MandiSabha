@@ -59,90 +59,95 @@ export default function HistoryPage() {
     <AppShell>
       <div className="flex flex-col gap-8">
         {/* ── Page Header ─────────────────────────────────────────────── */}
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border/80">
           <div>
-            <span className="section-kicker">Verified Record of Trades</span>
-            <h1 className="mt-1 font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-              Sabha Trade History
+            <span className="section-kicker">TRADE LEDGER</span>
+            <h1 className="page-title">
+              Sabha Trade History.
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="page-subtitle">
               Audit trail of all multi-agent trade recommendations, freight deductions, and verified buyer slips.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={() => alert('Exporting all trade records to Excel CSV...')}
-              className="button-secondary !min-h-[44px] !px-4 text-xs font-bold"
+              className="button-secondary !min-h-[34px] !px-3 text-xs font-semibold"
             >
-              <FileSpreadsheet className="size-4" />
+              <FileSpreadsheet className="size-3.5" />
               <span>Export CSV</span>
             </button>
           </div>
         </header>
 
         {/* ── Summary Stats ────────────────────────────────────────────── */}
-        <section className="grid gap-4 sm:grid-cols-3">
-          <div className="card-luxury p-5 flex flex-col justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+        <section className="grid gap-3.5 sm:grid-cols-3">
+          <div className="card-luxury p-4 flex flex-col justify-between">
+            <span className="stat-label-clean">
               Total Realized Gain
             </span>
-            <strong className="mt-2 block font-mono text-3xl sm:text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums">
+            <div className="mt-1 stat-number-clean text-emerald-600 dark:text-emerald-400">
               +{formatINR(totalGain)}
-            </strong>
-            <p className="mt-1 text-xs text-muted-foreground">
+            </div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
               Direct surplus pocketed by choosing optimal mandis
             </p>
           </div>
 
-          <div className="card-luxury p-5 flex flex-col justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <div className="card-luxury p-4 flex flex-col justify-between">
+            <span className="stat-label-clean">
               Total Sabhas Convened
             </span>
-            <strong className="mt-2 block font-mono text-3xl sm:text-4xl font-extrabold text-foreground tabular-nums">
-              {historyData.length} Sessions
-            </strong>
-            <p className="mt-1 text-xs text-primary font-semibold">
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="stat-number-clean">
+                {historyData.length}
+              </span>
+              <span className="text-xs font-normal text-muted-foreground">
+                Sessions
+              </span>
+            </div>
+            <p className="mt-0.5 text-[11px] text-primary font-medium">
               Average surplus: +{formatINR(Math.round(totalGain / historyData.length))} / sabha
             </p>
           </div>
 
-          <div className="card-luxury p-5 flex flex-col justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <div className="card-luxury p-4 flex flex-col justify-between">
+            <span className="stat-label-clean">
               Buyer Trust Score
             </span>
-            <strong className="mt-2 block font-mono text-3xl sm:text-4xl font-extrabold text-accent tabular-nums">
+            <div className="mt-1 stat-number-clean">
               99.4%
-            </strong>
-            <p className="mt-1 text-xs text-muted-foreground">
+            </div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
               Zero payment defaults on APMC electronic weighbridges
             </p>
           </div>
         </section>
 
         {/* ── Filter Bar ──────────────────────────────────────────────── */}
-        <section className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl border border-border bg-card shadow-sm">
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3.5 h-11 flex-1 w-full sm:w-auto">
-            <Search className="size-4 text-muted-foreground" />
+        <section className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-xl border border-border/80 bg-card shadow-2xs">
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 h-9 flex-1 w-full sm:w-auto">
+            <Search className="size-3.5 text-muted-foreground" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search session ID, crop, or mandi..."
-              className="w-full bg-transparent text-sm outline-none"
+              className="w-full bg-transparent text-xs outline-none"
             />
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
+          <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto">
             {['All', 'Onion', 'Wheat', 'Tomato', 'Soybean'].map((crop) => (
               <button
                 key={crop}
                 onClick={() => setSelectedCrop(crop)}
                 className={cn(
-                  'rounded-xl px-3.5 py-2 text-xs font-bold transition-all shrink-0',
+                  'rounded-lg px-2.5 py-1 text-xs font-medium transition-all shrink-0',
                   selectedCrop === crop
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'bg-muted/70 text-muted-foreground hover:text-foreground'
+                    ? 'bg-primary text-primary-foreground font-semibold shadow-2xs'
+                    : 'bg-muted/50 text-muted-foreground hover:text-foreground'
                 )}
               >
                 {crop}
@@ -152,59 +157,59 @@ export default function HistoryPage() {
         </section>
 
         {/* ── Session List ────────────────────────────────────────────── */}
-        <section className="card-luxury flex flex-col gap-4">
-          <div className="pb-4 border-b border-border/70 flex items-center justify-between">
-            <h2 className="font-display text-2xl font-extrabold">
+        <section className="card-luxury flex flex-col gap-3.5">
+          <div className="pb-3 border-b border-border/70 flex items-center justify-between">
+            <h2 className="text-xs sm:text-sm font-semibold text-foreground">
               Past Sabha Records ({filtered.length})
             </h2>
-            <span className="text-xs text-muted-foreground">Click any record to inspect audit slip</span>
+            <span className="text-[11px] text-muted-foreground">Click any record to inspect audit slip</span>
           </div>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2.5">
             {filtered.map((session) => (
               <div
                 key={session.id}
-                className="rounded-2xl border border-border bg-card hover:border-primary/60 p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 transition-all hover:shadow-md"
+                className="rounded-xl border border-border/80 bg-card hover:border-primary/40 p-3.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3 transition-all shadow-2xs"
               >
                 <div className="flex items-start sm:items-center gap-3">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-extrabold text-base text-foreground">{session.crop}</h3>
-                      <span className="text-xs font-mono font-bold text-muted-foreground">· {session.quantity} quintals</span>
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-mono text-muted-foreground">
+                      <h3 className="font-bold text-xs sm:text-sm text-foreground">{session.crop}</h3>
+                      <span className="text-xs font-mono font-medium text-muted-foreground">· {session.quantity} quintals</span>
+                      <span className="rounded bg-muted px-1.5 py-0.5 text-[9.5px] font-mono text-muted-foreground">
                         {session.id}
                       </span>
                     </div>
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
-                      <span className="flex items-center gap-1 font-semibold text-foreground">
-                        <MapPin className="size-3.5 text-primary" />
+                    <div className="flex flex-wrap items-center gap-2.5 text-xs text-muted-foreground mt-0.5">
+                      <span className="flex items-center gap-1 font-medium text-foreground">
+                        <MapPin className="size-3 text-primary" />
                         {session.mandi}, {session.state} ({session.distance})
                       </span>
                       <span>·</span>
                       <span className="flex items-center gap-1">
-                        <Calendar className="size-3.5" />
+                        <Calendar className="size-3" />
                         {session.date}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between lg:justify-end gap-6 pt-3 lg:pt-0 border-t lg:border-t-0 border-border/70">
+                <div className="flex items-center justify-between lg:justify-end gap-5 pt-2 lg:pt-0 border-t lg:border-t-0 border-border/70">
                   <div className="text-left lg:text-right">
-                    <span className="block font-mono text-lg font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
+                    <span className="block font-mono text-sm sm:text-base font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
                       +{formatINR(session.gain)}
                     </span>
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-[10.5px] text-muted-foreground">
                       {formatINR(session.rate)}/q vs local {formatINR(session.localRate)}/q
                     </span>
                   </div>
 
                   <Link
                     href="/sabha/demo-result"
-                    className="button-secondary !min-h-[40px] !px-4 text-xs font-bold hover:border-primary shrink-0"
+                    className="button-secondary !min-h-[32px] !px-3 text-xs font-semibold hover:border-primary shrink-0"
                   >
-                    <span>View Dispatch Slip</span>
-                    <ArrowUpRight className="size-3.5" />
+                    <span>View Slip</span>
+                    <ArrowUpRight className="size-3" />
                   </Link>
                 </div>
               </div>

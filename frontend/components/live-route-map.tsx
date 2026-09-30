@@ -436,7 +436,7 @@ export function LiveRouteMap({
           iconHtml = `
             <div class="custom-map-pin flex items-center justify-center">
               <div class="px-2 py-0.5 rounded-md bg-stone-900/95 text-amber-400 border border-amber-400/50 shadow-md text-[10px] font-mono font-bold whitespace-nowrap">
-                🛑 ${wp.badge}
+                ${wp.badge}
               </div>
             </div>
           `
@@ -444,7 +444,7 @@ export function LiveRouteMap({
           iconHtml = `
             <div class="custom-map-pin flex items-center justify-center">
               <div class="px-2 py-0.5 rounded-md bg-sky-950/95 text-sky-300 border border-sky-400/50 shadow-md text-[10px] font-sans font-bold whitespace-nowrap">
-                ⛅ ${wp.badge}
+                ${wp.badge}
               </div>
             </div>
           `

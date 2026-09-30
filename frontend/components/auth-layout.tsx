@@ -93,7 +93,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
 
           <div className="mt-8 rounded-3xl border border-white/15 bg-white/5 p-6 backdrop-blur-md max-w-md">
             <div className="flex items-center justify-between text-xs font-bold text-wheat mb-3">
-              <span>🌾 Sample Verified Comparison</span>
+              <span>Sample Verified Comparison</span>
               <span className="status-pill status-pill-active text-[10px] text-primary-foreground bg-primary">Surat #1</span>
             </div>
             <p className="font-display text-2xl font-bold text-white">Onion · 20 quintals</p>

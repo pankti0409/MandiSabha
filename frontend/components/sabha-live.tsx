@@ -75,10 +75,10 @@ export function SabhaLive({ id }: { id: string }) {
               <span>·</span>
               <span className="font-mono">#{id.replace('demo-', '').slice(0, 8)}</span>
             </div>
-            <h1 className="mt-1 font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-              Finding Your Best Mandi Deal
+            <h1 className="page-title">
+              Finding Your Best Mandi Deal.
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="page-subtitle">
               Analyzing 20 quintals of Onions from Nashik · {progress}% computed
             </p>
           </div>
@@ -378,130 +378,130 @@ export function ResultPage({ id }: { id: string }) {
     <AppShell>
       <div className="flex flex-col gap-8">
         {/* ── Result Header ───────────────────────────────────────────── */}
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border/80">
           <div>
-            <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
-              <span className="section-kicker">Consensus Recommendation</span>
+            <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+              <span className="section-kicker !mb-0">CONSENSUS VERDICT</span>
               <span>·</span>
               <span className="font-mono">#{id.replace('demo-', '').slice(0, 8)}</span>
             </div>
-            <h1 className="mt-1 font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
+            <h1 className="page-title">
               Surat APMC is Your Winning Move.
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="page-subtitle">
               Delivers maximum in-hand return with lowest transit degradation risk.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => window.print()}
-              className="button-secondary !min-h-[44px] !px-4 text-xs font-bold"
+              className="button-secondary !min-h-[36px] !px-3 text-xs font-semibold"
             >
-              <Printer className="size-4" />
+              <Printer className="size-3.5" />
               <span>Print Slip</span>
             </button>
             <Link
               href="/sabha/new"
-              className="button-primary !min-h-[44px] !px-5 text-xs font-bold shadow-lg shadow-primary/20"
+              className="button-primary !min-h-[36px] !px-4 text-xs font-semibold"
             >
-              <RotateCcw className="size-4" />
+              <RotateCcw className="size-3.5" />
               <span>New Sabha</span>
             </Link>
           </div>
         </header>
 
         {/* ── Key Decision Banner ─────────────────────────────────────── */}
-        <div className="grid gap-6 lg:grid-cols-12">
+        <div className="grid gap-4 lg:grid-cols-12">
           {/* Main Recommendation Hero (8 cols) */}
-          <div className="card-luxury lg:col-span-8 bg-gradient-to-r from-card via-card to-primary/5 p-6 sm:p-8 flex flex-col justify-between">
+          <div className="card-luxury lg:col-span-8 bg-gradient-to-r from-card via-card to-primary/5 p-4 sm:p-5 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between">
                 <span className="section-kicker">Primary Destination</span>
-                <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                  <CheckCircle2 className="size-3.5" /> 100% Agent Unanimity
+                <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                  <CheckCircle2 className="size-3" /> 100% Agent Unanimity
                 </span>
               </div>
 
-              <div className="mt-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <div className="mt-3 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
                 <div>
-                  <h2 className="font-display text-4xl sm:text-5xl font-black text-foreground">
+                  <h2 className="font-display text-xl sm:text-2xl font-normal text-foreground">
                     Surat APMC
                   </h2>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     20 quintals Onion · ₹2,140/q modal rate · 142 km via NH48
                   </p>
                 </div>
 
                 <div className="text-left sm:text-right">
-                  <span className="block font-mono text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
+                  <span className="block text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
                     {formatINR(36600)}
                   </span>
-                  <span className="text-xs font-bold text-primary">
+                  <span className="text-xs font-semibold text-primary">
                     +₹8,200 surplus vs local Nashik sale
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-border grid gap-4 sm:grid-cols-3 text-xs">
+            <div className="mt-4 pt-3 border-t border-border/70 grid gap-3 sm:grid-cols-3 text-xs">
               <div>
-                <span className="text-muted-foreground block">Gross Revenue</span>
-                <strong className="font-mono text-base font-bold text-foreground">{formatINR(42800)}</strong>
+                <span className="text-muted-foreground block text-[11px]">Gross Revenue</span>
+                <strong className="text-sm font-semibold text-foreground tabular-nums">{formatINR(42800)}</strong>
               </div>
               <div>
-                <span className="text-muted-foreground block">Transport & Tolls</span>
-                <strong className="font-mono text-base font-bold text-orange-600">- {formatINR(6200)}</strong>
+                <span className="text-muted-foreground block text-[11px]">Transport & Tolls</span>
+                <strong className="text-sm font-semibold text-orange-600 tabular-nums">- {formatINR(6200)}</strong>
               </div>
               <div>
-                <span className="text-muted-foreground block">Net In-Hand Payout</span>
-                <strong className="font-mono text-base font-bold text-emerald-600 dark:text-emerald-400">{formatINR(36600)}</strong>
+                <span className="text-muted-foreground block text-[11px]">Net In-Hand Payout</span>
+                <strong className="text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{formatINR(36600)}</strong>
               </div>
             </div>
           </div>
 
           {/* Confidence & Verification (4 cols) */}
-          <div className="card-luxury lg:col-span-4 flex flex-col justify-between">
+          <div className="card-luxury lg:col-span-4 flex flex-col justify-between p-4">
             <div>
               <span className="section-kicker">Sabha Confidence Gauge</span>
-              <h3 className="mt-1 font-display text-2xl font-extrabold">94% Confidence</h3>
+              <h3 className="mt-1 font-display text-base font-bold text-foreground">94% Confidence</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Evaluated against road transit, toll checkpoints, and historical price volatility.
               </p>
 
-              <div className="mt-6 flex flex-col gap-3">
-                <div className="flex items-center justify-between text-xs font-bold">
+              <div className="mt-4 flex flex-col gap-2.5">
+                <div className="flex items-center justify-between text-xs font-semibold">
                   <span>Price Arbitrage Spread</span>
-                  <span className="text-primary font-mono">+24%</span>
+                  <span className="text-primary tabular-nums">+24%</span>
                 </div>
-                <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
                   <div className="h-full bg-primary rounded-full w-[94%]" />
                 </div>
 
-                <div className="flex items-center justify-between text-xs font-bold mt-2">
+                <div className="flex items-center justify-between text-xs font-semibold mt-1">
                   <span>Weather & Highway Safety</span>
-                  <span className="text-sky font-mono">100% Clear</span>
+                  <span className="text-sky tabular-nums">100% Clear</span>
                 </div>
-                <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
                   <div className="h-full bg-sky rounded-full w-full" />
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-border flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Authorized APMC Yard</span>
-              <span className="font-bold text-primary flex items-center gap-1">
-                <ShieldCheck className="size-4" /> Verified Clearing
+            <div className="mt-4 pt-3 border-t border-border/70 flex items-center justify-between text-xs">
+              <span className="text-muted-foreground text-[11px]">Authorized APMC Yard</span>
+              <span className="font-semibold text-primary flex items-center gap-1 text-[11px]">
+                <ShieldCheck className="size-3.5" /> Verified Clearing
               </span>
             </div>
           </div>
         </div>
 
         {/* ── Winning Route & Corridor Radar ─────────────────────────── */}
-        <section className="flex flex-col gap-3">
+        <section className="flex flex-col gap-2.5">
           <div>
             <span className="section-kicker">Transit Telematics</span>
-            <h2 className="font-display text-2xl font-extrabold">
+            <h2 className="text-xs sm:text-sm font-semibold text-foreground">
               Winning Corridor Radar & Logistics Route
             </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -512,11 +512,11 @@ export function ResultPage({ id }: { id: string }) {
         </section>
 
         {/* ── Mandi Breakdown Comparison Table ────────────────────────── */}
-        <section className="card-luxury">
-          <div className="pb-4 border-b border-border/70 flex items-center justify-between">
+        <section className="card-luxury flex flex-col gap-3">
+          <div className="pb-3 border-b border-border/70 flex items-center justify-between">
             <div>
               <span className="section-kicker">All Evaluated Routes</span>
-              <h2 className="font-display text-2xl font-extrabold">
+              <h2 className="text-xs sm:text-sm font-semibold text-foreground">
                 Mandi Payout Matrix
               </h2>
             </div>

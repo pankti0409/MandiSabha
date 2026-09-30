@@ -103,7 +103,7 @@ export default function SignupPage() {
             <form onSubmit={submitProfile} className="flex flex-col gap-4">
               <div>
                 <span className="section-kicker">Account Setup</span>
-                <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-foreground">
+                <h1 className="mt-1 font-display text-xl sm:text-2xl font-bold tracking-tight text-foreground">
                   Let’s set up your profile.
                 </h1>
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -225,7 +225,7 @@ export default function SignupPage() {
             <form onSubmit={verify} className="flex flex-col gap-4">
               <div>
                 <span className="section-kicker">Step 2 of 2</span>
-                <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-foreground">
+                <h1 className="mt-1 font-display text-xl sm:text-2xl font-bold tracking-tight text-foreground">
                   Verify your number.
                 </h1>
                 <p className="mt-1 text-xs text-muted-foreground">

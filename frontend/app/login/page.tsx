@@ -86,7 +86,7 @@ function LoginForm() {
         <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
           <div className="mb-6">
             <span className="section-kicker">Secure Verification</span>
-            <h1 className="mt-1.5 font-display text-3xl font-extrabold tracking-tight text-foreground">
+            <h1 className="mt-1 font-display text-xl sm:text-2xl font-bold tracking-tight text-foreground">
               {step === 'mobile' ? 'Welcome back.' : 'Check your phone.'}
             </h1>
             <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">

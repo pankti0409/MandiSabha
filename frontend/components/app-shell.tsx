@@ -7,7 +7,6 @@ import {
   History, 
   Compass, 
   Settings, 
-  Plus, 
   LogOut, 
   Sun, 
   Moon, 
@@ -140,30 +139,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex w-[240px] lg:w-[256px] shrink-0 flex-col justify-between border-r border-border bg-card h-dvh sticky top-0 z-30 py-5">
         <div className="flex flex-col gap-4 px-4">
           {/* Brand Logo - Clean Leaf Emblem matching Landing Page */}
-          <div className="flex items-center justify-between pb-4 border-b border-border">
-            <Link href="/dashboard" className="flex items-center gap-2.5 group" aria-label="Mandi Sabha">
-              <span className="grid size-9 place-items-center rounded-full bg-primary text-white shadow-sm transition-transform group-hover:scale-105">
-                <Leaf className="size-5" />
+          <div className="flex items-center justify-between pb-3.5 border-b border-border/80">
+            <Link href="/dashboard" className="flex items-center gap-2 group" aria-label="Mandi Sabha">
+              <span className="grid size-8 place-items-center rounded-lg bg-primary text-white shadow-2xs transition-transform group-hover:scale-105">
+                <Leaf className="size-4" />
               </span>
               <div>
-                <span className="font-display text-[1.15rem] font-extrabold tracking-tight block leading-none">
+                <span className="font-display text-[1.08rem] font-bold tracking-tight block leading-none">
                   Mandi <span className="text-primary">Sabha</span>
                 </span>
-                <span className="text-[9px] font-mono tracking-widest font-bold text-ink-muted uppercase">
+                <span className="text-[8.5px] font-mono tracking-wider font-semibold text-muted-foreground uppercase">
                   Agri AI Desk
                 </span>
               </div>
             </Link>
           </div>
-
-          {/* Quick Action Button */}
-          <Link
-            href="/sabha/new"
-            className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-bold text-primary-foreground hover:bg-primary-hover transition-colors active:scale-[0.98]"
-          >
-            <Plus className="size-4 stroke-[2.5]" />
-            <span>Start a New Sabha</span>
-          </Link>
 
           {/* Navigation Links */}
           <nav className="flex flex-col gap-0.5" aria-label="App navigation">
@@ -174,23 +164,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   key={href}
                   href={href}
                   className={cn(
-                    'group relative flex items-center justify-between rounded-lg px-3 py-2.5 text-[13px] font-semibold transition-colors',
+                    'group relative flex items-center justify-between rounded-lg px-2.5 py-2 text-[12.5px] font-medium transition-colors border',
                     isActive
-                      ? 'bg-primary-soft text-primary'
-                      : 'text-ink-muted hover:bg-background-subtle hover:text-foreground'
+                      ? 'border-primary/25 bg-primary/10 text-primary font-semibold shadow-2xs'
+                      : 'border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                   )}
                 >
-                  <div className="flex items-center gap-3">
-                    <Icon className={cn('size-4 shrink-0', isActive ? 'text-primary' : 'text-ink-faint group-hover:text-foreground')} />
+                  <div className="flex items-center gap-2.5">
+                    <Icon className={cn('size-3.5 shrink-0', isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')} />
                     <span>{label}</span>
                   </div>
                   {badge && (
-                    <span className={cn('rounded-full px-2 py-0.5 text-[9px] font-mono font-extrabold uppercase', isActive ? 'bg-primary/15 text-primary' : 'bg-background-subtle text-ink-muted')}>
+                    <span className={cn('rounded px-1.5 py-0.5 text-[9px] font-mono font-semibold uppercase', isActive ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground')}>
                       {badge}
                     </span>
                   )}
                   {count && (
-                    <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-mono font-bold', isActive ? 'bg-primary/15 text-primary' : 'bg-background-subtle text-ink-muted')}>
+                    <span className={cn('rounded px-1.5 py-0.5 text-[9.5px] font-mono font-medium', isActive ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground')}>
                       {count}
                     </span>
                   )}
@@ -201,69 +191,69 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Sidebar Footer: System Status */}
-        <div className="mt-auto px-4 py-3.5 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground font-mono">
+        <div className="mt-auto px-4 py-3 border-t border-border/60 flex items-center justify-between text-[10.5px] text-muted-foreground font-mono">
           <span className="flex items-center gap-1.5 font-medium">
             <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>Mandi Live v2.4</span>
           </span>
-          <span className="text-[10px] text-ink-faint">Nashik Hub</span>
+          <span className="text-[10px] text-muted-foreground/70">Nashik Hub</span>
         </div>
       </aside>
 
       {/* ── Main Content Area with Full Screen Width ────────────────────── */}
       <div className="flex-1 min-w-0 flex flex-col min-h-screen">
         {/* Sticky Top Header with Highlighted Mandi News Ticker & User Profile */}
-        <header className="sticky top-0 z-20 w-full border-b border-border/70 bg-card/90 backdrop-blur-xl px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4">
+        <header className="sticky top-0 z-20 w-full border-b border-border/70 bg-card/85 backdrop-blur-xl px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-4">
           {/* Mobile Brand / Toggle */}
-          <div className="flex items-center gap-3 md:hidden">
+          <div className="flex items-center gap-2.5 md:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="grid size-9 place-items-center rounded-xl border border-border bg-card text-foreground"
+              className="grid size-8 place-items-center rounded-lg border border-border bg-card text-foreground"
               aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+              {mobileMenuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
             </button>
             <Link href="/dashboard" className="flex items-center gap-2">
-              <span className="grid size-7 place-items-center rounded-full bg-primary text-white shadow-sm">
-                <Leaf className="size-4" />
+              <span className="grid size-6 place-items-center rounded-md bg-primary text-white shadow-2xs">
+                <Leaf className="size-3.5" />
               </span>
-              <span className="font-display font-extrabold text-base">
+              <span className="font-display font-bold text-sm">
                 Mandi <span className="text-primary">Sabha</span>
               </span>
             </Link>
           </div>
 
-          {/* ── Live Agriculture & Market News Feed Ticker (Full-Width, Information-Dense) ── */}
+          {/* ── Live Agriculture & Market News Feed Ticker (Full-Width, Crisp & Minimal) ── */}
           <div 
-            className="hidden md:flex flex-1 min-w-0 items-center justify-between gap-3 overflow-hidden text-xs rounded-xl border border-primary/35 bg-gradient-to-r from-primary/[0.08] via-emerald-500/[0.04] to-primary/[0.06] dark:from-primary/[0.14] dark:via-emerald-500/[0.07] dark:to-primary/[0.10] px-3.5 py-1.5 shadow-[0_0_15px_-3px_rgba(16,185,129,0.14)] backdrop-blur-md transition-all duration-300 hover:border-primary/55 mx-2 lg:mx-4"
+            className="hidden md:flex flex-1 min-w-0 items-center justify-between gap-3 overflow-hidden text-xs rounded-lg border border-primary/25 bg-primary/[0.04] dark:bg-primary/[0.08] px-3 py-1.5 shadow-2xs backdrop-blur-md transition-all duration-300 hover:border-primary/40 mx-2 lg:mx-4"
             onMouseEnter={() => setNewsPaused(true)}
             onMouseLeave={() => setNewsPaused(false)}
           >
             {/* Live AgriPulse Badge */}
-            <div className="flex items-center gap-1.5 rounded-lg border border-primary/35 bg-primary/15 px-2.5 py-1 font-bold text-primary shrink-0 shadow-2xs">
-              <span className="relative flex size-2">
+            <div className="flex items-center gap-1.5 rounded-md border border-primary/25 bg-primary/10 px-2 py-0.5 font-semibold text-primary shrink-0">
+              <span className="relative flex size-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full size-2 bg-emerald-500" />
+                <span className="relative inline-flex rounded-full size-1.5 bg-emerald-500" />
               </span>
-              <Newspaper className="size-3.5" />
-              <span className="text-[11px] uppercase tracking-wider font-extrabold whitespace-nowrap">Live Mandi News</span>
+              <Newspaper className="size-3" />
+              <span className="text-[10px] uppercase tracking-wider font-bold whitespace-nowrap">Live News</span>
             </div>
 
-            {/* Auto-Slide Show News Headline (Spans full available width with bold letters) */}
-            <div className="flex-1 min-w-0 overflow-hidden relative h-7 flex items-center">
+            {/* Auto-Slide Show News Headline */}
+            <div className="flex-1 min-w-0 overflow-hidden relative h-6 flex items-center">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={newsIdx}
-                  initial={{ opacity: 0, y: 14 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -14 }}
-                  transition={{ duration: 0.35, ease: 'easeOut' }}
-                  className="flex items-center gap-2.5 w-full min-w-0"
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  className="flex items-center gap-2 w-full min-w-0"
                 >
-                  <span className="rounded-md border border-border/60 bg-background/90 px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground shrink-0 shadow-2xs">
+                  <span className="rounded border border-border/70 bg-background/80 px-1.5 py-0.5 text-[9.5px] font-mono font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
                     {activeNews.tag}
                   </span>
-                  <p className="truncate text-foreground font-black text-xs sm:text-[13px] tracking-tight min-w-0 flex-1 leading-snug">
+                  <p className="truncate text-foreground font-medium text-xs sm:text-[12.5px] tracking-tight min-w-0 flex-1 leading-snug">
                     {activeNews.headline}
                   </p>
                 </motion.div>
@@ -275,59 +265,59 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <AnimatePresence mode="wait" initial={false}>
                 <motion.span
                   key={`badge-${newsIdx}`}
-                  initial={{ opacity: 0, scale: 0.92 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.92 }}
-                  transition={{ duration: 0.2 }}
-                  className="hidden sm:inline-flex rounded-md border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-0.5 font-mono text-[11px] font-black text-emerald-700 dark:text-emerald-400 shrink-0 shadow-2xs"
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="hidden sm:inline-flex rounded border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 shrink-0"
                 >
                   {activeNews.badge}
                 </motion.span>
               </AnimatePresence>
 
-              <span className="text-[10px] text-muted-foreground hidden lg:inline font-mono shrink-0">
+              <span className="text-[9.5px] text-muted-foreground hidden lg:inline font-mono shrink-0">
                 {activeNews.time}
               </span>
 
               {/* Counter Indicator */}
-              <span className="text-[10px] font-mono font-bold text-muted-foreground/80 bg-background/60 px-1.5 py-0.5 rounded border border-border/50 hidden xl:inline shrink-0">
+              <span className="text-[9.5px] font-mono font-medium text-muted-foreground/80 bg-background/70 px-1.5 py-0.5 rounded border border-border/50 hidden xl:inline shrink-0">
                 {newsIdx + 1}/{liveMarketNews.length}
               </span>
 
               {/* Prev / Next News Buttons */}
-              <div className="flex items-center border border-border/80 rounded-lg bg-background/90 overflow-hidden shrink-0 shadow-2xs">
+              <div className="flex items-center border border-border/70 rounded-md bg-background/90 overflow-hidden shrink-0 shadow-2xs">
                 <button
                   type="button"
                   onClick={() => setNewsIdx((prev) => (prev - 1 + liveMarketNews.length) % liveMarketNews.length)}
-                  className="px-1.5 py-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  className="px-1.5 py-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                   aria-label="Previous news item"
                   title="Previous news"
                 >
-                  <ChevronLeft className="size-3.5" />
+                  <ChevronLeft className="size-3" />
                 </button>
-                <div className="w-[1px] h-3 bg-border/60" />
+                <div className="w-[1px] h-2.5 bg-border/50" />
                 <button
                   type="button"
                   onClick={() => setNewsIdx((prev) => (prev + 1) % liveMarketNews.length)}
-                  className="px-1.5 py-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  className="px-1.5 py-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                   aria-label="Next news item"
                   title="Next news"
                 >
-                  <ChevronRight className="size-3.5" />
+                  <ChevronRight className="size-3" />
                 </button>
               </div>
             </div>
           </div>
 
-          {/* ── User Profile & Action Controls in Top Right Corner (Image 3) ── */}
-          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+          {/* ── User Profile & Action Controls in Top Right Corner ── */}
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             {/* Farmer Profile Pill */}
             <Link
               href="/settings"
-              className="flex items-center gap-2.5 rounded-xl p-1 -m-1 hover:bg-muted/60 transition-colors group"
+              className="flex items-center gap-2 rounded-lg p-1 -m-1 hover:bg-muted/50 transition-colors group"
               title="Go to Farmer Profile & Settings"
             >
-              <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-700 dark:text-emerald-400 font-bold font-display text-sm group-hover:border-primary transition-colors shadow-2xs">
+              <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 border border-primary/20 text-primary font-bold font-display text-xs group-hover:border-primary transition-colors shadow-2xs">
                 {(user?.name || 'Pankti').charAt(0)}
               </div>
               <div className="hidden sm:block text-left min-w-0">

@@ -15,7 +15,6 @@ import {
   RefreshCw,
   Layers,
   Truck,
-  Scale,
   ArrowRightLeft
 } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
@@ -94,13 +93,13 @@ export default function ExplorePage() {
     <AppShell>
       <div className="flex flex-col gap-8">
         {/* ── Page Header ─────────────────────────────────────────────── */}
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border/80">
           <div>
-            <span className="section-kicker">Pan-India Agmarknet Feed</span>
-            <h1 className="mt-1 font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-              Mandi Price Explorer
+            <span className="section-kicker">ARBITRAGE RADAR</span>
+            <h1 className="page-title">
+              Mandi Price Explorer.
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="page-subtitle">
               Real-time modal prices, freight-deducted net spreads, and inter-mandi arbitrage windows.
             </p>
           </div>
@@ -108,94 +107,95 @@ export default function ExplorePage() {
           <div className="flex items-center gap-3">
             <Link
               href="/sabha/new"
-              className="button-primary !min-h-[46px] !px-6 text-sm font-bold shadow-lg shadow-primary/20 hover:scale-105"
+              className="button-primary !min-h-[36px] !px-4 text-xs font-semibold"
             >
               <span>Convene Sabha for This Crop</span>
-              <ArrowRight className="size-4 stroke-[2.5]" />
+              <ArrowRight className="size-3.5" />
             </Link>
           </div>
         </header>
 
         {/* ── 3 Summary Highlight Cards ───────────────────────────────── */}
-        <section className="grid gap-4 sm:grid-cols-3">
-          <div className="card-luxury p-5 flex flex-col justify-between">
+        <section className="grid gap-3.5 sm:grid-cols-3">
+          <div className="card-luxury p-4 flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <span className="stat-label-clean">
                 Highest Modal Rate
               </span>
-              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400">
+              <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
                 Surat APMC
               </span>
             </div>
-            <strong className="mt-3 block font-mono text-3xl sm:text-4xl font-extrabold text-foreground tabular-nums">
+            <div className="mt-1 flex items-baseline gap-1 stat-number-clean">
               {formatINR(highestModal)}
-              <small className="ml-1 text-xs font-sans text-muted-foreground font-normal">/quintal</small>
-            </strong>
-            <p className="mt-1 text-xs text-primary font-semibold">
+              <span className="text-xs font-normal text-muted-foreground">/quintal</span>
+            </div>
+            <p className="mt-0.5 text-[11px] text-primary font-medium">
               +4.2% daily surge (Agmarknet verified)
             </p>
           </div>
 
-          <div className="card-luxury p-5 flex flex-col justify-between">
+          <div className="card-luxury p-4 flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <span className="stat-label-clean">
                 Regional Average
               </span>
-              <span className="text-xs font-mono font-bold text-muted-foreground">
+              <span className="text-[11px] font-medium text-muted-foreground">
                 {sorted.length} Mandis
               </span>
             </div>
-            <strong className="mt-3 block font-mono text-3xl sm:text-4xl font-extrabold text-foreground tabular-nums">
+            <div className="mt-1 flex items-baseline gap-1 stat-number-clean">
               {formatINR(avgModal)}
-              <small className="ml-1 text-xs font-sans text-muted-foreground font-normal">/quintal</small>
-            </strong>
-            <p className="mt-1 text-xs text-muted-foreground">
+              <span className="text-xs font-normal text-muted-foreground">/quintal</span>
+            </div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
               Weighted across Western corridor
             </p>
           </div>
 
-          <div className="card-luxury p-5 flex flex-col justify-between">
+          <div className="card-luxury p-4 flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <span className="stat-label-clean">
                 Peak Arbitrage Spread
               </span>
-              <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-extrabold text-accent">
+              <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-accent">
                 Surat vs Lasalgaon
               </span>
             </div>
-            <strong className="mt-3 block font-mono text-3xl sm:text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums">
-              +₹520<small className="text-xs font-sans text-muted-foreground font-normal">/q spread</small>
-            </strong>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <div className="mt-1 flex items-baseline gap-1 stat-number-clean text-emerald-600 dark:text-emerald-400">
+              +₹520
+              <span className="text-xs font-normal text-muted-foreground">/q spread</span>
+            </div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
               Net +₹410/q after ₹110/q freight deduction
             </p>
           </div>
         </section>
 
         {/* ── Interactive Head-to-Head Mandi Comparison Tool ───────────── */}
-        <section className="card-luxury bg-gradient-to-r from-card via-card to-primary/5 flex flex-col gap-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-border">
-            <div className="flex items-center gap-2">
-              <Scale className="size-5 text-accent" />
-              <h2 className="font-display text-xl sm:text-2xl font-extrabold text-foreground">
+        <section className="card-luxury bg-gradient-to-r from-card via-card to-primary/5 flex flex-col gap-4 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border/70">
+            <div>
+              <span className="section-kicker">Arbitrage Comparison</span>
+              <h2 className="text-xs sm:text-sm font-semibold text-foreground">
                 Interactive Mandi Arbitrage Duel
               </h2>
             </div>
-            <div className="flex items-center gap-2 text-xs font-mono font-bold">
+            <div className="flex items-center gap-2 text-xs font-medium">
               <span className="text-muted-foreground">Volume:</span>
-              <span className="text-primary">{compareQty} quintals</span>
+              <span className="text-primary font-bold">{compareQty} quintals</span>
             </div>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12 items-center">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12 items-center">
             {/* Mandi A Selection */}
-            <div className="lg:col-span-5 rounded-2xl border border-primary/30 bg-primary/5 p-4 flex flex-col gap-3">
+            <div className="lg:col-span-5 rounded-xl border border-primary/30 bg-primary/5 p-3.5 flex flex-col gap-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-primary">Destination A</span>
+                <span className="text-[10.5px] font-semibold uppercase tracking-wider text-primary">Destination A</span>
                 <select
                   value={compareA}
                   onChange={(e) => setCompareA(e.target.value)}
-                  className="rounded-xl border border-border bg-card px-2.5 py-1 text-xs font-bold text-foreground outline-none cursor-pointer"
+                  className="rounded-lg border border-border bg-card px-2 py-1 text-xs font-semibold text-foreground outline-none cursor-pointer"
                 >
                   {mandiDatabase.map((m) => (
                     <option key={m.mandi} value={m.mandi}>{m.mandi} ({m.state})</option>
@@ -204,43 +204,43 @@ export default function ExplorePage() {
               </div>
 
               <div>
-                <strong className="font-mono text-2xl font-extrabold text-foreground block">
+                <div className="text-base font-bold text-foreground tabular-nums block">
                   {formatINR(mandiAData.modal)}/q
-                </strong>
+                </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Distance: {mandiAData.distanceKm} km · Freight: -₹{mandiAData.freightEst}/q
                 </p>
               </div>
 
-              <div className="pt-2 border-t border-border flex items-center justify-between text-xs">
+              <div className="pt-2 border-t border-border/70 flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">Net Payoff ({compareQty}q):</span>
-                <strong className="font-mono font-extrabold text-primary text-base">
+                <span className="font-bold text-primary text-sm tabular-nums">
                   {formatINR(netRealizedA)}
-                </strong>
+                </span>
               </div>
             </div>
 
             {/* VS Badge */}
             <div className="lg:col-span-2 flex flex-col items-center justify-center gap-1 text-center">
-              <div className="grid size-10 place-items-center rounded-full bg-accent/15 text-accent font-mono font-bold text-xs">
-                <ArrowRightLeft className="size-4" />
+              <div className="grid size-8 place-items-center rounded-full bg-accent/15 text-accent font-semibold text-xs">
+                <ArrowRightLeft className="size-3.5" />
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Net Spread
               </span>
-              <strong className={cn('font-mono font-black text-sm', arbitrageSpread >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-orange-600')}>
+              <span className={cn('text-xs font-bold tabular-nums', arbitrageSpread >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-orange-600')}>
                 {arbitrageSpread >= 0 ? `+${formatINR(arbitrageSpread)}` : `-${formatINR(Math.abs(arbitrageSpread))}`}
-              </strong>
+              </span>
             </div>
 
             {/* Mandi B Selection */}
-            <div className="lg:col-span-5 rounded-2xl border border-border bg-card p-4 flex flex-col gap-3">
+            <div className="lg:col-span-5 rounded-xl border border-border bg-card p-3.5 flex flex-col gap-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Destination B</span>
+                <span className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">Destination B</span>
                 <select
                   value={compareB}
                   onChange={(e) => setCompareB(e.target.value)}
-                  className="rounded-xl border border-border bg-background px-2.5 py-1 text-xs font-bold text-foreground outline-none cursor-pointer"
+                  className="rounded-lg border border-border bg-background px-2 py-1 text-xs font-semibold text-foreground outline-none cursor-pointer"
                 >
                   {mandiDatabase.map((m) => (
                     <option key={m.mandi} value={m.mandi}>{m.mandi} ({m.state})</option>
@@ -249,34 +249,34 @@ export default function ExplorePage() {
               </div>
 
               <div>
-                <strong className="font-mono text-2xl font-extrabold text-foreground block">
+                <div className="text-base font-bold text-foreground tabular-nums block">
                   {formatINR(mandiBData.modal)}/q
-                </strong>
+                </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Distance: {mandiBData.distanceKm} km · Freight: -₹{mandiBData.freightEst}/q
                 </p>
               </div>
 
-              <div className="pt-2 border-t border-border flex items-center justify-between text-xs">
+              <div className="pt-2 border-t border-border/70 flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">Net Payoff ({compareQty}q):</span>
-                <strong className="font-mono font-extrabold text-foreground text-base">
+                <span className="font-bold text-foreground text-sm tabular-nums">
                   {formatINR(netRealizedB)}
-                </strong>
+                </span>
               </div>
             </div>
           </div>
         </section>
 
         {/* ── Filters & Search Control Bar ─────────────────────────────── */}
-        <section className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 p-4 rounded-2xl border border-border bg-card shadow-sm">
+        <section className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 p-3 rounded-xl border border-border/80 bg-card shadow-2xs">
           {/* Search Box */}
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3.5 h-11 flex-1 min-w-[240px]">
-            <Search className="size-4 text-muted-foreground" />
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 h-9 flex-1 min-w-[220px]">
+            <Search className="size-3.5 text-muted-foreground" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search mandi, district or state..."
-              className="w-full bg-transparent text-sm outline-none"
+              className="w-full bg-transparent text-xs outline-none"
             />
           </div>
 
@@ -287,10 +287,10 @@ export default function ExplorePage() {
                 key={crop}
                 onClick={() => setSelectedCrop(crop)}
                 className={cn(
-                  'rounded-xl px-3.5 py-2 text-xs font-bold transition-all shrink-0',
+                  'rounded-lg px-2.5 py-1 text-xs font-medium transition-all shrink-0',
                   selectedCrop === crop
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'bg-muted/70 text-muted-foreground hover:text-foreground hover:bg-muted'
+                    ? 'bg-primary text-primary-foreground font-semibold shadow-2xs'
+                    : 'bg-muted/50 text-muted-foreground hover:text-foreground'
                 )}
               >
                 {crop}
@@ -303,7 +303,7 @@ export default function ExplorePage() {
             <select
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
-              className="h-11 rounded-xl border border-border bg-background px-3 text-xs font-bold text-foreground outline-none cursor-pointer"
+              className="h-9 rounded-lg border border-border bg-background px-2.5 text-xs font-semibold text-foreground outline-none cursor-pointer"
             >
               <option value="All">All States (India)</option>
               <option value="Gujarat">Gujarat</option>
@@ -315,11 +315,11 @@ export default function ExplorePage() {
         </section>
 
         {/* ── Full-Width Interactive Mandi Price Table ─────────────────── */}
-        <section className="card-luxury">
-          <div className="flex items-center justify-between pb-4 border-b border-border/70">
+        <section className="card-luxury flex flex-col gap-3">
+          <div className="flex items-center justify-between pb-3 border-b border-border/70">
             <div>
               <span className="section-kicker">Live Quotations</span>
-              <h2 className="font-display text-2xl font-extrabold">
+              <h2 className="text-xs sm:text-sm font-semibold text-foreground">
                 Active Mandi Auctions ({sorted.length})
               </h2>
             </div>
@@ -385,20 +385,20 @@ export default function ExplorePage() {
                         </span>
                       </td>
                       <td>
-                        <strong className="font-mono text-base font-extrabold text-foreground tabular-nums">
+                        <span className="font-bold text-sm text-foreground tabular-nums">
                           {formatINR(row.modal)}
-                          <small className="ml-1 text-xs font-sans text-muted-foreground font-normal">/q</small>
-                        </strong>
+                          <span className="ml-0.5 text-xs text-muted-foreground font-normal">/q</span>
+                        </span>
                       </td>
                       <td>
-                        <span className="font-mono text-xs text-muted-foreground tabular-nums">
+                        <span className="text-xs text-muted-foreground tabular-nums">
                           {formatINR(row.min)} – {formatINR(row.max)}
                         </span>
                       </td>
                       <td>
                         <span
                           className={cn(
-                            'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-mono font-bold',
+                            'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums',
                             isPositive ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-orange-500/10 text-orange-600'
                           )}
                         >
@@ -406,13 +406,13 @@ export default function ExplorePage() {
                           {isPositive ? '+' : ''}{row.change}%
                         </span>
                       </td>
-                      <td className="font-mono text-xs font-semibold text-foreground">
+                      <td className="text-xs font-medium text-foreground tabular-nums">
                         {row.volumeMT} MT
                       </td>
                       <td>
-                        <div className="text-xs font-mono text-muted-foreground">
+                        <div className="text-xs text-muted-foreground">
                           <span>{row.distanceKm} km</span>
-                          <span className="block text-[10px] text-muted-foreground">
+                          <span className="block text-[10.5px] text-muted-foreground">
                             -₹{row.freightEst}/q freight
                           </span>
                         </div>
@@ -420,7 +420,7 @@ export default function ExplorePage() {
                       <td className="text-right">
                         <Link
                           href={`/sabha/new?crop=${row.crop}&targetMandi=${row.mandi}`}
-                          className="inline-flex items-center gap-1 rounded-xl bg-primary px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:scale-105 transition-all"
+                          className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1 text-xs font-semibold text-white shadow-2xs hover:bg-primary-hover transition-all"
                         >
                           <span>Start Sabha</span>
                           <ArrowRight className="size-3" />

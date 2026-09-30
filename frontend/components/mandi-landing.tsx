@@ -211,9 +211,9 @@ function Preview() {
 
 function Stat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="p-6 text-center md:p-8">
-      <p className="font-display text-3xl font-bold tabular-nums text-primary-text md:text-4xl">{value}</p>
-      <p className="mt-1.5 text-xs font-semibold text-secondary-text md:text-sm">{label}</p>
+    <div className="p-4 text-center md:p-6">
+      <p className="font-display text-xl font-bold tabular-nums text-primary-text md:text-2xl">{value}</p>
+      <p className="mt-1 text-xs font-semibold text-secondary-text">{label}</p>
     </div>
   )
 }
