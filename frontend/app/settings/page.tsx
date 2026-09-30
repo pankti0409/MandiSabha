@@ -94,12 +94,20 @@ export default function SettingsPage() {
   const { language, setLanguage } = useLocale()
 
   // Profile fields
-  const [name, setName] = useState(user?.name || 'Ramesh Patel')
-  const [villageDistrict, setVillageDistrict] = useState(
-    user?.village && user?.district
-      ? `${user.village}, ${user.district}`
-      : 'Rajkot, Gujarat'
+  const [name, setName] = useState(user?.name || 'Pankti')
+  const [village, setVillage] = useState(
+    user?.village && user.village.includes(',')
+      ? user.village.split(',')[0].trim()
+      : user?.village || 'Surat'
   )
+  const [stateName, setStateName] = useState(
+    user?.state ||
+    (user?.village && user.village.includes(',')
+      ? user.village.split(',')[1].trim()
+      : user?.district || 'Gujarat')
+  )
+  const [saving, setSaving] = useState(false)
+  const [profileSaved, setProfileSaved] = useState(false)
 
   // Appearance & preferences
   const [theme, setTheme] = useState<'system' | 'light' | 'dark'>('system')
@@ -116,8 +124,19 @@ export default function SettingsPage() {
   // Sync state from user object if available
   useEffect(() => {
     if (user?.name) setName(user.name)
-    if (user?.village && user?.district) {
-      setVillageDistrict(`${user.village}, ${user.district}`)
+    if (user?.village) {
+      if (user.village.includes(',') && !user.state) {
+        const parts = user.village.split(',').map((p) => p.trim())
+        setVillage(parts[0] || user.village)
+        if (parts[1]) setStateName(parts[1])
+      } else {
+        setVillage(user.village)
+      }
+    }
+    if (user?.state) {
+      setStateName(user.state)
+    } else if (user?.district && !user?.village?.includes(',')) {
+      setStateName(user.district)
     }
     if (user?.crops && user.crops.length > 0) {
       const valid = user.crops.filter((c): c is Crop => AVAILABLE_CROPS.includes(c as Crop))
@@ -160,20 +179,24 @@ export default function SettingsPage() {
     setTimeout(() => setSavedIndicator(false), 2000)
   }
 
-  // Handle profile updates with debounce
-  function handleProfileBlur() {
-    const parts = villageDistrict.split(',').map((p) => p.trim())
-    const village = parts[0] || 'Rajkot'
-    const district = parts[1] || 'Gujarat'
-
-    updateUser({
-      name,
-      village,
-      district,
-      crops: selectedCrops,
-      transportCostPerKm: parseFloat(transportRate) || 4.2,
-    }).catch(() => {})
-    triggerSave()
+  async function handleSaveProfile(e?: React.FormEvent) {
+    if (e) e.preventDefault()
+    setSaving(true)
+    try {
+      await updateUser({
+        name: name.trim(),
+        village: village.trim(),
+        state: stateName.trim(),
+        district: stateName.trim(),
+      })
+      setProfileSaved(true)
+      triggerSave()
+      setTimeout(() => setProfileSaved(false), 2500)
+    } catch (err) {
+      console.error('Failed to save profile:', err)
+    } finally {
+      setSaving(false)
+    }
   }
 
   function toggleCrop(crop: Crop) {
@@ -220,7 +243,7 @@ export default function SettingsPage() {
               Profile
             </h2>
 
-            <div className="flex flex-col gap-3">
+            <form onSubmit={handleSaveProfile} className="flex flex-col gap-3.5">
               <div>
                 <label 
                   htmlFor="profile-name" 
@@ -233,30 +256,61 @@ export default function SettingsPage() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  onBlur={handleProfileBlur}
                   className="w-full rounded-lg bg-muted/40 border border-transparent focus:border-primary/40 focus:bg-background px-3 py-2 text-xs font-normal text-foreground outline-none transition-all placeholder:text-muted-foreground/60"
-                  placeholder="Ramesh Patel"
+                  placeholder="Enter name"
                 />
               </div>
 
               <div>
                 <label 
-                  htmlFor="profile-village-district" 
+                  htmlFor="profile-village" 
                   className="text-[11px] font-medium text-foreground block mb-1.5"
                 >
-                  Village / district
+                  Village
                 </label>
                 <input
-                  id="profile-village-district"
+                  id="profile-village"
                   type="text"
-                  value={villageDistrict}
-                  onChange={(e) => setVillageDistrict(e.target.value)}
-                  onBlur={handleProfileBlur}
+                  value={village}
+                  onChange={(e) => setVillage(e.target.value)}
                   className="w-full rounded-lg bg-muted/40 border border-transparent focus:border-primary/40 focus:bg-background px-3 py-2 text-xs font-normal text-foreground outline-none transition-all placeholder:text-muted-foreground/60"
-                  placeholder="Rajkot, Gujarat"
+                  placeholder="Enter village"
                 />
               </div>
-            </div>
+
+              <div>
+                <label 
+                  htmlFor="profile-state" 
+                  className="text-[11px] font-medium text-foreground block mb-1.5"
+                >
+                  State
+                </label>
+                <input
+                  id="profile-state"
+                  type="text"
+                  value={stateName}
+                  onChange={(e) => setStateName(e.target.value)}
+                  className="w-full rounded-lg bg-muted/40 border border-transparent focus:border-primary/40 focus:bg-background px-3 py-2 text-xs font-normal text-foreground outline-none transition-all placeholder:text-muted-foreground/60"
+                  placeholder="Enter state"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-between border-t border-border/60">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="button-primary !min-h-[32px] !px-4 text-xs font-semibold rounded-lg shadow-2xs hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {saving ? 'Saving...' : 'Save Information'}
+                </button>
+
+                {profileSaved && (
+                  <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 animate-in fade-in flex items-center gap-1">
+                    <Check className="size-3.5 stroke-[2.5]" /> Information saved
+                  </span>
+                )}
+              </div>
+            </form>
           </section>
 
           {/* Card 2: Language & appearance */}
