@@ -1,5 +1,5 @@
 # PROJECT LOCATION (non-negotiable)
-ALL work happens inside the existing `fe/` folder. This is a frontend-only project. Do not create or edit anything outside `fe/`, except reading the zip and `.agent/`. Run every command from `fe/` (`npm install`, `npm run dev`, `npm run lint`, `npx tsc --noEmit`, `npm run build`). If `fe/` is a git repo, commit a "baseline before plan2" checkpoint first. If it is not, run `git init` inside `fe/` and commit.
+ALL work happens inside the existing `frontend/` folder. This is a frontend-only project. Do not create or edit anything outside `frontend/`, except reading the zip and `.agent/`. Run every command from `frontend/` (`npm install`, `npm run dev`, `npm run lint`, `npx tsc --noEmit`, `npm run build`). If `frontend/` is a git repo, commit a "baseline before plan2" checkpoint first. If it is not, run `git init` inside `frontend/` and commit.
 
 # WORKING STYLE
 Complete everything in one continuous run: brief plan artifact, implement, verify in the browser, fix, repeat. Do not stop for approval. Before writing UI code, discover and read every relevant skill in `.agent/skills/` (frontend design, React/Next.js, Tailwind, accessibility, animation, browser verification) and follow `.agent/rules/`. Prefer this plan where a skill conflicts with it. Keep the existing palette tokens, fonts, illustration style, routes, typed API client, SSE contract, i18n keys and Demo Mode numbers (20 quintals of onions, Surat best at ₹2,140/q, freight ₹6,200, net ₹36,600, +₹8,200 vs local). Do not rewrite from scratch.
@@ -7,13 +7,13 @@ Complete everything in one continuous run: brief plan artifact, implement, verif
 # JOB 1: ADD THE SCROLL ANIMATION FROM THE ZIP (landing page only)
 
 ## 1.1 Extract and inspect
-1. Find the new zip in the workspace root and extract it to a temporary folder (for example `/tmp/scroll-zip`), NOT into `fe/`.
+1. Find the new zip in the workspace root and extract it to a temporary folder (for example `/tmp/scroll-zip`), NOT into `frontend/`.
 2. Inspect what the animation is made of: an image sequence (frames), a video, Lottie/JSON, SVG, canvas/WebGL code, a GSAP/ScrollTrigger snippet, or a React/HTML component. Write a short note on what you found and which implementation approach you chose.
 3. **Take ONLY the scroll animation.** Do not import any other content from the zip: no pages, headings, copy, navbar, footer, buttons, fonts, global CSS, layout wrappers, or unrelated assets. If the zip contains a full demo site, extract just the animation logic and its assets.
-4. Copy only the required assets into `fe/public/scroll-anim/` (or `fe/components/landing/scroll-anim/` for code). Optimize: convert frames to WebP or AVIF where sensible, keep the total payload reasonable for Vercel free tier and low bandwidth, and lazy-load. Remove unused files. Document licences or credits if the zip includes any.
+4. Copy only the required assets into `frontend/public/scroll-anim/` (or `frontend/components/landing/scroll-anim/` for code). Optimize: convert frames to WebP or AVIF where sensible, keep the total payload reasonable for Vercel free tier and low bandwidth, and lazy-load. Remove unused files. Document licences or credits if the zip includes any.
 
 ## 1.2 Implement as one reusable component
-Create `fe/components/landing/ScrollAnimation.tsx` (client component, dynamically imported, `ssr: false` where needed).
+Create `frontend/components/landing/ScrollAnimation.tsx` (client component, dynamically imported, `ssr: false` where needed).
 - Bind progress to scroll with `useScroll` and `useTransform` (or the technique the zip already uses if it is better). Use a sticky pinned stage inside a tall scroll track (for example a 300 to 500vh wrapper with a `sticky top-0 h-dvh` stage) so the animation scrubs smoothly as the user scrolls.
 - If it is an image sequence: preload progressively, draw to a `<canvas>` with `requestAnimationFrame`, cap DPR at 2, show a skeleton until the first frames are ready, and reduce frame count on small screens or slow connections.
 - Pause or unmount when off-screen (IntersectionObserver). Clean up all listeners.
@@ -66,7 +66,7 @@ Build authentication as a complete, standard, production-style system.
 - Optional but recommended: "Continue with email" is NOT required. Keep mobile + OTP as the primary method and do not invent backend endpoints.
 
 ## 3.3 Session, security and routing
-- Route Handlers in `fe/app/api/auth/`: `otp/request`, `otp/verify`, `logout`, `session` (and `refresh` if the contract supports it). In Demo Mode any valid mobile works, the OTP is `123456`, and a "Demo code: 123456" chip is shown. In real mode proxy to FastAPI and set an `httpOnly; Secure; SameSite=Lax` cookie with the JWT. Never store tokens in localStorage or expose them to client JS.
+- Route Handlers in `frontend/app/api/auth/`: `otp/request`, `otp/verify`, `logout`, `session` (and `refresh` if the contract supports it). In Demo Mode any valid mobile works, the OTP is `123456`, and a "Demo code: 123456" chip is shown. In real mode proxy to FastAPI and set an `httpOnly; Secure; SameSite=Lax` cookie with the JWT. Never store tokens in localStorage or expose them to client JS.
 - `middleware.ts` protects `/dashboard`, `/sabha/*`, `/explore`, `/history`, `/settings`. Logged-out users go to `/login?next=<path>` and return there after login (validate `next` to allow only same-origin relative paths, to prevent open redirects). Logged-in users visiting `/login` or `/signup` go to `/dashboard`.
 - `AuthProvider` with `useAuth()` exposing `user`, `status` (loading | authenticated | anonymous), `login`, `signup`, `logout`, `refresh`. A 401 anywhere clears the session, clears the React Query cache, redirects to `/login`, and shows the toast "Session expired. Please log in again."
 - Logout: confirm dialog, clear cookie, clear caches, redirect to `/`. Add a profile/avatar menu in the Navbar and Sidebar with Settings and Logout.
@@ -82,13 +82,13 @@ Use the browser tool in light and dark, English, Hindi and Gujarati, at the widt
 1. Landing: the scroll animation scrubs smoothly, is crisp and clearly visible in both themes, matches the palette, causes no horizontal scroll or layout shift, and falls back to a static frame under reduced motion.
 2. Every page fills the screen properly with no narrow centered island, no double scrollbars, and no overflow.
 3. Auth end to end in Demo Mode: signup (all 3 steps) then OTP then dashboard; refresh keeps the session; logout clears it; `/dashboard` while logged out redirects to `/login?next=/dashboard` and returns after login; a wrong OTP shakes and never crashes; lockout and resend timers work; an unregistered number shows the create-account prompt.
-4. Run `npm run lint`, `npx tsc --noEmit` and `npm run build` inside `fe/` and fix everything. No console errors or hydration warnings.
-5. Save before and after screenshots to `fe/docs/screenshots/plan2/` and write `fe/docs/CHANGELOG-plan2.md` (what changed, which skills were used for what, known limitations).
+4. Run `npm run lint`, `npx tsc --noEmit` and `npm run build` inside `frontend/` and fix everything. No console errors or hydration warnings.
+5. Save before and after screenshots to `frontend/docs/screenshots/plan2/` and write `frontend/docs/CHANGELOG-plan2.md` (what changed, which skills were used for what, known limitations).
 
 # DEFINITION OF DONE
 - The zip's scroll animation, and nothing else from the zip, is live on the landing page, clear (not washed out), and recolored to the site palette in both themes.
 - The whole frontend fills the screen like a real website, with full-bleed sections on the landing page and a proper full-width app shell everywhere else.
 - Login and signup follow a standard, elegant split-screen structure, and the complete auth system works end to end with protected routes and session handling.
-- Lint, type-check and build pass, and screenshots plus the changelog are delivered inside `fe/docs/`.
+- Lint, type-check and build pass, and screenshots plus the changelog are delivered inside `frontend/docs/`.
 
 Start now with the plan artifact, then proceed through Job 1, Job 2 and Job 3 without stopping.

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Check, ChevronLeft, ShieldCheck, Sparkles, UserCheck, Leaf } from 'lucide-react'
 import { useAuth } from '@/components/auth-provider'
+import { GoogleSignInButton } from '@/components/google-sign-in-button'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -108,6 +109,17 @@ export default function SignupPage() {
                 <p className="mt-1 text-xs text-muted-foreground">
                   Personalize your dashboard with your local village and the commodities you harvest.
                 </p>
+              </div>
+
+              <GoogleSignInButton text="Sign up with Google" />
+
+              <div className="relative flex items-center justify-center my-1">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border" />
+                </div>
+                <span className="relative bg-card px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Or register with details
+                </span>
               </div>
 
               {/* Name and Mobile */}

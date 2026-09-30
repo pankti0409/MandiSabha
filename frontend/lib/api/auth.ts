@@ -25,6 +25,8 @@ export type DemoUser = {
   priceAlerts?: boolean
   weatherAlerts?: boolean
   primaryMandi?: string
+  email?: string
+  avatar?: string
 }
 
 export async function requestOtp(mobile: string) {

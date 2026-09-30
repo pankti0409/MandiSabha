@@ -6,17 +6,27 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowRight, Check, ChevronLeft, ShieldCheck, Sparkles, Smartphone, KeyRound } from 'lucide-react'
 import { useAuth } from '@/components/auth-provider'
 import { mobileSchema } from '@/lib/api/auth'
+import { GoogleSignInButton } from '@/components/google-sign-in-button'
 
 function LoginForm() {
   const router = useRouter()
   const params = useSearchParams()
   const next = params.get('next') || '/dashboard'
+  const queryError = params.get('error')
   const { requestOtp, verifyOtp } = useAuth()
 
   const [mobile, setMobile] = useState('')
   const [otp, setOtp] = useState('')
   const [step, setStep] = useState<'mobile' | 'otp'>('mobile')
-  const [error, setError] = useState('')
+  const [error, setError] = useState(
+    queryError
+      ? queryError === 'missing_google_credentials'
+        ? 'Google credentials are not configured in .env.local.'
+        : queryError === 'access_denied'
+        ? 'Google Sign-In was cancelled.'
+        : 'Google Sign-In failed. Please try again or use mobile OTP.'
+      : ''
+  )
   const [busy, setBusy] = useState(false)
 
   async function send(e: FormEvent) {
@@ -87,7 +97,19 @@ function LoginForm() {
           </div>
 
           {step === 'mobile' ? (
-            <form onSubmit={send} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-5">
+              <GoogleSignInButton text="Sign in with Google" />
+
+              <div className="relative flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border" />
+                </div>
+                <span className="relative bg-card px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Or continue with phone
+                </span>
+              </div>
+
+              <form onSubmit={send} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="login-mobile" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Mobile Number
@@ -117,7 +139,8 @@ function LoginForm() {
                 <ArrowRight className="size-4" />
               </button>
             </form>
-          ) : (
+          </div>
+        ) : (
             <form onSubmit={verify} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
