@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { Check, Globe, Moon, ShieldCheck, Sparkles, Sun, TrendingUp, Users } from 'lucide-react'
+import { Check, Globe, Moon, ShieldCheck, Sparkles, Sun, TrendingUp, Users, Leaf } from 'lucide-react'
 import { useLocale } from '@/components/locale-provider'
 
 function ThemeToggle() {
@@ -72,8 +72,8 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         {/* Top Logo */}
         <div className="relative z-10">
           <Link href="/" className="inline-flex items-center gap-3" aria-label="Mandi Sabha home">
-            <span className="logo-mark" aria-hidden="true">
-              <span /><span /><span /><span /><span />
+            <span className="grid size-10 place-items-center rounded-full bg-white/20 text-white backdrop-blur-md shadow-sm">
+              <Leaf className="size-5" />
             </span>
             <span className="font-display text-2xl font-bold tracking-tight text-white">
               Mandi Sabha
@@ -118,7 +118,9 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         <div className="flex items-center justify-between mb-8">
           {/* Mobile Logo */}
           <Link href="/" className="lg:hidden flex items-center gap-2 font-display text-lg font-bold">
-            <span className="logo-mark shrink-0"><span/><span/><span/><span/><span/></span>
+            <span className="grid size-8 place-items-center rounded-full bg-primary text-white shadow-sm">
+              <Leaf className="size-4" />
+            </span>
             Mandi Sabha
           </Link>
 

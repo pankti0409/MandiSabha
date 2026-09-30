@@ -109,9 +109,6 @@ export default function DashboardPage() {
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Stat 1: Total Realized Extra Earned */}
           <div className="card-luxury relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-5 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Sparkles className="size-16 text-accent" />
-            </div>
             <div className="flex items-center justify-between mb-4">
               <span className="grid size-11 place-items-center rounded-2xl bg-amber-500/10 text-accent font-display text-2xl font-black">
                 ₹
@@ -133,9 +130,6 @@ export default function DashboardPage() {
 
           {/* Stat 2: Active & Completed Sabhas */}
           <div className="card-luxury relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-5 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Leaf className="size-16 text-primary" />
-            </div>
             <div className="flex items-center justify-between mb-4">
               <span className="grid size-11 place-items-center rounded-2xl bg-primary/10 text-primary">
                 <Leaf className="size-6" />
@@ -157,9 +151,6 @@ export default function DashboardPage() {
 
           {/* Stat 3: Best Winning Mandi */}
           <div className="card-luxury relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-5 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Truck className="size-16 text-sky" />
-            </div>
             <div className="flex items-center justify-between mb-4">
               <span className="grid size-11 place-items-center rounded-2xl bg-sky/10 text-sky">
                 <Truck className="size-6" />
@@ -181,9 +172,6 @@ export default function DashboardPage() {
 
           {/* Stat 4: Live Agmarknet Feed */}
           <div className="card-luxury relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-5 opacity-10 group-hover:opacity-20 transition-opacity">
-              <CloudSun className="size-16 text-emerald-500" />
-            </div>
             <div className="flex items-center justify-between mb-4">
               <span className="grid size-11 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                 <CloudSun className="size-6" />

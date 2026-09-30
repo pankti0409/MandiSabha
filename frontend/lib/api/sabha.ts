@@ -6,6 +6,7 @@ export type SabhaDraft = {
   quantity: number
   location: string
   urgency: 'today' | 'soon' | 'week'
+  targetDate?: string
   radius: number
   vehicleType?: 'pickup' | 'truck' | 'heavy'
 }

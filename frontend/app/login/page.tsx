@@ -3,7 +3,7 @@
 import { FormEvent, Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowRight, Check, ChevronLeft, ShieldCheck, Sparkles, Smartphone, KeyRound } from 'lucide-react'
+import { ArrowRight, Check, ChevronLeft, ShieldCheck, Sparkles, Smartphone, KeyRound, Leaf } from 'lucide-react'
 import { useAuth } from '@/components/auth-provider'
 import { mobileSchema } from '@/lib/api/auth'
 import { GoogleSignInButton } from '@/components/google-sign-in-button'
@@ -72,8 +72,8 @@ function LoginForm() {
         {/* Brand Header */}
         <div className="mb-8 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-bold tracking-tight text-foreground group">
-            <span className="logo-mark transition-transform group-hover:scale-105">
-              <span /><span /><span /><span /><span />
+            <span className="grid size-9 place-items-center rounded-full bg-primary text-white shadow-sm transition-transform group-hover:scale-105">
+              <Leaf className="size-5" />
             </span>
             <span>Mandi Sabha</span>
           </Link>

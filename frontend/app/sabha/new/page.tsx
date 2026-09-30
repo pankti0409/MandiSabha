@@ -20,13 +20,16 @@ import {
   Navigation,
   CloudRain,
   Sliders,
-  DollarSign
+  DollarSign,
+  Calendar
 } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { useAuth } from '@/components/auth-provider'
 import { allCrops, createSabha, formatINR, type Crop } from '@/lib/api/sabha'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { VoiceAssistantModal } from '@/components/voice-assistant-modal'
+import { LiveRouteMap } from '@/components/live-route-map'
 import { cn } from '@/lib/utils'
 
 export default function NewSabhaPage() {
@@ -37,6 +40,57 @@ export default function NewSabhaPage() {
   const [quantity, setQuantity] = useState(20)
   const [location, setLocation] = useState(user?.village ? `${user.village}, ${user.district || 'Maharashtra'}` : 'Nashik, Maharashtra')
   const [urgency, setUrgency] = useState<'today' | 'soon' | 'week'>('today')
+  const getTodayISO = () => new Date().toISOString().split('T')[0]
+  const [targetDate, setTargetDate] = useState<string>(getTodayISO())
+  const [activeTimingPreset, setActiveTimingPreset] = useState<'today' | 'soon' | 'week' | 'custom'>('today')
+
+  function handlePresetSelect(presetId: 'today' | 'soon' | 'week', offsetDays: number) {
+    setActiveTimingPreset(presetId)
+    setUrgency(presetId)
+    const d = new Date()
+    d.setDate(d.getDate() + offsetDays)
+    setTargetDate(d.toISOString().split('T')[0])
+  }
+
+  function handleCustomDateChange(selectedIso: string) {
+    if (!selectedIso) return
+    setTargetDate(selectedIso)
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+    const selected = new Date(selectedIso + 'T00:00:00')
+    const diffDays = Math.round((selected.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+
+    if (diffDays <= 0) {
+      setUrgency('today')
+      setActiveTimingPreset('today')
+    } else if (diffDays <= 3) {
+      setUrgency('soon')
+      setActiveTimingPreset('soon')
+    } else if (diffDays <= 7) {
+      setUrgency('week')
+      setActiveTimingPreset('week')
+    } else {
+      setUrgency('week')
+      setActiveTimingPreset('custom')
+    }
+  }
+
+  function formatDisplayDate(iso: string) {
+    if (!iso) return 'Today'
+    try {
+      const d = new Date(iso + 'T00:00:00')
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const diff = Math.round((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+      if (diff === 0) return 'Today, Immediate'
+      if (diff === 1) return 'Tomorrow'
+      const options: Intl.DateTimeFormatOptions = { weekday: 'short', day: 'numeric', month: 'short' }
+      return `${d.toLocaleDateString('en-IN', options)} (${diff > 0 ? `in ${diff}d` : 'Immediate'})`
+    } catch {
+      return iso
+    }
+  }
+
   const [radius, setRadius] = useState(200)
   const [vehicle, setVehicle] = useState<'pickup' | 'truck' | 'heavy'>('pickup')
   const [qualityGrade, setQualityGrade] = useState<'A' | 'B' | 'C'>('A')
@@ -68,6 +122,7 @@ export default function NewSabhaPage() {
         quantity,
         location,
         urgency,
+        targetDate,
         radius,
         vehicleType: vehicle,
       })
@@ -85,6 +140,8 @@ export default function NewSabhaPage() {
     setQuantity(data.quantity)
     setLocation(data.location)
     setUrgency(data.urgency)
+    const offset = data.urgency === 'today' ? 0 : data.urgency === 'soon' ? 3 : 7
+    handlePresetSelect(data.urgency, offset)
   }
 
   return (
@@ -143,7 +200,7 @@ export default function NewSabhaPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-1">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-1">
                 {visibleCrops.map((item) => {
                   const isSelected = crop === item.name
                   return (
@@ -152,28 +209,36 @@ export default function NewSabhaPage() {
                       key={item.name}
                       onClick={() => setCrop(item.name)}
                       className={cn(
-                        'rounded-2xl border p-3.5 text-left transition-all flex flex-col justify-between group',
+                        'rounded-xl border p-3 text-left transition-all flex flex-col justify-between group relative select-none',
                         isSelected
-                          ? 'border-primary bg-primary/10 ring-2 ring-primary shadow-md shadow-primary/10'
-                          : 'border-border bg-card hover:border-primary/50'
+                          ? 'border-primary bg-primary/10 ring-1 ring-primary shadow-xs'
+                          : 'border-border bg-card hover:border-primary/40 hover:bg-muted/40'
                       )}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <span
-                          className="grid size-9 place-items-center rounded-xl font-bold font-display text-base transition-transform group-hover:scale-110"
-                          style={{
-                            backgroundColor: `color-mix(in srgb, ${item.color} 15%, transparent)`,
-                            color: item.color,
-                          }}
+                      <div className="flex items-start justify-between gap-1 mb-2">
+                        <div>
+                          <span className="block text-sm font-bold text-foreground leading-tight group-hover:text-primary transition-colors">
+                            {item.name}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground block truncate mt-0.5">
+                            {item.local}
+                          </span>
+                        </div>
+                        <div
+                          className={cn(
+                            'size-4.5 rounded-full border grid place-items-center shrink-0 transition-all mt-0.5',
+                            isSelected
+                              ? 'border-primary bg-primary text-white'
+                              : 'border-border/80 bg-background/80 group-hover:border-primary/60'
+                          )}
                         >
-                          {item.name.charAt(0)}
-                        </span>
-                        {isSelected && <Check className="size-4 text-primary stroke-[3]" />}
+                          {isSelected && <Check className="size-3 stroke-[3]" />}
+                        </div>
                       </div>
-                      <div>
-                        <span className="block text-sm font-bold text-foreground">{item.name}</span>
-                        <span className="text-[11px] text-muted-foreground block truncate">{item.local}</span>
-                        <span className="mt-1 block font-mono text-xs font-bold text-primary">
+
+                      <div className="pt-2 border-t border-border/50 flex items-center justify-between">
+                        <span className="text-[10px] text-muted-foreground uppercase font-mono">Modal</span>
+                        <span className="font-mono text-xs font-bold text-primary">
                           {formatINR(item.price)}/q
                         </span>
                       </div>
@@ -297,29 +362,58 @@ export default function NewSabhaPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-foreground flex items-center gap-2">
-                    <span className="grid size-6 place-items-center rounded-full bg-primary text-white text-xs">5</span>
-                    Sale Urgency
-                  </label>
+                {/* Step 5: Sale Timing & Target Dispatch Date */}
+                <div className="flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                      <span className="grid size-6 place-items-center rounded-full bg-primary text-white text-xs">5</span>
+                      Target Sale & Dispatch Date
+                    </label>
+                    <span className="text-[11px] font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                      {formatDisplayDate(targetDate)}
+                    </span>
+                  </div>
+
+                  {/* Preset Quick Timing Options */}
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: 'today', label: 'Today' },
-                      { id: 'soon', label: '2–3 Days' },
-                      { id: 'week', label: 'This Week' },
+                      { id: 'today', label: 'Immediately', sub: 'Today', offset: 0 },
+                      { id: 'soon', label: 'In 2–3 Days', sub: 'Short Notice', offset: 3 },
+                      { id: 'week', label: 'Next Week', sub: 'Harvest Window', offset: 7 },
                     ].map((u) => (
                       <button
                         key={u.id}
                         type="button"
-                        onClick={() => setUrgency(u.id as any)}
+                        onClick={() => handlePresetSelect(u.id as any, u.offset)}
                         className={cn(
-                          'rounded-xl border py-2.5 text-xs font-bold transition-all text-center',
-                          urgency === u.id ? 'border-primary bg-primary text-white shadow-sm' : 'border-border bg-background text-muted-foreground hover:text-foreground'
+                          'rounded-xl border py-2 px-1 text-center transition-all flex flex-col items-center justify-center',
+                          activeTimingPreset === u.id
+                            ? 'border-primary bg-primary text-white shadow-sm font-bold'
+                            : 'border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted/60'
                         )}
                       >
-                        {u.label}
+                        <span className="text-xs font-bold leading-tight">{u.label}</span>
+                        <span className={cn('text-[10px] font-mono mt-0.5', activeTimingPreset === u.id ? 'text-white/80' : 'text-muted-foreground')}>
+                          {u.sub}
+                        </span>
                       </button>
                     ))}
+                  </div>
+
+                  {/* Interactive Calendar Date Picker Input */}
+                  <div className="flex items-center gap-2.5 rounded-xl border border-border bg-background px-3 h-10 transition-colors focus-within:border-primary">
+                    <Calendar className="size-4 text-primary shrink-0" />
+                    <input
+                      type="date"
+                      min={getTodayISO()}
+                      value={targetDate}
+                      onChange={(e) => handleCustomDateChange(e.target.value)}
+                      className="w-full bg-transparent text-xs font-semibold outline-none text-foreground cursor-pointer"
+                      title="Click to select specific sale date from calendar"
+                    />
+                    <span className="text-[10px] font-mono text-muted-foreground font-semibold shrink-0 uppercase tracking-wider">
+                      Pick Date
+                    </span>
                   </div>
                 </div>
               </div>
@@ -353,83 +447,12 @@ export default function NewSabhaPage() {
 
           {/* Right Column: Live Interactive Economics & Highway Radar (5 cols) */}
           <aside className="lg:col-span-5 flex flex-col gap-6">
-            {/* Interactive Highway Route Map Card */}
-            <div className="card-luxury relative overflow-hidden flex flex-col gap-4">
-              <div className="flex items-center justify-between pb-3 border-b border-border">
-                <div className="flex items-center gap-2">
-                  <Navigation className="size-4 text-primary" />
-                  <span className="font-bold text-sm text-foreground">Live Route & Toll Radar</span>
-                </div>
-                <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                  NH48 Clear
-                </span>
-              </div>
-
-              {/* Interactive Mandi Switcher */}
-              <div className="flex items-center gap-1.5 overflow-x-auto">
-                {['Surat APMC', 'Pune Market Yard', 'Ahmedabad APMC'].map((mandi) => (
-                  <button
-                    key={mandi}
-                    type="button"
-                    onClick={() => setSelectedMandiTarget(mandi)}
-                    className={cn(
-                      'rounded-xl px-3 py-1.5 text-xs font-bold transition-all shrink-0',
-                      selectedMandiTarget === mandi
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'bg-muted/70 text-muted-foreground hover:text-foreground'
-                    )}
-                  >
-                    {mandi.split(' ')[0]} ({mandi === 'Surat APMC' ? '142km' : mandi === 'Pune Market Yard' ? '188km' : '260km'})
-                  </button>
-                ))}
-              </div>
-
-              {/* Animated SVG Route Visualization */}
-              <div className="relative h-44 w-full rounded-2xl border border-border bg-gradient-to-br from-background to-primary/5 p-4 flex flex-col justify-between overflow-hidden">
-                <div className="flex items-center justify-between text-xs z-10">
-                  <div className="flex items-center gap-1.5 font-bold text-foreground">
-                    <span className="size-2.5 rounded-full bg-primary" />
-                    <span>Origin: Nashik</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 font-bold text-accent">
-                    <span className="size-2.5 rounded-full bg-accent" />
-                    <span>Target: {selectedMandiTarget}</span>
-                  </div>
-                </div>
-
-                {/* Highway Route Arc */}
-                <svg className="w-full h-16 my-auto" viewBox="0 0 300 60" fill="none">
-                  <path
-                    d="M 20 40 Q 150 5 280 40"
-                    stroke="var(--border)"
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M 20 40 Q 150 5 280 40"
-                    stroke="var(--primary)"
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                    className="flow-route"
-                  />
-                  {/* Origin Node */}
-                  <circle cx="20" cy="40" r="7" fill="var(--primary)" />
-                  {/* Mid Toll Checkpoint */}
-                  <circle cx="150" cy="22" r="5" fill="var(--accent)" />
-                  {/* Destination Node */}
-                  <circle cx="280" cy="40" r="7" fill="var(--accent)" />
-                </svg>
-
-                <div className="flex items-center justify-between text-[11px] text-muted-foreground z-10 pt-1 border-t border-border/60">
-                  <span className="flex items-center gap-1">
-                    <Truck className="size-3.5 text-primary" /> Est. Transit: 3.5 hrs
-                  </span>
-                  <span className="flex items-center gap-1 font-mono font-bold text-primary">
-                    Road Toll: ₹240
-                  </span>
-                </div>
-              </div>
-            </div>
+            {/* Sophisticated Highway Route & Corridor Radar Map */}
+            <LiveRouteMap
+              originLocation={location}
+              targetMandi={selectedMandiTarget}
+              onSelectMandi={setSelectedMandiTarget}
+            />
 
             {/* Live Financial Breakdown Card */}
             <div className="card-luxury relative overflow-hidden bg-gradient-to-b from-card to-primary/5 flex flex-col gap-4">

@@ -81,8 +81,8 @@ export default function SignupPage() {
         {/* Brand Header */}
         <div className="mb-8 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-bold tracking-tight text-foreground group">
-            <span className="logo-mark transition-transform group-hover:scale-105">
-              <span /><span /><span /><span /><span />
+            <span className="grid size-9 place-items-center rounded-full bg-primary text-white shadow-sm transition-transform group-hover:scale-105">
+              <Leaf className="size-5" />
             </span>
             <span>Mandi Sabha</span>
           </Link>

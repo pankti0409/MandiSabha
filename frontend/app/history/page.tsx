@@ -166,10 +166,7 @@ export default function HistoryPage() {
                 key={session.id}
                 className="rounded-2xl border border-border bg-card hover:border-primary/60 p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 transition-all hover:shadow-md"
               >
-                <div className="flex items-start sm:items-center gap-4">
-                  <div className="grid size-12 place-items-center rounded-2xl bg-primary/10 text-primary font-display font-extrabold text-lg shrink-0">
-                    {session.crop.charAt(0)}
-                  </div>
+                <div className="flex items-start sm:items-center gap-3">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-extrabold text-base text-foreground">{session.crop}</h3>

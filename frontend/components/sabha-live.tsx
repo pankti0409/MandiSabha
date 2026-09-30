@@ -24,6 +24,7 @@ import {
 import { AppShell } from '@/components/app-shell'
 import { formatINR, formatNumber } from '@/lib/api/sabha'
 import { cn } from '@/lib/utils'
+import { LiveRouteMap } from '@/components/live-route-map'
 
 type Mandi = { name: string; state: string; price: number; freight: number; net: number; distance: string; color: string; advantage: number }
 const mandis: Mandi[] = [
@@ -116,14 +117,20 @@ export function SabhaLive({ id }: { id: string }) {
 
         {/* ── 3-Column Live Workspace ─────────────────────────────────── */}
         <div className="grid gap-6 lg:grid-cols-12">
-          {/* Column 1: Agent Squad (3 cols) */}
-          <section className="card-luxury lg:col-span-3 flex flex-col gap-4">
+          {/* Column 1: Organized Sabha Agents Panel (Clean & Structured) */}
+          <section className="card-luxury lg:col-span-3 flex flex-col gap-3.5">
             <div className="flex items-center justify-between pb-3 border-b border-border">
-              <span className="font-bold text-sm text-foreground">Sabha Agents</span>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm text-foreground">Sabha Agents</span>
+                <span className="rounded-full bg-primary/10 border border-primary/20 px-2 py-0.5 text-[10px] font-mono font-bold text-primary">
+                  {done ? '5/5 Done' : `${activeAgentIndex + 1}/5 Active`}
+                </span>
+              </div>
               <Users className="size-4 text-muted-foreground" />
             </div>
 
-            <div className="flex flex-col gap-2.5">
+            {/* Unified Pipeline List (Organized & Minimal) */}
+            <div className="rounded-xl border border-border/80 bg-background/60 divide-y divide-border/60 overflow-hidden shadow-2xs">
               {agents.map((agent, index) => {
                 const isWorking = index === activeAgentIndex && !done
                 const isFinished = index < activeAgentIndex || done
@@ -132,87 +139,160 @@ export function SabhaLive({ id }: { id: string }) {
                   <div
                     key={agent.name}
                     className={cn(
-                      'rounded-xl border p-3 flex items-start gap-3 transition-all',
-                      isWorking ? 'border-primary bg-primary/10 shadow-sm' : 'border-border bg-card'
+                      'px-3 py-2.5 flex items-center justify-between gap-2.5 transition-colors',
+                      isWorking ? 'bg-primary/10' : 'hover:bg-muted/40'
                     )}
                   >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {/* Minimal status indicator */}
+                      <span className="grid size-5 place-items-center shrink-0">
+                        {isFinished ? (
+                          <Check className="size-3.5 text-emerald-600 dark:text-emerald-400 stroke-[3]" />
+                        ) : isWorking ? (
+                          <span className="relative flex size-2.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                            <span className="relative inline-flex rounded-full size-2.5 bg-primary" />
+                          </span>
+                        ) : (
+                          <span className="font-mono text-[10px] font-medium text-muted-foreground">
+                            {index + 1}
+                          </span>
+                        )}
+                      </span>
+
+                      <div className="min-w-0">
+                        <p className={cn('text-xs leading-tight truncate', isWorking ? 'font-bold text-primary' : 'font-semibold text-foreground')}>
+                          {agent.name}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground truncate leading-tight">
+                          {agent.role}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Compact Status Pill */}
                     <span
                       className={cn(
-                        'grid size-7 place-items-center rounded-full text-xs font-bold shrink-0 mt-0.5',
-                        isFinished ? 'bg-primary text-white' : isWorking ? 'bg-accent text-white animate-pulse' : 'bg-muted text-muted-foreground'
+                        'rounded px-1.5 py-0.5 text-[9px] font-mono font-bold shrink-0',
+                        isFinished
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                          : isWorking
+                          ? 'bg-primary/20 text-primary animate-pulse'
+                          : 'bg-muted text-muted-foreground'
                       )}
                     >
-                      {isFinished ? <Check className="size-3.5 stroke-[3]" /> : index + 1}
+                      {isFinished ? 'Ready' : isWorking ? 'Active' : 'Queued'}
                     </span>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-foreground">{agent.name}</p>
-                      <p className="text-[11px] text-muted-foreground truncate">{agent.role}</p>
-                    </div>
                   </div>
                 )
               })}
             </div>
+
+            {/* Bottom Consensus Status Footer */}
+            <div className="rounded-lg bg-card/70 border border-border/70 p-2.5 text-[11px] text-muted-foreground flex items-center justify-between">
+              <span className="flex items-center gap-1.5 font-medium">
+                <span className={cn('size-1.5 rounded-full', done ? 'bg-emerald-500' : 'bg-primary animate-pulse')} />
+                {done ? 'Consensus Validated' : 'Simulating Arbitrage'}
+              </span>
+              <span className="font-mono text-[10px] font-bold text-primary">
+                {done ? '100% Ready' : `${progress}%`}
+              </span>
+            </div>
           </section>
 
-          {/* Column 2: Net Realization Live Race (6 cols) */}
+          {/* Column 2: Net Realization Live Race & Corridor Radar (6 cols) */}
           <section className="card-luxury lg:col-span-6 flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between pb-3 border-b border-border">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border">
                 <div>
-                  <span className="font-bold text-sm text-foreground">Race to Maximum Net Profit</span>
-                  <p className="text-[11px] text-muted-foreground">Revenue minus freight, tolls, and loading</p>
+                  <span className="font-bold text-sm text-foreground">
+                    {tab === 'Race' ? 'Race to Maximum Net Profit' : 'Live Highway Corridor Radar'}
+                  </span>
+                  <p className="text-[11px] text-muted-foreground">
+                    {tab === 'Race' ? 'Revenue minus freight, tolls, and loading' : 'Interactive GIS telemetry & FASTag route'}
+                  </p>
                 </div>
-                <span className="text-xs font-mono font-bold text-primary">Live Ranking</span>
+                
+                {/* View Switcher: Race vs Radar */}
+                <div className="flex items-center gap-1 rounded-xl bg-background border border-border p-0.5 text-xs font-bold shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setTab('Race')}
+                    className={cn(
+                      'rounded-lg px-2.5 py-1 transition-all',
+                      tab === 'Race' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    Profit Race
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTab('Routes')}
+                    className={cn(
+                      'rounded-lg px-2.5 py-1 transition-all flex items-center gap-1.5',
+                      tab === 'Routes' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    <span>Corridor Radar</span>
+                    <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  </button>
+                </div>
               </div>
 
-              <div className="mt-6 flex flex-col gap-5">
-                {ranked.map((mandi, idx) => {
-                  const maxNet = 36600
-                  const percent = Math.round((mandi.net / maxNet) * 100)
-                  return (
-                    <div key={mandi.name} className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between text-xs font-bold">
-                        <span className="flex items-center gap-2 text-foreground">
-                          <span
-                            className="grid size-5 place-items-center rounded-full text-[10px] text-white font-mono"
-                            style={{ backgroundColor: mandi.color }}
-                          >
-                            {idx + 1}
+              {tab === 'Race' ? (
+                <div className="mt-6 flex flex-col gap-5">
+                  {ranked.map((mandi, idx) => {
+                    const maxNet = 36600
+                    const percent = Math.round((mandi.net / maxNet) * 100)
+                    return (
+                      <div key={mandi.name} className="flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between text-xs font-bold">
+                          <span className="flex items-center gap-2 text-foreground">
+                            <span
+                              className="grid size-5 place-items-center rounded-full text-[10px] text-white font-mono"
+                              style={{ backgroundColor: mandi.color }}
+                            >
+                              {idx + 1}
+                            </span>
+                            {mandi.name} ({mandi.distance})
                           </span>
-                          {mandi.name} ({mandi.distance})
-                        </span>
-                        <div className="flex items-center gap-3">
-                          <span className="text-muted-foreground font-mono text-[11px]">
-                            {formatINR(mandi.price)}/q
-                          </span>
-                          <span className="font-mono font-extrabold text-foreground">
-                            {formatINR(mandi.net)}
-                          </span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-muted-foreground font-mono text-[11px]">
+                              {formatINR(mandi.price)}/q
+                            </span>
+                            <span className="font-mono font-extrabold text-foreground">
+                              {formatINR(mandi.net)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="h-3 w-full rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{
+                              width: `${(percent * progress) / 100}%`,
+                              backgroundColor: mandi.color,
+                            }}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                          <span>Freight: {formatINR(mandi.freight)}</span>
+                          {mandi.advantage > 0 && (
+                            <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                              +{formatINR(mandi.advantage)} vs Local
+                            </span>
+                          )}
                         </div>
                       </div>
-
-                      <div className="h-3 w-full rounded-full bg-muted overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-700"
-                          style={{
-                            width: `${(percent * progress) / 100}%`,
-                            backgroundColor: mandi.color,
-                          }}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                        <span>Freight: {formatINR(mandi.freight)}</span>
-                        {mandi.advantage > 0 && (
-                          <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                            +{formatINR(mandi.advantage)} vs Local
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="mt-4">
+                  <LiveRouteMap targetMandi="Surat APMC" initialHeight="h-[360px]" className="border-0 shadow-none p-0" />
+                </div>
+              )}
             </div>
 
             <div className="mt-6 p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-center gap-2.5 text-xs text-muted-foreground">
@@ -416,6 +496,20 @@ export function ResultPage({ id }: { id: string }) {
             </div>
           </div>
         </div>
+
+        {/* ── Winning Route & Corridor Radar ─────────────────────────── */}
+        <section className="flex flex-col gap-3">
+          <div>
+            <span className="section-kicker">Transit Telematics</span>
+            <h2 className="font-display text-2xl font-extrabold">
+              Winning Corridor Radar & Logistics Route
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Verified route from Nashik farm hub to Surat APMC Gate 2 via NH48 Express corridor
+            </p>
+          </div>
+          <LiveRouteMap targetMandi="Surat APMC" initialHeight="h-[390px]" />
+        </section>
 
         {/* ── Mandi Breakdown Comparison Table ────────────────────────── */}
         <section className="card-luxury">
