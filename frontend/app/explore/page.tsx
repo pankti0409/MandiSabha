@@ -69,7 +69,22 @@ export default function ExplorePage() {
         }
         const data = await res.json()
         if (!isCancelled) {
-          const fetchedRows: MandiRow[] = data.rows || []
+          const fetchedRows: MandiRow[] = (data.rows || []).map((r: any) => ({
+            mandi_id: r.mandiId ?? r.mandi_id ?? null,
+            mandi: r.mandi,
+            district: r.district,
+            state: r.state,
+            crop: r.crop,
+            variety: r.variety,
+            modal_price: r.modalPrice ?? r.modal_price ?? null,
+            min_price: r.minPrice ?? r.min_price ?? null,
+            max_price: r.maxPrice ?? r.max_price ?? null,
+            change_pct: r.changePct ?? r.change_pct ?? null,
+            arrivals_qty: r.arrivalsQty ?? r.arrivals_qty ?? null,
+            distance_km: r.distanceKm ?? r.distance_km ?? null,
+            freight_est_per_quintal: r.freightEstPerQuintal ?? r.freight_est_per_quintal ?? null,
+            price_date: r.priceDate ?? r.price_date ?? null,
+          }))
           setRows(fetchedRows)
           if (fetchedRows.length > 0) {
             setCompareA(fetchedRows[0].mandi)
