@@ -27,6 +27,8 @@ export type DemoUser = {
   primaryMandi?: string
   email?: string
   avatar?: string
+  homeLat?: number
+  homeLon?: number
   onboarded?: boolean
 }
 

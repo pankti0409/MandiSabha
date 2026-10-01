@@ -10,10 +10,15 @@ import {
   Sparkles, 
   ArrowRight,
   Building2,
-  Leaf
+  Leaf,
+  LocateFixed,
+  Loader2,
+  Check,
+  AlertCircle
 } from 'lucide-react'
 import { useAuth } from '@/components/auth-provider'
 import { useLocale } from '@/components/locale-provider'
+import { detectUserLocation } from '@/lib/geolocation'
 import { cn } from '@/lib/utils'
 
 const INDIAN_STATES = [
@@ -40,8 +45,12 @@ export function FarmerOnboardingModal() {
   const [isOpen, setIsOpen] = useState(false)
   const [name, setName] = useState('')
   const [village, setVillage] = useState('')
+  const [district, setDistrict] = useState('')
+  const [coords, setCoords] = useState<[number, number] | null>(null)
   const [state, setState] = useState('Maharashtra')
   const [mobile, setMobile] = useState('')
+  const [isLocating, setIsLocating] = useState(false)
+  const [locFeedback, setLocFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -60,6 +69,7 @@ export function FarmerOnboardingModal() {
       if (forceOnboarding || !isCompleted) {
         setName(user.name && user.name.toLowerCase() !== 'farmer' ? user.name : '')
         setVillage(user.village || '')
+        setDistrict(user.district || '')
         setState(user.state || 'Maharashtra')
         setMobile(user.mobile || '')
         setIsOpen(true)
@@ -72,6 +82,56 @@ export function FarmerOnboardingModal() {
   }, [status, user])
 
   if (!isOpen) return null
+
+  async function handleDetectLocation() {
+    setIsLocating(true)
+    setLocFeedback(null)
+    try {
+      const res = await detectUserLocation()
+      if (res.ok) {
+        if (res.village) {
+          setVillage(res.village)
+        } else if (res.district) {
+          setVillage(res.district)
+        }
+
+        if (res.district) {
+          setDistrict(res.district)
+        }
+
+        if (res.state) {
+          const matched = INDIAN_STATES.find(
+            (s) => s.toLowerCase() === res.state.toLowerCase() || res.state.toLowerCase().includes(s.toLowerCase())
+          )
+          if (matched) {
+            setState(matched)
+          }
+        }
+
+        if (res.lat && res.lon) {
+          setCoords([res.lat, res.lon])
+        }
+
+        const display = res.village && res.district 
+          ? `${res.village}, ${res.district}` 
+          : (res.village || res.district || res.formatted)
+
+        setLocFeedback({ 
+          type: 'success', 
+          message: t('auth.onboarding.loc_detected', { location: display }) || `Detected: ${display}` 
+        })
+        setTimeout(() => setLocFeedback(null), 5000)
+      } else {
+        setLocFeedback({ type: 'error', message: res.error })
+        setTimeout(() => setLocFeedback(null), 5000)
+      }
+    } catch {
+      setLocFeedback({ type: 'error', message: 'Could not fetch GPS location.' })
+      setTimeout(() => setLocFeedback(null), 5000)
+    } finally {
+      setIsLocating(false)
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -96,8 +156,11 @@ export function FarmerOnboardingModal() {
       await updateUser({
         name: name.trim(),
         village: village.trim(),
+        district: district.trim() || user?.district || '',
         state: state.trim(),
         mobile: cleanMobile,
+        homeLat: coords ? coords[0] : (user as any)?.homeLat,
+        homeLon: coords ? coords[1] : (user as any)?.homeLon,
         onboarded: true,
       })
 
@@ -196,17 +259,53 @@ export function FarmerOnboardingModal() {
             {/* Field 2 & 3: City/Village and State */}
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <MapPin className="size-3.5 text-primary" />
-                  {t('auth.onboarding.village_label')} <span className="text-primary">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={village}
-                  onChange={(e) => setVillage(e.target.value)}
-                  placeholder={t('auth.onboarding.village_placeholder')}
-                  className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm font-semibold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <MapPin className="size-3.5 text-primary" />
+                    {t('auth.onboarding.village_label')} <span className="text-primary">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleDetectLocation}
+                    disabled={isLocating}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:text-primary-hover disabled:opacity-50 transition-colors cursor-pointer"
+                    title="Auto detect location via GPS"
+                  >
+                    {isLocating ? (
+                      <>
+                        <Loader2 className="size-3 animate-spin" />
+                        <span>{t('auth.onboarding.btn_detecting') || 'Detecting...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <LocateFixed className="size-3" />
+                        <span>{t('auth.onboarding.btn_auto_detect') || 'Auto Detect'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    value={village}
+                    onChange={(e) => setVillage(e.target.value)}
+                    placeholder={t('auth.onboarding.village_placeholder')}
+                    className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pr-10 text-sm font-semibold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleDetectLocation}
+                    disabled={isLocating}
+                    title="Auto detect location via GPS"
+                    className="absolute right-2.5 p-1 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {isLocating ? (
+                      <Loader2 className="size-4 animate-spin text-primary" />
+                    ) : (
+                      <LocateFixed className="size-4" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -227,6 +326,24 @@ export function FarmerOnboardingModal() {
                 </select>
               </div>
             </div>
+
+            {locFeedback && (
+              <p
+                className={cn(
+                  'text-xs font-medium flex items-center gap-1.5 -mt-1 px-1 transition-opacity animate-in fade-in',
+                  locFeedback.type === 'success'
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-amber-600 dark:text-amber-400'
+                )}
+              >
+                {locFeedback.type === 'success' ? (
+                  <Check className="size-3.5 shrink-0" />
+                ) : (
+                  <AlertCircle className="size-3.5 shrink-0" />
+                )}
+                <span>{locFeedback.message}</span>
+              </p>
+            )}
 
             {/* Field 4: Phone Number */}
             <div className="flex flex-col gap-1.5">
