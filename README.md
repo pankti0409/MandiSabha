@@ -7,6 +7,9 @@
   <img src="https://img.shields.io/badge/BHARAT%20AGENTIC%202026-Powered%20by%20AIKart-FF6F00?style=for-the-badge&logo=target&logoColor=white" alt="Bharat Agentic 2026" />
   <img src="https://img.shields.io/badge/Team-Aura%20Spectre-8A2BE2?style=for-the-badge&logo=shield&logoColor=white" alt="Team Aura Spectre" />
   <img src="https://img.shields.io/badge/Domain-AgriTech%20%26%20Rural%20%7C%20Bharat%20Languages-008080?style=for-the-badge&logo=googleearth&logoColor=white" alt="Domain" />
+  <a href="https://docs.google.com/presentation/d/1JL9U1y64Fx31BtwbEReYRGZu4cAh6K-b/edit?usp=sharing&ouid=102954601433148212637&rtpof=true&sd=true" target="_blank">
+    <img src="https://img.shields.io/badge/📊%20Presentation-Google%20Drive-4285F4?style=for-the-badge&logo=googleslides&logoColor=white" alt="Presentation PPT" />
+  </a>
 </p>
 
 <p align="center">
@@ -44,6 +47,7 @@
 * **Challenge Domains:** **AgriTech & Rural** / **Bharat Languages & Accessibility**
 * **Project Name:** **MandiSabha (VyaaparMitra)**
 * **Mission:** *Build the Agents. Build Bharat.*
+* **📊 Project Presentation (PPT):** [**View / Download Google Slides Presentation**](https://docs.google.com/presentation/d/1JL9U1y64Fx31BtwbEReYRGZu4cAh6K-b/edit?usp=sharing&ouid=102954601433148212637&rtpof=true&sd=true)
 
 ---
 
