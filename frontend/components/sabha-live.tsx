@@ -28,6 +28,7 @@ import { useAuth } from '@/components/auth-provider'
 import { useLocale } from '@/components/locale-provider'
 import { cn } from '@/lib/utils'
 import { LiveRouteMap } from '@/components/live-route-map'
+import { MandiReceiptModal, MandiReceiptDocument, MandiReceiptData } from '@/components/mandi-loading-receipt'
 
 function resolveCropName(queryCrop?: string | null, draftCrop?: string | null, userCrops?: string[]): Crop {
   const candidate = (queryCrop && queryCrop.trim().toLowerCase() !== 'commodity' ? queryCrop.trim() : null)
@@ -51,6 +52,71 @@ function resolveOriginName(queryLoc?: string | null, draftLoc?: string | null, u
     return `${userDistrict}, ${userState || 'Gujarat'}`
   }
   return 'Rajkot, Gujarat'
+}
+
+function buildReceiptData({
+  id,
+  user,
+  originName,
+  winner,
+  quantity,
+  cropName,
+  cropLocalName,
+  localBaseline,
+  draft,
+  vehicleType,
+}: {
+  id: string
+  user: any
+  originName: string
+  winner: EvaluatedMandi
+  quantity: number
+  cropName: Crop
+  cropLocalName: string
+  localBaseline?: EvaluatedMandi
+  draft?: SabhaDraft | null
+  vehicleType: string
+}): MandiReceiptData {
+  const rawDigits = id.replace(/[^0-9]/g, '')
+  const passNumber = `APMC/GJ/2026/${rawDigits.slice(-5) || '84920'}`
+  const farmerName = user?.name || 'Yash'
+  const farmerMobile = user?.mobile || '+91 98765 43210'
+  const farmerLocation = originName || `${user?.village || 'Rajkot West'}, ${user?.district || 'Rajkot'}, Gujarat`
+  const grossVal = winner.gross || (winner.price * quantity)
+  const freightVal = winner.freight || 538
+  const netVal = winner.net || (grossVal - freightVal)
+  const tollVal = 80
+
+  return {
+    passNumber,
+    farmerName,
+    farmerKID: `KID-GJ-${rawDigits.slice(-4) || '8492'}`,
+    farmerMobile,
+    farmerLocation,
+    bankAccountMasked: 'SBI A/C ······4921',
+    bankIfsc: 'SBIN0001824',
+    mandiName: winner.name,
+    mandiYardCode: winner.name.toLowerCase().includes('gondal') ? 'GJ-APMC-042' : 'APMC-REG-A',
+    mandiLocation: `${winner.name}, ${winner.state}`,
+    mandiHighway: winner.highway,
+    transitDistance: winner.distance,
+    transitHours: '45 mins',
+    cropName: cropName,
+    cropLocalName,
+    quantityQuintals: quantity,
+    qualityGrade: 'Grade A (FAQ Standard)',
+    moistureContent: '10.8%',
+    modalRatePerQtl: winner.price,
+    grossProduceValue: grossVal,
+    freightCost: freightVal,
+    tollCost: tollVal,
+    netPayable: netVal,
+    localBenchmarkMandi: localBaseline?.name || 'Local Mandi',
+    localBenchmarkRate: localBaseline?.price,
+    surplusVsLocal: winner.advantage,
+    vehicleType: draft?.vehicleType || vehicleType || 'Pickup (1.5T LCV)',
+    weighbridgeLane: 'Gate #1 · Electronic Lane 2',
+  }
 }
 
 export function SabhaLive({ id }: { id: string }) {
@@ -445,6 +511,23 @@ export function ResultPage({ id }: { id: string }) {
 
   const { winner, localBaseline, ranked, originCoords } = evaluation
 
+  const [showReceiptModal, setShowReceiptModal] = useState(false)
+
+  const receiptData: MandiReceiptData = useMemo(() => {
+    return buildReceiptData({
+      id,
+      user,
+      originName,
+      winner,
+      quantity,
+      cropName,
+      cropLocalName: tData('crop', cropName),
+      localBaseline,
+      draft,
+      vehicleType,
+    })
+  }, [id, user, originName, winner, quantity, cropName, tData, localBaseline, draft, vehicleType])
+
   return (
     <AppShell>
       <div className="flex flex-col gap-8">
@@ -466,10 +549,11 @@ export function ResultPage({ id }: { id: string }) {
 
           <div className="flex items-center gap-2.5">
             <button
-              onClick={() => window.print()}
-              className="button-secondary !min-h-[36px] !px-3 text-xs font-semibold"
+              onClick={() => setShowReceiptModal(true)}
+              className="button-primary !min-h-[36px] !px-3.5 text-xs font-semibold shadow-sm flex items-center gap-1.5 cursor-pointer"
+              title="View & Print Official APMC Loading Pass & Receipt"
             >
-              <Printer className="size-3.5" />
+              <FileText className="size-3.5" />
               <span>{t('sabha.live.btn_print')}</span>
             </button>
             <Link
@@ -644,6 +728,18 @@ export function ResultPage({ id }: { id: string }) {
           </div>
         </section>
       </div>
+
+      {/* ── Hidden Dedicated Print Container (rendered exclusively in window.print) ── */}
+      <div className="hidden print:block print:w-full print:m-0 print:p-0">
+        <MandiReceiptDocument data={receiptData} />
+      </div>
+
+      {/* ── Interactive Official Loading Pass & Receipt Modal ───────────────── */}
+      <MandiReceiptModal
+        isOpen={showReceiptModal}
+        onClose={() => setShowReceiptModal(false)}
+        data={receiptData}
+      />
     </AppShell>
   )
 }

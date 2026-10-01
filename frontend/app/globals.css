@@ -1495,3 +1495,58 @@ button {
   }
 }
 
+/* ── Official APMC Mandi Loading Pass Print Rules ────────────────────── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 6mm 8mm;
+  }
+
+  /* Hide all app chrome, headers, navs, footers, tickers */
+  header,
+  nav,
+  aside,
+  footer,
+  .print\:hidden,
+  .mobile-nav,
+  .mobile-bottom-bar,
+  .leaflet-control-container,
+  .ticker-marquee {
+    display: none !important;
+  }
+
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Force APMC official receipt to show crisply on 1 single page */
+  #apmc-official-receipt {
+    display: block !important;
+    visibility: visible !important;
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 16px !important;
+    border: 1.5pt solid #1a1a1a !important;
+    background-color: #FFFDF9 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Prevent browser URL / date headers from colliding */
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+}
+
+
