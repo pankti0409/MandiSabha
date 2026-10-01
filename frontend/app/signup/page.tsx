@@ -22,6 +22,7 @@ export default function SignupPage() {
   const [language, setLanguage] = useState<'en' | 'hi' | 'gu'>(appLanguage)
   const [crops, setCrops] = useState<string[]>(['Onion', 'Wheat'])
   const [otp, setOtp] = useState('')
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -68,7 +69,13 @@ export default function SignupPage() {
         state,
         language,
         crops,
+        onboarded: true,
       })
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`farmer_onboarding_done_demo-${mobile}`, 'true')
+        localStorage.setItem(`farmer_onboarded_${mobile}`, 'true')
+        localStorage.setItem('farmer_global_onboarded', 'true')
+      }
       router.push('/dashboard')
     } catch (err) {
       setError(err instanceof Error ? err.message : t('auth.validation.invalid_otp'))
@@ -214,9 +221,32 @@ export default function SignupPage() {
                 </div>
               </div>
 
+              {/* Terms and Privacy Checkbox */}
+              <label className="flex items-start gap-2.5 text-xs text-muted-foreground cursor-pointer select-none py-1">
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-0.5 size-4 rounded border-border text-primary focus:ring-primary accent-[var(--primary)] cursor-pointer"
+                />
+                <span>
+                  {t('auth.agree_terms', {
+                    terms: '',
+                    privacy: ''
+                  }).split(/\{\{.*?\}\}/)[0] || 'I agree to the '}
+                  <Link href="/terms" target="_blank" className="font-semibold text-foreground underline hover:text-primary">
+                    {t('auth.terms_link')}
+                  </Link>{' '}
+                  &{' '}
+                  <Link href="/privacy" target="_blank" className="font-semibold text-foreground underline hover:text-primary">
+                    {t('auth.privacy_link')}
+                  </Link>
+                </span>
+              </label>
+
               <button
                 type="submit"
-                disabled={busy}
+                disabled={busy || !agreedToTerms}
                 className="button-primary min-h-12 w-full justify-center text-sm font-bold shadow-sm mt-2 disabled:opacity-50"
               >
                 <span>{busy ? t('auth.login.btn_sending') : t('auth.signup.btn_continue')}</span>

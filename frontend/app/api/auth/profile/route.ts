@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
     const updatedUser: DemoUser = {
       ...existingUser,
       ...body,
+      onboarded: true,
       crops: Array.isArray(body.crops)
         ? body.crops
         : existingUser.crops || (body.cropDetails ? body.cropDetails.map((c: any) => c.name) : ['Onion']),

@@ -320,7 +320,7 @@ export function SabhaLive({ id }: { id: string }) {
                 </div>
               ) : (
                 <div className="mt-4">
-                  <LiveRouteMap targetMandi="Surat APMC" initialHeight="h-[360px]" className="border-0 shadow-none p-0" />
+                  <LiveRouteMap targetMandi="Surat APMC" initialHeight="h-[480px] lg:h-[520px]" className="border-0 shadow-none p-0" />
                 </div>
               )}
             </div>
@@ -566,7 +566,7 @@ export function ResultPage({ id }: { id: string }) {
               {`Verified route from ${activeOrigin} farm hub to Surat APMC Gate 2 via NH48 Express corridor`}
             </p>
           </div>
-          <LiveRouteMap targetMandi="Surat APMC" initialHeight="h-[390px]" />
+          <LiveRouteMap targetMandi="Surat APMC" initialHeight="h-[480px] lg:h-[540px]" />
         </section>
 
         {/* ── Mandi Breakdown Comparison Table ────────────────────────── */}

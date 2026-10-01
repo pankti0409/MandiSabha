@@ -221,10 +221,11 @@ export default function DashboardPage() {
                         key={range}
                         onClick={() => {
                           setActiveRange(range)
-                          setSelectedBar(range === '3M' ? 2 : 5)
+                          const nextLen = range === '3M' ? 3 : range === '6M' ? 6 : 12
+                          setSelectedBar(nextLen - 1)
                         }}
                         className={cn(
-                          'rounded-md px-2.5 py-1 transition-all',
+                          'rounded-md px-2.5 py-1 transition-all cursor-pointer',
                           activeRange === range ? 'bg-primary text-primary-foreground shadow-2xs' : 'text-muted-foreground hover:text-foreground'
                         )}
                       >
@@ -257,8 +258,16 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Bars Container */}
-                <div className="relative z-10 flex items-end justify-between gap-2 sm:gap-5 h-48 px-1 sm:px-3">
-                  {(activeRange === '3M' ? data.monthlyData.slice(-3) : data.monthlyData).map((item, index, arr) => {
+                <div className={cn(
+                  'relative z-10 flex items-end justify-between h-48 px-1 sm:px-2',
+                  activeRange === '1Y' ? 'gap-1 sm:gap-2' : activeRange === '6M' ? 'gap-2 sm:gap-4' : 'gap-4 sm:gap-8 max-w-lg mx-auto'
+                )}>
+                  {(activeRange === '3M'
+                    ? data.monthlyData.slice(-3)
+                    : activeRange === '6M'
+                    ? data.monthlyData.slice(-6)
+                    : data.monthlyData.slice(-12)
+                  ).map((item, index, arr) => {
                     const isSelected = selectedBar === index || (selectedBar === null && index === arr.length - 1)
                     const earnedHeight = Math.max(14, Math.min(100, Math.round((item.earned / 16000) * 100)))
                     const baselineHeight = Math.max(10, Math.round((item.earned * 0.62 / 16000) * 100))
@@ -268,14 +277,14 @@ export default function DashboardPage() {
                         key={item.month}
                         onClick={() => setSelectedBar(index)}
                         className={cn(
-                          'group flex-1 flex flex-col items-center justify-end h-full cursor-pointer relative py-1 rounded-md transition-all',
+                          'group flex-1 min-w-0 flex flex-col items-center justify-end h-full cursor-pointer relative py-1 rounded-md transition-all',
                           isSelected ? 'bg-muted/20' : 'hover:bg-muted/10'
                         )}
                       >
                         {/* Tooltip on Hover / Active - Sharp, clean financial chip */}
                         <div
                           className={cn(
-                            'absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md border border-border bg-card/95 backdrop-blur-sm px-2.5 py-1 text-[11px] shadow-md transition-all pointer-events-none z-20 flex items-center gap-1.5',
+                            'absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md border border-border bg-card/95 backdrop-blur-sm px-2 py-1 text-[11px] shadow-md transition-all pointer-events-none z-20 flex items-center gap-1.5',
                             isSelected ? 'opacity-100 scale-100' : 'opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100'
                           )}
                         >
@@ -286,10 +295,13 @@ export default function DashboardPage() {
                         </div>
 
                         {/* Dual Bars: Local Baseline vs Net Realized Profit - Sharp, architectural precision */}
-                        <div className="w-full flex items-end justify-center gap-1.5 sm:gap-2 h-[142px] pb-0.5 border-b border-border/80">
+                        <div className="w-full flex items-end justify-center gap-1 sm:gap-1.5 h-[142px] pb-0.5 border-b border-border/80">
                           {/* Local Baseline Bar - Crisp muted slate */}
                           <div
-                            className="w-3 sm:w-4 rounded-t-[2px] bg-slate-200 dark:bg-slate-700/80 transition-all duration-200 group-hover:bg-slate-300 dark:group-hover:bg-slate-600"
+                            className={cn(
+                              'rounded-t-[2px] bg-slate-200 dark:bg-slate-700/80 transition-all duration-200 group-hover:bg-slate-300 dark:group-hover:bg-slate-600',
+                              activeRange === '1Y' ? 'w-2 sm:w-3' : activeRange === '6M' ? 'w-3 sm:w-4' : 'w-4 sm:w-6'
+                            )}
                             style={{ height: `${baselineHeight}%` }}
                             title={`${t('dashboard.chart.local_baseline')}: ${formatCurrency(Math.round(item.earned * 0.62))}`}
                           />
@@ -297,7 +309,8 @@ export default function DashboardPage() {
                           {/* Net Realized Profit Bar - Crisp emerald with subtle top edge */}
                           <div
                             className={cn(
-                              'w-4 sm:w-5 rounded-t-[2px] transition-all duration-200',
+                              'rounded-t-[2px] transition-all duration-200',
+                              activeRange === '1Y' ? 'w-2.5 sm:w-4' : activeRange === '6M' ? 'w-4 sm:w-5' : 'w-5 sm:w-8',
                               isSelected
                                 ? 'bg-emerald-600 dark:bg-emerald-500 shadow-sm'
                                 : 'bg-emerald-600/80 dark:bg-emerald-500/80 group-hover:bg-emerald-600 dark:group-hover:bg-emerald-500'
@@ -310,7 +323,8 @@ export default function DashboardPage() {
                         {/* Month Label */}
                         <div className="flex flex-col items-center pt-2">
                           <span className={cn(
-                            'text-[11px] font-mono transition-colors block',
+                            'font-mono transition-colors block truncate',
+                            activeRange === '1Y' ? 'text-[9.5px] sm:text-[10.5px]' : 'text-[11px]',
                             isSelected ? 'text-foreground font-bold' : 'text-muted-foreground font-medium group-hover:text-foreground'
                           )}>
                             {item.month}

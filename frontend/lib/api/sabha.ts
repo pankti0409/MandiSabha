@@ -53,6 +53,12 @@ export async function getDashboardData() {
     ],
     earnings: [1800, 3900, 7400, 11200, 14100, 15800],
     monthlyData: [
+      { month: 'Oct', earned: 1200, sabhas: 1 },
+      { month: 'Nov', earned: 1800, sabhas: 1 },
+      { month: 'Dec', earned: 2100, sabhas: 2 },
+      { month: 'Jan', earned: 2400, sabhas: 2 },
+      { month: 'Feb', earned: 2700, sabhas: 2 },
+      { month: 'Mar', earned: 2900, sabhas: 2 },
       { month: 'Apr', earned: 3200, sabhas: 2 },
       { month: 'May', earned: 5400, sabhas: 3 },
       { month: 'Jun', earned: 7800, sabhas: 4 },

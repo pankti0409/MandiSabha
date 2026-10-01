@@ -13,22 +13,24 @@ import {
   Sparkles, 
   TrendingUp, 
   Radio, 
-  ChevronRight,
-  ChevronLeft,
-  Menu,
-  X,
-  UserCheck,
-  ShieldCheck,
-  Bell,
-  Leaf,
-  Newspaper,
-  Mic
+  ChevronRight, 
+  ChevronLeft, 
+  ArrowLeft,
+  Menu, 
+  X, 
+  UserCheck, 
+  ShieldCheck, 
+  Bell, 
+  Leaf, 
+  Newspaper, 
+  Mic 
 } from 'lucide-react'
 import { useAuth } from './auth-provider'
 import { useLocale } from './locale-provider'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { VoiceAssistantModal } from '@/components/voice-assistant-modal'
+import { FarmerOnboardingModal } from '@/components/farmer-onboarding-modal'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const liveMarketNewsEn = [
@@ -283,24 +285,44 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* ── Main Content Area with Full Screen Width ────────────────────── */}
       <div className="flex-1 min-w-0 flex flex-col min-h-screen">
         {/* Sticky Top Header with Highlighted Mandi News Ticker & User Profile */}
-        <header className="sticky top-0 z-20 w-full border-b border-border/70 bg-card/85 backdrop-blur-xl px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-4">
-          {/* Mobile Brand / Toggle */}
-          <div className="flex items-center gap-2.5 md:hidden">
+        <header className="sticky top-0 z-20 w-full border-b border-border/70 bg-card/85 backdrop-blur-xl px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-3 sm:gap-4">
+          {/* Back button & Mobile Brand / Toggle */}
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="grid size-8 place-items-center rounded-lg border border-border bg-card text-foreground cursor-pointer"
-              aria-label="Toggle menu"
+              type="button"
+              onClick={() => {
+                if (typeof window !== 'undefined' && window.history.length > 1) {
+                  router.back()
+                } else {
+                  router.push('/dashboard')
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border/70 bg-card hover:bg-muted/70 text-xs text-muted-foreground hover:text-foreground transition-all cursor-pointer shrink-0 shadow-2xs group"
+              title="Go back"
+              aria-label="Go back"
             >
-              {mobileMenuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+              <ArrowLeft className="size-3.5 transition-transform group-hover:-translate-x-0.5" />
+              <span className="text-[11px] font-medium hidden sm:inline">{t('common.actions.back') || 'Back'}</span>
             </button>
-            <Link href="/dashboard" className="flex items-center gap-2">
-              <span className="grid size-6 place-items-center rounded-md bg-primary text-white shadow-2xs">
-                <Leaf className="size-3.5" />
-              </span>
-              <span className="font-display font-bold text-sm">
-                Mandi <span className="text-primary">Sabha</span>
-              </span>
-            </Link>
+
+            {/* Mobile Brand / Toggle */}
+            <div className="flex items-center gap-2 md:hidden">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="grid size-8 place-items-center rounded-lg border border-border bg-card text-foreground cursor-pointer"
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+              </button>
+              <Link href="/dashboard" className="flex items-center gap-2">
+                <span className="grid size-6 place-items-center rounded-md bg-primary text-white shadow-2xs">
+                  <Leaf className="size-3.5" />
+                </span>
+                <span className="font-display font-bold text-sm">
+                  Mandi <span className="text-primary">Sabha</span>
+                </span>
+              </Link>
+            </div>
           </div>
 
           {/* ── Live Agriculture & Market News Feed Ticker (Full-Width, Crisp & Minimal) ── */}
@@ -492,6 +514,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           router.push(`/sabha/new?crop=${data.crop}&quantity=${data.quantity}&location=${encodeURIComponent(data.location)}&urgency=${data.urgency}`)
         }}
       />
+
+      {/* One-time Onboarding Modal for New Unregistered Farmers Only */}
+      <FarmerOnboardingModal />
 
       {/* ── Mobile Floating Bottom Navigation ────────────────────────────── */}
       <nav className="fixed inset-x-3 bottom-3 z-30 flex md:hidden items-center justify-around rounded-2xl border border-border/80 bg-card/90 px-3 py-2 shadow-2xl backdrop-blur-xl">

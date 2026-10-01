@@ -19,6 +19,7 @@ function LoginForm() {
 
   const [mobile, setMobile] = useState('')
   const [otp, setOtp] = useState('')
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [step, setStep] = useState<'mobile' | 'otp'>('mobile')
   const [error, setError] = useState(
     queryError
@@ -132,9 +133,32 @@ function LoginForm() {
                 </div>
               </div>
 
+              {/* Terms and Privacy Checkbox */}
+              <label className="flex items-start gap-2.5 text-xs text-muted-foreground cursor-pointer select-none py-1">
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-0.5 size-4 rounded border-border text-primary focus:ring-primary accent-[var(--primary)] cursor-pointer"
+                />
+                <span>
+                  {t('auth.agree_terms', {
+                    terms: '',
+                    privacy: ''
+                  }).split(/\{\{.*?\}\}/)[0] || 'I agree to the '}
+                  <Link href="/terms" target="_blank" className="font-semibold text-foreground underline hover:text-primary">
+                    {t('auth.terms_link')}
+                  </Link>{' '}
+                  &{' '}
+                  <Link href="/privacy" target="_blank" className="font-semibold text-foreground underline hover:text-primary">
+                    {t('auth.privacy_link')}
+                  </Link>
+                </span>
+              </label>
+
               <button
                 type="submit"
-                disabled={busy || mobile.length < 10}
+                disabled={busy || mobile.length < 10 || !agreedToTerms}
                 className="button-primary min-h-12 w-full justify-center text-sm font-bold shadow-sm disabled:opacity-50"
               >
                 <span>{busy ? t('auth.login.btn_sending') : t('auth.login.btn_continue')}</span>

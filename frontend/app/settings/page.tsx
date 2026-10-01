@@ -106,6 +106,7 @@ export default function SettingsPage() {
       ? user.village.split(',')[1].trim()
       : user?.district || 'Gujarat')
   )
+  const [mobile, setMobile] = useState(user?.mobile || '9876543210')
   const [saving, setSaving] = useState(false)
   const [profileSaved, setProfileSaved] = useState(false)
 
@@ -132,6 +133,9 @@ export default function SettingsPage() {
       } else {
         setVillage(user.village)
       }
+    }
+    if (user?.mobile) {
+      setMobile(user.mobile)
     }
     if (user?.state) {
       setStateName(user.state)
@@ -188,6 +192,7 @@ export default function SettingsPage() {
         village: village.trim(),
         state: stateName.trim(),
         district: stateName.trim(),
+        mobile: mobile.replace(/\D/g, '').slice(0, 10),
       })
       setProfileSaved(true)
       triggerSave()
@@ -259,6 +264,30 @@ export default function SettingsPage() {
                   className="w-full rounded-lg bg-muted/40 border border-transparent focus:border-primary/40 focus:bg-background px-3 py-2 text-xs font-normal text-foreground outline-none transition-all placeholder:text-muted-foreground/60"
                   placeholder={t('settings.profile.name_placeholder')}
                 />
+              </div>
+
+              <div>
+                <label 
+                  htmlFor="profile-phone" 
+                  className="text-[11px] font-medium text-foreground block mb-1.5"
+                >
+                  {t('settings.profile.phone_label')}
+                </label>
+                <div className="relative flex items-center">
+                  <span className="absolute left-3 text-xs text-muted-foreground font-mono select-none pointer-events-none">
+                    +91
+                  </span>
+                  <input
+                    id="profile-phone"
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    value={mobile}
+                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    className="w-full rounded-lg bg-muted/40 border border-transparent focus:border-primary/40 focus:bg-background pl-11 pr-3 py-2 text-xs font-mono text-foreground outline-none transition-all placeholder:text-muted-foreground/60"
+                    placeholder={t('settings.profile.phone_placeholder')}
+                  />
+                </div>
               </div>
 
               <div>

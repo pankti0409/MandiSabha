@@ -268,7 +268,7 @@ export function LiveRouteMap({
   targetMandi = 'Surat APMC',
   onSelectMandi,
   className,
-  initialHeight = 'h-[380px]',
+  initialHeight = 'h-[460px] lg:h-[500px]',
   compact = false,
 }: LiveRouteMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null)
@@ -614,24 +614,45 @@ export function LiveRouteMap({
         <div className="relative flex-1 w-full overflow-hidden bg-muted/30">
           <div ref={mapContainerRef} className="absolute inset-0 w-full h-full z-10" />
 
-          {/* Floating Map Layer Switcher (Top Right) */}
-          <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 bg-card/90 backdrop-blur-md p-1 rounded-xl border border-border shadow-md">
-            {(['voyager', 'dark', 'satellite'] as const).map((style) => (
+          {/* Floating Map Layer Switcher & Zoom Controls (Top Right) */}
+          <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1.5">
+            <div className="flex items-center gap-0.5 bg-card/90 backdrop-blur-md p-1 rounded-xl border border-border shadow-md">
               <button
-                key={style}
                 type="button"
-                onClick={() => setMapStyle(style)}
-                title={`Switch map layer to ${style}`}
-                className={cn(
-                  'px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase transition-all',
-                  mapStyle === style
-                    ? 'bg-primary text-white shadow-2xs'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
+                onClick={() => mapInstanceRef.current?.zoomIn()}
+                className="size-6 grid place-items-center rounded-lg text-xs font-bold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                title="Zoom In"
               >
-                {style === 'voyager' ? 'Road' : style === 'dark' ? 'Dark' : 'Sat'}
+                +
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={() => mapInstanceRef.current?.zoomOut()}
+                className="size-6 grid place-items-center rounded-lg text-xs font-bold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                title="Zoom Out"
+              >
+                −
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1 bg-card/90 backdrop-blur-md p-1 rounded-xl border border-border shadow-md">
+              {(['voyager', 'dark', 'satellite'] as const).map((style) => (
+                <button
+                  key={style}
+                  type="button"
+                  onClick={() => setMapStyle(style)}
+                  title={`Switch map layer to ${style}`}
+                  className={cn(
+                    'px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase transition-all cursor-pointer',
+                    mapStyle === style
+                      ? 'bg-primary text-white shadow-2xs'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {style === 'voyager' ? 'Road' : style === 'dark' ? 'Dark' : 'Sat'}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Floating Highway Telemetry Pill (Bottom Left) */}

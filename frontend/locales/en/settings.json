@@ -10,6 +10,8 @@
     "village_placeholder": "Enter village",
     "state_label": "State",
     "state_placeholder": "Enter state",
+    "phone_label": "Phone Number",
+    "phone_placeholder": "10-digit mobile number",
     "save_btn": "Save Information",
     "saving_btn": "Saving...",
     "saved_success": "Information saved"

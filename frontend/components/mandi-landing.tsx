@@ -228,11 +228,13 @@ function Footer() {
             Better information for every crop, every season, every farmer.
           </p>
         </div>
-        <div className="flex flex-wrap gap-6 text-sm font-semibold text-secondary-text">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-semibold text-secondary-text">
           <Link href="/explore" className="hover:text-brand transition-colors">Explore prices</Link>
           <Link href="/dashboard" className="hover:text-brand transition-colors">Dashboard</Link>
           <Link href="/settings" className="hover:text-brand transition-colors">Settings</Link>
           <a href="#faq" className="hover:text-brand transition-colors">Help & FAQ</a>
+          <Link href="/privacy" className="hover:text-brand transition-colors">Privacy Policy</Link>
+          <Link href="/terms" className="hover:text-brand transition-colors">Terms of Use</Link>
           <span className="text-muted-text">© 2026 Mandi Sabha</span>
         </div>
       </div>

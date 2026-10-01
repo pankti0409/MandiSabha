@@ -10,6 +10,8 @@
     "village_placeholder": "ગામનું નામ દાખલ કરો",
     "state_label": "રાજ્ય",
     "state_placeholder": "રાજ્યનું નામ દાખલ કરો",
+    "phone_label": "ફોન નંબર",
+    "phone_placeholder": "10 અંકનો મોબાઇલ નંબર",
     "save_btn": "માહિતી સાચવો",
     "saving_btn": "સાચવી રહ્યાં છીએ...",
     "saved_success": "માહિતી સાચવવામાં આવી"

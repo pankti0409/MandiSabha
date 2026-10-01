@@ -10,6 +10,8 @@
     "village_placeholder": "गांव का नाम दर्ज करें",
     "state_label": "राज्य",
     "state_placeholder": "राज्य का नाम दर्ज करें",
+    "phone_label": "फोन नंबर",
+    "phone_placeholder": "10 अंकों का मोबाइल नंबर",
     "save_btn": "जानकारी सहेजें",
     "saving_btn": "सहेजा जा रहा है...",
     "saved_success": "जानकारी सहेज ली गई"
