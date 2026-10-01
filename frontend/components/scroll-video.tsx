@@ -188,12 +188,12 @@ export function ScrollVideo() {
           </div>
         )}
 
-        {/* ── Only a narrow bottom scrim — keeps 85% of screen fully bright ─ */}
+        {/* ── Bottom scrim — darkens lower third so text is legible ─ */}
         <div
           className="absolute inset-0 z-20 pointer-events-none"
           style={{
             background:
-              'linear-gradient(to top, rgba(2,11,4,0.75) 0%, rgba(2,11,4,0.15) 28%, transparent 55%)',
+              'linear-gradient(to top, rgba(2,11,4,0.88) 0%, rgba(2,11,4,0.65) 35%, rgba(2,11,4,0.25) 60%, transparent 80%)',
           }}
         />
 
@@ -212,8 +212,8 @@ export function ScrollVideo() {
           <div className="flex flex-col items-center text-center px-6">
 
             {/* Frosted pill: backdrop behind text ONLY, not the whole screen */}
-            <div className="rounded-2xl px-8 py-5 backdrop-blur-[2px]
-              bg-black/20 border border-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+            <div className="rounded-2xl px-8 py-6 backdrop-blur-md
+              bg-black/60 border border-white/15 shadow-[0_8px_40px_rgba(0,0,0,0.6)]">
 
               {/* Chapter text stack */}
               <div className="relative" style={{ minHeight: '4rem' }}>

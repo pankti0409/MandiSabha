@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import React, { useState, useEffect, Suspense, useRef } from 'react'
 import { 
   ArrowRight, 
   Check, 
@@ -156,6 +156,8 @@ function NewSabhaContent() {
   const [locFeedback, setLocFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [originCoords, setOriginCoords] = useState<[number, number] | null>([22.3039, 70.8022])
   const [routeDistanceKm, setRouteDistanceKm] = useState<number>(36)
+  // Guard: when voice explicitly pins a mandi, prevent geocode useEffect from overriding it
+  const mandiLockedByVoice = useRef(false)
 
   // Geocode location input whenever user types a new farm location
   useEffect(() => {
@@ -168,9 +170,13 @@ function NewSabhaContent() {
           const data = await res.json()
           if (!isCancelled && data.lat && data.lon) {
             setOriginCoords([data.lat, data.lon])
-            if (location.toLowerCase().includes('rajkot') || (Math.abs(data.lat - 22.3) < 0.5 && Math.abs(data.lon - 70.8) < 0.5)) {
-              setSelectedMandiTarget('Gondal APMC')
-              setRouteDistanceKm(36)
+            // ⚠️ Only auto-suggest a mandi if voice has NOT pinned a specific destination.
+            // If user explicitly said "send to Morbi" via voice, never override that here.
+            if (!mandiLockedByVoice.current) {
+              if (location.toLowerCase().includes('rajkot') || (Math.abs(data.lat - 22.3) < 0.5 && Math.abs(data.lon - 70.8) < 0.5)) {
+                setSelectedMandiTarget('Gondal APMC')
+                setRouteDistanceKm(36)
+              }
             }
           }
         }
@@ -258,7 +264,7 @@ function NewSabhaContent() {
     }
   }
 
-  function handleVoiceFill(data: { crop: string; quantity: number; location: string; urgency: 'today' | 'soon' | 'week' }) {
+  function handleVoiceFill(data: { crop: string; quantity: number; location: string; urgency: 'today' | 'soon' | 'week'; targetMandi?: string }) {
     if (allCrops.some((c) => c.name === data.crop)) {
       setCrop(data.crop as Crop)
     }
@@ -268,6 +274,19 @@ function NewSabhaContent() {
     const offset = data.urgency === 'today' ? 0 : data.urgency === 'soon' ? 3 : 7
     handlePresetSelect(data.urgency, offset)
 
+    // ── Destination Mandi Logic ───────────────────────────────────────────
+    // Priority 1: User explicitly said "deliver to X" — honor it unconditionally
+    // Lock the mandi so the geocode useEffect cannot override it afterward
+    if (data.targetMandi) {
+      mandiLockedByVoice.current = true
+      setSelectedMandiTarget(data.targetMandi)
+      setRouteDistanceKm(60) // will be recomputed by map
+      return
+    }
+    // No explicit destination — release any previous voice lock so geocode auto-suggest can work
+    mandiLockedByVoice.current = false
+
+    // Priority 2: Infer a reasonable default based on origin location
     const loc = (data.location || '').toLowerCase()
     if (loc.includes('rajkot') || loc.includes('gondal') || loc.includes('morbi')) {
       setSelectedMandiTarget('Gondal APMC')

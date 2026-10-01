@@ -27,13 +27,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const rawSession = request.cookies.get(cookieName)?.value
-    let existingUser: Partial<DemoUser> | null = null
-    if (rawSession) {
-      try {
-        existingUser = JSON.parse(decodeURIComponent(rawSession))
-      } catch {}
+    // ── Step 1: Check the DATABASE first for a returning user ─────────────
+    // This is the primary source of truth — cookie is just a fallback for new users
+    let dbExistingUser: Partial<DemoUser> | null = null
+    try {
+      const { getUserFromDb } = await import('@/lib/db')
+      dbExistingUser = await getUserFromDb(mobile)
+      if (dbExistingUser) {
+        console.log('[OTP] Returning user found in DB:', mobile, dbExistingUser.name)
+      }
+    } catch (dbErr) {
+      console.warn('[OTP] DB lookup failed, will fall back to cookie:', dbErr)
     }
+
+    // ── Step 2: Cookie fallback (new users or DB-miss) ────────────────────
+    const rawSession = request.cookies.get(cookieName)?.value
+    let cookieUser: Partial<DemoUser> | null = null
+    if (rawSession) {
+      try { cookieUser = JSON.parse(decodeURIComponent(rawSession)) } catch {}
+    }
+
+    // Merge priority: DB profile > cookie > submitted profile body > defaults
+    const existingUser = dbExistingUser || cookieUser
 
     const profile = body.profile || {}
     const hasProfile = Boolean(profile.name && profile.name.trim() !== '' && profile.village && profile.village.trim() !== '')
@@ -48,11 +63,11 @@ export async function POST(request: NextRequest) {
 
     const user: DemoUser = {
       id: existingUser?.id || `usr-${mobile}`,
-      name: profile.name || (wasAlreadyOnboarded ? existingUser!.name : 'Farmer'),
+      name: profile.name || (wasAlreadyOnboarded ? existingUser!.name! : (dbExistingUser?.name && dbExistingUser.name !== 'Farmer' ? dbExistingUser.name : 'Farmer')),
       mobile,
-      village: profile.village || (wasAlreadyOnboarded ? existingUser!.village : ''),
-      district: profile.district || (wasAlreadyOnboarded ? existingUser!.district : ''),
-      state: profile.state || (wasAlreadyOnboarded ? existingUser!.state : ''),
+      village: profile.village || existingUser?.village || '',
+      district: profile.district || existingUser?.district || '',
+      state: profile.state || existingUser?.state || '',
       language: profile.language || existingUser?.language || 'en',
       crops: profile.crops || existingUser?.crops || [],
       cropDetails: profile.cropDetails || existingUser?.cropDetails,
@@ -64,13 +79,22 @@ export async function POST(request: NextRequest) {
       primaryMandi: profile.primaryMandi || existingUser?.primaryMandi,
       email: profile.email || existingUser?.email,
       avatar: profile.avatar || existingUser?.avatar,
-      onboarded: hasProfile || wasAlreadyOnboarded,
+      onboarded: hasProfile || wasAlreadyOnboarded || Boolean(dbExistingUser?.onboarded),
     }
 
-    const response = NextResponse.json({ user, success: true })
+    // Persist user record in SQLite database
+    let persistedUser = user
+    try {
+      const { saveUserToDb } = await import('@/lib/db')
+      persistedUser = await saveUserToDb(user)
+    } catch (dbErr) {
+      console.error('[DB] Failed to save user to SQLite:', dbErr)
+    }
+
+    const response = NextResponse.json({ user: persistedUser, success: true })
 
     // Set persistent session cookie (30 days)
-    response.cookies.set(cookieName, encodeURIComponent(JSON.stringify(user)), {
+    response.cookies.set(cookieName, encodeURIComponent(JSON.stringify(persistedUser)), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -90,4 +114,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-

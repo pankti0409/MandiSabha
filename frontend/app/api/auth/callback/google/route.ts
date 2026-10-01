@@ -60,22 +60,58 @@ export async function GET(request: NextRequest) {
 
     const googleUser = await userinfoResponse.json()
 
-    // 3. Construct user session object compatible with Mandi Sabha
-    const user = {
+    // 3. Look up existing user profile or create a new one
+    let user: any = {
       id: `google-${googleUser.sub}`,
       name: googleUser.name || 'Farmer',
-      email: googleUser.email,
-      mobile: '',
-      village: 'Nashik',
-      district: 'Nashik',
-      state: 'Maharashtra',
-      language: 'en',
-      crops: ['Onion', 'Wheat'],
-      avatar: googleUser.picture,
+      email: googleUser.email || '',
+      mobile: '',                // Google users start with no mobile
+      village: '',
+      district: '',
+      state: '',
+      language: 'en' as const,
+      crops: ['Wheat'],
+      avatar: googleUser.picture || null,
+      onboarded: false,
+    }
+
+    // Try to fetch an existing profile from DB (in case user logged in before)
+    try {
+      const { getUserFromDb, saveUserToDb } = await import('@/lib/db')
+      const existing = googleUser.email
+        ? await getUserFromDb(`google-${googleUser.sub}`)
+        : null
+
+      if (existing) {
+        // Merge: keep DB data but refresh avatar/name from Google
+        user = {
+          ...existing,
+          name: existing.name && existing.name !== 'Farmer' ? existing.name : (googleUser.name || 'Farmer'),
+          avatar: googleUser.picture || existing.avatar,
+          email: googleUser.email || existing.email,
+        }
+      } else {
+        // First login — persist to DB
+        user = await saveUserToDb({
+          id: `google-${googleUser.sub}`,
+          name: googleUser.name || 'Farmer',
+          email: googleUser.email || '',
+          mobile: `g-${googleUser.sub.slice(-10)}`, // synthetic mobile for DB key
+          village: '',
+          district: '',
+          state: '',
+          language: 'en',
+          crops: ['Wheat'],
+          avatar: googleUser.picture || null,
+        })
+      }
+    } catch (dbErr) {
+      console.warn('[Google Auth] DB persist failed, using session only:', dbErr)
     }
 
     const targetUrl = next.startsWith('/') ? next : '/dashboard'
-    const response = NextResponse.redirect(new URL(targetUrl, request.url))
+    const redirectTarget = !user.onboarded ? '/signup?step=profile' : targetUrl
+    const response = NextResponse.redirect(new URL(redirectTarget, request.url))
 
     // 4. Set the session cookie
     response.cookies.set(cookieName, encodeURIComponent(JSON.stringify(user)), {

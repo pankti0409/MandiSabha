@@ -92,11 +92,6 @@ export function signOtpChallenge(mobile: string, otp: string, ttlSeconds = 300):
 export function verifyOtpChallenge(mobile: string, enteredOtp: string, token: string): boolean {
   const cleanMobile = mobile.replace(/\D/g, '').slice(-10)
 
-  // Dev bypass fallback for local offline testing
-  if (enteredOtp === '123456') {
-    return true
-  }
-
   if (!token) return false
 
   try {

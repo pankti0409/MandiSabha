@@ -507,7 +507,45 @@ export async function createSabha(draft: SabhaDraft) {
     } catch {}
   }
 
+  // Persist to SQLite Database via API
+  try {
+    await fetch('/api/sabha', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id, draft }),
+    })
+  } catch (err) {
+    console.warn('[SABHA] Database persistence deferred:', err)
+  }
+
   return session
+}
+
+export async function saveSabhaResult(id: string, draft: any, recommendation: any) {
+  try {
+    await fetch('/api/sabha', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id, draft, recommendation, status: 'completed' }),
+    })
+  } catch (err) {
+    console.warn('[SABHA] Failed to save result to DB:', err)
+  }
+}
+
+export async function fetchUserSabhas(): Promise<any[]> {
+  try {
+    const res = await fetch('/api/sabha', { cache: 'no-store' })
+    if (res.ok) {
+      const data = await res.json()
+      if (Array.isArray(data.sabhas)) {
+        return data.sabhas
+      }
+    }
+  } catch (err) {
+    console.warn('[SABHA] Failed to fetch sabhas from DB:', err)
+  }
+  return []
 }
 
 export type DashboardSession = {
@@ -531,45 +569,75 @@ export type DashboardData = {
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
-  await new Promise((resolve) => setTimeout(resolve, 150))
+  let dbStats: any = null
+  try {
+    const res = await fetch('/api/dashboard', { cache: 'no-store' })
+    if (res.ok) {
+      dbStats = await res.json()
+    }
+  } catch {}
+
+  const defaultPulse = [
+    { crop: 'Onion', price: 2140, change: 4.2, mandi: 'Surat', high: 2280, low: 1980, trend: [2010, 2040, 2080, 2110, 2140] },
+    { crop: 'Wheat', price: 2640, change: 1.8, mandi: 'Pune', high: 2720, low: 2580, trend: [2590, 2600, 2610, 2630, 2640] },
+    { crop: 'Tomato', price: 2480, change: -1.5, mandi: 'Ahmedabad', high: 2600, low: 2350, trend: [2550, 2520, 2500, 2490, 2480] },
+    { crop: 'Soybean', price: 4750, change: 3.8, mandi: 'Indore', high: 4890, low: 4620, trend: [4580, 4620, 4680, 4710, 4750] },
+    { crop: 'Cotton', price: 7200, change: 2.1, mandi: 'Rajkot', high: 7350, low: 7050, trend: [7050, 7100, 7120, 7180, 7200] },
+    { crop: 'Garlic', price: 8900, change: 5.4, mandi: 'Mandsaur', high: 9200, low: 8400, trend: [8400, 8550, 8700, 8820, 8900] },
+  ]
+
+  const defaultMonthly = [
+    { month: 'Oct', earned: 1200, sabhas: 1 },
+    { month: 'Nov', earned: 1800, sabhas: 1 },
+    { month: 'Dec', earned: 2100, sabhas: 2 },
+    { month: 'Jan', earned: 2400, sabhas: 2 },
+    { month: 'Feb', earned: 2700, sabhas: 2 },
+    { month: 'Mar', earned: 2900, sabhas: 2 },
+    { month: 'Apr', earned: 3200, sabhas: 2 },
+    { month: 'May', earned: 5400, sabhas: 3 },
+    { month: 'Jun', earned: 7800, sabhas: 4 },
+    { month: 'Jul', earned: 10500, sabhas: 5 },
+    { month: 'Aug', earned: 13200, sabhas: 6 },
+    { month: 'Sep', earned: 15800, sabhas: 8 },
+  ]
+
+  if (dbStats && dbStats.sessions && dbStats.sessions.length > 0) {
+    const totalG = dbStats.totalGain || 6150
+    return {
+      sessions: dbStats.sessions,
+      earnings: [
+        Math.round(totalG * 0.15),
+        Math.round(totalG * 0.32),
+        Math.round(totalG * 0.52),
+        Math.round(totalG * 0.74),
+        Math.round(totalG * 0.88),
+        totalG,
+      ],
+      monthlyData: defaultMonthly,
+      winners: dbStats.winners?.length > 0 ? dbStats.winners : [
+        { name: 'Gondal APMC', value: 1, percent: 100, avgGain: `₹${totalG.toLocaleString('en-IN')}`, crop: 'Wheat / Onion' },
+      ],
+      pulse: defaultPulse,
+    }
+  }
+
   return {
     sessions: [
-      { id: 'sb-001', date: 'Today, 09:30 AM', crop: 'Onion', quantity: 20, mandi: 'Surat Mandi', gain: 8200, status: 'Ready to Dispatch', distance: '142 km', pricePerQ: 2140 },
-      { id: 'sb-002', date: '18 Sep 2026', crop: 'Wheat', quantity: 35, mandi: 'Pune Market Yard', gain: 5600, status: 'Completed', distance: '188 km', pricePerQ: 2640 },
-      { id: 'sb-003', date: '09 Sep 2026', crop: 'Tomato', quantity: 15, mandi: 'Ahmedabad APMC', gain: 4120, status: 'Completed', distance: '260 km', pricePerQ: 2480 },
-      { id: 'sb-004', date: '28 Aug 2026', crop: 'Soybean', quantity: 25, mandi: 'Indore APMC', gain: 6750, status: 'Completed', distance: '310 km', pricePerQ: 4750 },
+      { id: 'sb-001', date: 'Today, 09:30 AM', crop: 'Wheat', quantity: 20, mandi: 'Gondal APMC', gain: 2012, status: 'Ready to Dispatch', distance: '48 km', pricePerQ: 2750 },
+      { id: 'sb-002', date: '18 Sep 2026', crop: 'Wheat', quantity: 35, mandi: 'Rajkot Market Yard', gain: 1400, status: 'Completed', distance: '15 km', pricePerQ: 2640 },
+      { id: 'sb-003', date: '09 Sep 2026', crop: 'Tomato', quantity: 15, mandi: 'Morbi APMC', gain: 4120, status: 'Completed', distance: '71 km', pricePerQ: 2480 },
     ],
     earnings: [1800, 3900, 7400, 11200, 14100, 15800],
-    monthlyData: [
-      { month: 'Oct', earned: 1200, sabhas: 1 },
-      { month: 'Nov', earned: 1800, sabhas: 1 },
-      { month: 'Dec', earned: 2100, sabhas: 2 },
-      { month: 'Jan', earned: 2400, sabhas: 2 },
-      { month: 'Feb', earned: 2700, sabhas: 2 },
-      { month: 'Mar', earned: 2900, sabhas: 2 },
-      { month: 'Apr', earned: 3200, sabhas: 2 },
-      { month: 'May', earned: 5400, sabhas: 3 },
-      { month: 'Jun', earned: 7800, sabhas: 4 },
-      { month: 'Jul', earned: 10500, sabhas: 5 },
-      { month: 'Aug', earned: 13200, sabhas: 6 },
-      { month: 'Sep', earned: 15800, sabhas: 8 },
-    ],
+    monthlyData: defaultMonthly,
     winners: [
-      { name: 'Surat APMC', value: 6, percent: 50, avgGain: '₹8,200', crop: 'Onion / Tomato' },
-      { name: 'Pune Yard', value: 3, percent: 25, avgGain: '₹5,600', crop: 'Wheat' },
-      { name: 'Ahmedabad APMC', value: 2, percent: 17, avgGain: '₹4,120', crop: 'Soybean / Onion' },
-      { name: 'Lasalgaon', value: 1, percent: 8, avgGain: '₹1,900', crop: 'Onion' },
+      { name: 'Gondal APMC', value: 6, percent: 50, avgGain: '₹2,012', crop: 'Wheat' },
+      { name: 'Rajkot Yard', value: 3, percent: 25, avgGain: '₹1,400', crop: 'Wheat' },
+      { name: 'Morbi APMC', value: 2, percent: 17, avgGain: '₹4,120', crop: 'Soybean / Onion' },
     ],
-    pulse: [
-      { crop: 'Onion', price: 2140, change: 4.2, mandi: 'Surat', high: 2280, low: 1980, trend: [2010, 2040, 2080, 2110, 2140] },
-      { crop: 'Wheat', price: 2640, change: 1.8, mandi: 'Pune', high: 2720, low: 2580, trend: [2590, 2600, 2610, 2630, 2640] },
-      { crop: 'Tomato', price: 2480, change: -1.5, mandi: 'Ahmedabad', high: 2600, low: 2350, trend: [2550, 2520, 2500, 2490, 2480] },
-      { crop: 'Soybean', price: 4750, change: 3.8, mandi: 'Indore', high: 4890, low: 4620, trend: [4580, 4620, 4680, 4710, 4750] },
-      { crop: 'Cotton', price: 7200, change: 2.1, mandi: 'Rajkot', high: 7350, low: 7050, trend: [7050, 7100, 7120, 7180, 7200] },
-      { crop: 'Garlic', price: 8900, change: 5.4, mandi: 'Mandsaur', high: 9200, low: 8400, trend: [8400, 8550, 8700, 8820, 8900] },
-    ],
+    pulse: defaultPulse,
   }
 }
+
 
 export function formatINR(value: number) {
   return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value)

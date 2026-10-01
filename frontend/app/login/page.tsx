@@ -65,10 +65,6 @@ function LoginForm() {
     }
   }
 
-  function handleFillDemo() {
-    setOtp('123456')
-  }
-
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
@@ -173,13 +169,6 @@ function LoginForm() {
                   <label htmlFor="login-otp" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                     {t('auth.login.otp_title')}
                   </label>
-                  <button
-                    type="button"
-                    onClick={handleFillDemo}
-                    className="text-[11px] font-mono font-bold text-primary hover:underline cursor-pointer"
-                  >
-                    {t('auth.login.demo_code')}
-                  </button>
                 </div>
                 <input
                   id="login-otp"

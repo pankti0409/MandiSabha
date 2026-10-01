@@ -146,6 +146,7 @@ def create_app() -> FastAPI:
     from app.routers.markets import router as markets_router
     from app.routers.voice import router as voice_router
     from app.routers.health import router as health_router
+    from app.routers.db_sync import router as db_sync_router
 
     app.include_router(auth_router)
     app.include_router(me_router)
@@ -153,6 +154,7 @@ def create_app() -> FastAPI:
     app.include_router(markets_router)
     app.include_router(voice_router)
     app.include_router(health_router)
+    app.include_router(db_sync_router)
 
     return app
 

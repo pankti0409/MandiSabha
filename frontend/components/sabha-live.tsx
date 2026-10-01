@@ -142,6 +142,27 @@ export function SabhaLive({ id }: { id: string }) {
         setDraft(JSON.parse(stored))
       }
     } catch {}
+
+    // Hydrate persistent state from SQLite database
+    async function fetchFromDb() {
+      try {
+        const decodedId = decodeURIComponent(id)
+        const res = await fetch(`/api/sabha/${encodeURIComponent(decodedId)}`, { cache: 'no-store' })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.sabha?.draft) {
+            setDraft((prev) => ({ ...(prev || {}), ...data.sabha.draft }))
+            if (data.sabha.status === 'completed') {
+              setDone(true)
+              setProgress(100)
+            }
+          }
+        }
+      } catch (e) {
+        // Silently continue if fresh session
+      }
+    }
+    fetchFromDb()
   }, [id])
 
   const originName = resolveOriginName(queryLoc, draft?.location, user?.village, user?.district, user?.state)
@@ -510,6 +531,30 @@ export function ResultPage({ id }: { id: string }) {
   }, [cropName, quantity, originName, draft, vehicleType, radius])
 
   const { winner, localBaseline, ranked, originCoords } = evaluation
+
+  // Automatically persist evaluated Sabha session into SQLite database
+  useEffect(() => {
+    if (!id || !winner) return
+    const draftPayload = {
+      crop: cropName,
+      quantity,
+      location: originName,
+      originCoords,
+      vehicleType,
+      radius,
+      targetMandi: winner.name,
+      highway: winner.highway,
+    }
+    const recommendationPayload = {
+      winner,
+      localBaseline,
+      ranked,
+      surplusVsLocal: { total: winner.advantage, perQuintal: Math.round(winner.advantage / Math.max(1, quantity)) },
+    }
+    import('@/lib/api/sabha').then(({ saveSabhaResult }) => {
+      saveSabhaResult(id, draftPayload, recommendationPayload)
+    })
+  }, [id, winner, cropName, quantity, originName, originCoords, vehicleType, radius, localBaseline, ranked])
 
   const [showReceiptModal, setShowReceiptModal] = useState(false)
 

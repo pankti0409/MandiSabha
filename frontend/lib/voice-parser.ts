@@ -34,12 +34,84 @@ export type ParsedHarvest = {
   location: string
   urgency: 'today' | 'soon' | 'week'
   confidence: number
+  targetMandi?: string   // explicit destination mandi if user said "deliver to X"
+}
+
+// Known mandis/markets that user may explicitly specify as destination
+// Keywords include common STT phonetic errors and split-word variants
+const KNOWN_DESTINATION_MANDIS: { keywords: string[]; name: string }[] = [
+  { keywords: ['gondal', 'gon dal', 'ગોંડલ', 'गोंडल', 'goundal', 'gondaal'], name: 'Gondal APMC' },
+  { keywords: ['rajkot', 'raj kot', 'રાજકોટ', 'राजकोट', 'rajkot market', 'rajkot yard', 'raikot'], name: 'Rajkot Market Yard' },
+  // Morbi: STT often transcribes as "mor bhi" / "मोर भी" / "मोर बी" — catch all variants
+  { keywords: ['morbi', 'mor bi', 'mor bhi', 'morbi apmc', 'મોરબી', 'मोरबी', 'मोर भी', 'मोर बी', 'morabi', 'morabi apmc', 'mori', 'morvi'], name: 'Morbi APMC' },
+  { keywords: ['jamnagar', 'jam nagar', 'જામનગર', 'जामनगर', 'jamnagr', 'jamnagar apmc'], name: 'Jamnagar APMC' },
+  { keywords: ['ahmedabad', 'amdavad', 'ahmed abad', 'અમદાવાદ', 'अहमदाबाद', 'ahemdabad', 'amdabad'], name: 'Ahmedabad APMC' },
+  { keywords: ['surat', 'su rat', 'સુરત', 'सूरत', 'surrat', 'surt'], name: 'Surat APMC' },
+  { keywords: ['navsari', 'nav sari', 'નવસારી', 'नवसारी', 'navsaari'], name: 'Navsari APMC' },
+  { keywords: ['nashik', 'nasik', 'na shik', 'નાશિક', 'नाशिक', 'नासिक', 'nashik apmc'], name: 'Nashik APMC' },
+  { keywords: ['lasalgaon', 'lasalgao', 'laal gao', 'લાસલગાવ', 'लासलगांव'], name: 'Lasalgaon APMC' },
+  { keywords: ['pune', 'poona', 'poon', 'પુણે', 'पुणे', 'puna'], name: 'Pune Market Yard' },
+  { keywords: ['indore', 'in dore', 'ઇન્દોર', 'इंदौर', 'indaur', 'indor'], name: 'Indore APMC' },
+  { keywords: ['ujjain', 'uj jain', 'ઉજ્જૈન', 'उज्जैन', 'ujain', 'ujjein'], name: 'Ujjain APMC' },
+  { keywords: ['mandsaur', 'mandsour', 'मंदसौर', 'मनासोर', 'mand saur'], name: 'Mandsaur APMC' },
+  { keywords: ['kota', 'कोटा', 'kota rajasthan'], name: 'Kota APMC' },
+]
+
+// Keywords that indicate explicit delivery intent to a specific mandi
+const DELIVERY_INTENT_KEYWORDS = [
+  // English
+  'deliver to', 'send to', 'take to', 'go to', 'want to go to', 'sell at', 'sell in',
+  'want to send', 'want to deliver', 'need to send', 'ship to',
+  // Hindi — common spoken variants including STT errors
+  'pahunchana hai', 'pahunchaana hai', 'pohchana hai', 'pouchaana', 'pohnchana',
+  'bhejna hai', 'bhejana hai', 'bhej dena', 'bhej do',
+  'lejana hai', 'le jaana', 'leja', 'beja', 'pahuncha', 'dena hai',
+  'pouchane hain', 'pochaane hain', 'pohuchana', 'pohuchana hai',
+  // Hindi script variants
+  'पहुंचाना', 'पोचाना', 'पोचाने', 'पहुँचाना', 'भेजना', 'भेजना है', 'ले जाना', 'भिजवाना',
+  'yahan bechna', 'wahan bechna', 'vahan bechna', 'wahan le jana', 'vahan pohuchna',
+  // Gujarati
+  'moklu che', 'moklavanu che', 'lavanu che', 'le javanu che', 'mane che',
+  'pavhuchavanu', 'apavu che', 'apavanu', 'moklave', 'moklavani',
+  // Marathi
+  'pathvayche', 'nyayche', 'gheun jayche', 'pathvaycha', 'pathaavaycha',
+]
+
+/**
+ * Detect if user explicitly said they want to deliver/send to a specific mandi.
+ * Returns the mandi name if an explicit delivery intent + known mandi is found.
+ */
+function detectExplicitDestination(lower: string, original: string): string | undefined {
+  // Check for delivery intent keywords
+  const hasDeliveryIntent = DELIVERY_INTENT_KEYWORDS.some(kw => lower.includes(kw))
+
+  // Find which mandi is mentioned
+  for (const mandi of KNOWN_DESTINATION_MANDIS) {
+    for (const kw of mandi.keywords) {
+      if (lower.includes(kw.toLowerCase())) {
+        if (hasDeliveryIntent) {
+          // Explicit: "I want to deliver to Gondal"
+          return mandi.name
+        }
+        // Also check: if "mandi" / "APMC" / "market" word appears near the mandi name, treat as explicit destination
+        const mandiCtxPattern = new RegExp(
+          `(mandi|apmc|market|yard|બજાર|ma|mai|men|में|मार्केट|mar|bazaar|bazaari).{0,20}${kw}|${kw}.{0,20}(mandi|apmc|market|yard|bazaar|bazaari|ma |mai |men |में|मार्केट)`,
+          'i'
+        )
+        if (mandiCtxPattern.test(original)) {
+          return mandi.name
+        }
+      }
+    }
+  }
+
+  return undefined
 }
 
 export function parseHarvestDetails(rawText: string): ParsedHarvest {
   if (!rawText || !rawText.trim()) {
     return {
-      crop: 'Onion',
+      crop: 'Wheat',        // neutral default — not Onion
       quantity: 20,
       location: 'Rajkot, Gujarat',
       urgency: 'today',
@@ -59,72 +131,95 @@ export function parseHarvestDetails(rawText: string): ParsedHarvest {
   const lower = normalized.toLowerCase()
   let matchedPoints = 0
 
-  // 2. Crop Detection across Gujarati, Hindi, Marathi, English
-  let crop: ParsedHarvest['crop'] = 'Onion'
+  // 2. Explicit destination detection (BEFORE crop/location parsing)
+  const targetMandi = detectExplicitDestination(lower, normalized)
+
+  // 3. Crop Detection across Gujarati, Hindi, Marathi, English + phonetic variants
+  // Note: crop is ONLY defaulted if truly nothing matches — avoid defaulting to Onion
+  let crop: ParsedHarvest['crop'] | null = null
+
   if (
     lower.includes('onion') || lower.includes('pyaaz') || lower.includes('pyaz') ||
+    lower.includes('piyaaj') || lower.includes('piyaz') ||
     lower.includes('kanda') || lower.includes('kaanda') || lower.includes('dungri') ||
-    lower.includes('dungari') || lower.includes('ડુંગળી') || lower.includes('કાંદા') ||
-    lower.includes('કાંદો') || lower.includes('प्याज') || lower.includes('कांदा') || lower.includes('कांदे')
+    lower.includes('dungari') || lower.includes('dungali') || lower.includes('dungali') ||
+    lower.includes('ڈنگری') ||
+    lower.includes('ડુંગળી') || lower.includes('ડુંગળ') || lower.includes('ડૂંગળ') ||
+    lower.includes('કાંદ') || lower.includes('कांद') || lower.includes('प्याज') ||
+    lower.includes('प्याजा') || lower.includes('कांदा') || lower.includes('कांदे') ||
+    // Gujarati spoken phonetics that STT often returns
+    lower.includes('dungri') || lower.includes('dungli') || lower.includes('dungali')
   ) {
     crop = 'Onion'
-    matchedPoints += 1
+    matchedPoints += 2
   } else if (
     lower.includes('wheat') || lower.includes('gehu') || lower.includes('gehun') ||
-    lower.includes('ghau') || lower.includes('gahu') || lower.includes('ઘઉં') ||
-    lower.includes('गेहूं') || lower.includes('गेंहू') || lower.includes('गहू')
+    lower.includes('ghau') || lower.includes('gahu') || lower.includes('gheu') ||
+    lower.includes('ઘઉં') || lower.includes('ઘઉ') || lower.includes('ghav') ||
+    lower.includes('गेहूं') || lower.includes('गेंहू') || lower.includes('गहू') ||
+    lower.includes('गेहू') || lower.includes('गेहु')
   ) {
     crop = 'Wheat'
-    matchedPoints += 1
+    matchedPoints += 2
   } else if (
     lower.includes('tomato') || lower.includes('tamatar') || lower.includes('tameta') ||
-    lower.includes('tameeta') || lower.includes('ટામેટા') || lower.includes('ટમેટા') ||
-    lower.includes('ટામેટું') || lower.includes('टमाटर') || lower.includes('टोमॅटो')
+    lower.includes('tameeta') || lower.includes('tameta') || lower.includes('tometa') ||
+    lower.includes('ટામેટ') || lower.includes('ટમેટ') || lower.includes('tameto') ||
+    lower.includes('टमाटर') || lower.includes('टोमॅटो') || lower.includes('tamatar')
   ) {
     crop = 'Tomato'
-    matchedPoints += 1
+    matchedPoints += 2
   } else if (
     lower.includes('soybean') || lower.includes('soyabean') || lower.includes('soya') ||
-    lower.includes('સોયાબીન') || lower.includes('सोयाबीन')
+    lower.includes('soybeen') || lower.includes('soyabeen') || lower.includes('soy') ||
+    lower.includes('સોયાબ') || lower.includes('सोयाब')
   ) {
     crop = 'Soybean'
-    matchedPoints += 1
+    matchedPoints += 2
   } else if (
     lower.includes('cotton') || lower.includes('kapas') || lower.includes('kapaas') ||
-    lower.includes('rui') || lower.includes('કપાસ') || lower.includes('કપાસીયા') ||
-    lower.includes('कपास') || lower.includes('रुई')
+    lower.includes('kapas') || lower.includes('rui') || lower.includes('ruee') ||
+    lower.includes('કપાસ') || lower.includes('कपास') || lower.includes('रुई')
   ) {
     crop = 'Cotton'
-    matchedPoints += 1
+    matchedPoints += 2
   } else if (
     lower.includes('potato') || lower.includes('aloo') || lower.includes('alu') ||
-    lower.includes('bataka') || lower.includes('batata') || lower.includes('bateto') ||
-    lower.includes('બટાકા') || lower.includes('બટાટા') || lower.includes('બટેટા') ||
-    lower.includes('आलू') || lower.includes('बटाटा')
+    lower.includes('allu') || lower.includes('bataka') || lower.includes('batata') ||
+    lower.includes('bateto') || lower.includes('batako') ||
+    lower.includes('બટાક') || lower.includes('બટાટ') || lower.includes('आलू') ||
+    lower.includes('बटाट')
   ) {
     crop = 'Potato'
-    matchedPoints += 1
+    matchedPoints += 2
   } else if (
     lower.includes('garlic') || lower.includes('lahsun') || lower.includes('lasun') ||
-    lower.includes('lasan') || lower.includes('લસણ') || lower.includes('लहसुन') || lower.includes('लसूण')
+    lower.includes('lasan') || lower.includes('lashan') || lower.includes('lassan') ||
+    lower.includes('લસણ') || lower.includes('लहसुन') || lower.includes('लसूण')
   ) {
     crop = 'Garlic'
-    matchedPoints += 1
+    matchedPoints += 2
   } else if (
     lower.includes('mustard') || lower.includes('sarson') || lower.includes('raydo') ||
-    lower.includes('રાઈ') || lower.includes('રાયડો') || lower.includes('સરસવ') || lower.includes('सरसों')
+    lower.includes('raido') || lower.includes('sarso') ||
+    lower.includes('રાઈ') || lower.includes('રાયડ') || lower.includes('સરસ') ||
+    lower.includes('सरसों') || lower.includes('सरसो')
   ) {
     crop = 'Mustard'
-    matchedPoints += 1
+    matchedPoints += 2
   } else if (
     lower.includes('maize') || lower.includes('makka') || lower.includes('makkai') ||
-    lower.includes('makai') || lower.includes('મકાઈ') || lower.includes('मक्का')
+    lower.includes('makai') || lower.includes('makka') || lower.includes('corn') ||
+    lower.includes('મકાઈ') || lower.includes('मक्का') || lower.includes('मकाई')
   ) {
     crop = 'Maize'
-    matchedPoints += 1
+    matchedPoints += 2
   }
 
-  // 3. Quantity Detection (Handles Digits, Bori/Bags, and Spoken Words)
+  // If no crop matched, leave as null — we'll use a neutral fallback NOT Onion
+  const finalCrop: ParsedHarvest['crop'] = crop ?? 'Wheat'
+
+  // 4. Quantity Detection (Handles Digits, Bori/Bags, and Spoken Words)
   let quantity = 20
   const digitMatch = normalized.match(/(\d+)\s*(?:quintal|qtl|q|bori|bag|gunny|કટા|ક્વિન્ટલ|બોરી|ક્વિ|क्विंटल|बोरी|टन|ton)?/i)
   if (digitMatch && digitMatch[1]) {
@@ -145,73 +240,70 @@ export function parseHarvestDetails(rawText: string): ParsedHarvest {
     }
   }
 
-  // 4. Location Detection across Gujarat, Maharashtra, MP, Rajasthan
+  // 5. Origin Location Detection (where the farmer IS, not where they want to go)
+  // Skip locations that match the explicit target mandi to avoid confusion
   let location = 'Rajkot, Gujarat'
-  if (lower.includes('rajkot') || lower.includes('રાજકોટ') || lower.includes('राजकोट')) {
-    location = 'Rajkot, Gujarat'
-    matchedPoints += 1
-  } else if (lower.includes('gondal') || lower.includes('ગોંડલ') || lower.includes('गोंडल')) {
-    location = 'Gondal, Gujarat'
-    matchedPoints += 1
-  } else if (lower.includes('morbi') || lower.includes('મોરબી') || lower.includes('मोरबी')) {
-    location = 'Morbi, Gujarat'
-    matchedPoints += 1
-  } else if (lower.includes('jamnagar') || lower.includes('જામનગર') || lower.includes('जामनगर')) {
-    location = 'Jamnagar, Gujarat'
-    matchedPoints += 1
-  } else if (lower.includes('ahmedabad') || lower.includes('amdavad') || lower.includes('અમદાવાદ') || lower.includes('अहमदाबाद')) {
-    location = 'Ahmedabad, Gujarat'
-    matchedPoints += 1
-  } else if (lower.includes('surat') || lower.includes('સુરત') || lower.includes('सूरत')) {
-    location = 'Surat, Gujarat'
-    matchedPoints += 1
-  } else if (lower.includes('navsari') || lower.includes('નવસારી') || lower.includes('नवसारी')) {
-    location = 'Navsari, Gujarat'
-    matchedPoints += 1
-  } else if (
-    lower.includes('nashik') || lower.includes('nasik') || lower.includes('નાશિક') ||
-    lower.includes('नाशिक') || lower.includes('नासिक') || lower.includes('niphad') || lower.includes('निफाड')
-  ) {
-    location = 'Nashik, Maharashtra'
-    matchedPoints += 1
-  } else if (lower.includes('lasalgaon') || lower.includes('lasalgao') || lower.includes('લાસલગાવ') || lower.includes('लासलगांव')) {
-    location = 'Lasalgaon, Maharashtra'
-    matchedPoints += 1
-  } else if (lower.includes('pune') || lower.includes('poona') || lower.includes('પુણે') || lower.includes('पुणे') || lower.includes('पूना')) {
-    location = 'Pune, Maharashtra'
-    matchedPoints += 1
-  } else if (lower.includes('indore') || lower.includes('ઇન્દોર') || lower.includes('इंदौर') || lower.includes('इन्दौर')) {
-    location = 'Indore, Madhya Pradesh'
-    matchedPoints += 1
-  } else if (lower.includes('ujjain') || lower.includes('ઉજ્જૈન') || lower.includes('उज्जैन')) {
-    location = 'Ujjain, Madhya Pradesh'
-    matchedPoints += 1
+  const targetMandiLower = (targetMandi || '').toLowerCase()
+
+  // Build list of location candidates, but exclude the destination mandi city
+  const locationCandidates: { keywords: string[]; loc: string }[] = [
+    { keywords: ['rajkot', 'રાજકોટ', 'राजकोट'], loc: 'Rajkot, Gujarat' },
+    { keywords: ['gondal', 'ગોંડલ', 'गोंडल'], loc: 'Gondal, Gujarat' },
+    { keywords: ['morbi', 'મોરબી', 'मोरबी'], loc: 'Morbi, Gujarat' },
+    { keywords: ['jamnagar', 'જામનગર', 'जामनगर'], loc: 'Jamnagar, Gujarat' },
+    { keywords: ['ahmedabad', 'amdavad', 'અમદાવ', 'अहमदाबाद'], loc: 'Ahmedabad, Gujarat' },
+    { keywords: ['surat', 'સુરત', 'सूरत'], loc: 'Surat, Gujarat' },
+    { keywords: ['navsari', 'નવસારી', 'नवसारी'], loc: 'Navsari, Gujarat' },
+    { keywords: ['nashik', 'nasik', 'નાશિ', 'नाशिक', 'नासिक', 'niphad', 'निफाड'], loc: 'Nashik, Maharashtra' },
+    { keywords: ['lasalgaon', 'lasalgao', 'લાસ', 'लासल'], loc: 'Lasalgaon, Maharashtra' },
+    { keywords: ['pune', 'poona', 'પુણ', 'पुण'], loc: 'Pune, Maharashtra' },
+    { keywords: ['indore', 'ઇન્દો', 'इंदौर', 'indaur'], loc: 'Indore, Madhya Pradesh' },
+    { keywords: ['ujjain', 'ઉજ્જ', 'उज्जैन'], loc: 'Ujjain, Madhya Pradesh' },
+    { keywords: ['kota', 'कोटा'], loc: 'Kota, Rajasthan' },
+    { keywords: ['mandsaur', 'मंदसौर'], loc: 'Mandsaur, Madhya Pradesh' },
+  ]
+
+  for (const candidate of locationCandidates) {
+    const matchedKw = candidate.keywords.find(kw => lower.includes(kw.toLowerCase()))
+    if (matchedKw) {
+      // If this location matches the targeted mandi, it's the destination — skip as origin
+      // unless it's the only location mentioned (user may be at the mandi)
+      if (targetMandi && targetMandiLower.includes(matchedKw.toLowerCase())) {
+        continue
+      }
+      location = candidate.loc
+      matchedPoints += 1
+      break
+    }
   }
 
-  // 5. Urgency Detection
+  // 6. Urgency Detection
   let urgency: ParsedHarvest['urgency'] = 'today'
   if (
     lower.includes('tomorrow') || lower.includes('kal') || lower.includes('kaale') ||
-    lower.includes('soon') || lower.includes('કાલે') || lower.includes('આવતીકાલે') ||
-    lower.includes('कल') || lower.includes('जल्दी')
+    lower.includes('soon') || lower.includes('કાલ') || lower.includes('આવતીક') ||
+    lower.includes('kall ') || lower.includes(' kal ') ||
+    lower.includes('कल ') || lower.includes(' कल') || lower.includes('जल्दी') ||
+    lower.includes('ugta') || lower.includes('ugta kal')
   ) {
     urgency = 'soon'
     matchedPoints += 1
   } else if (
     lower.includes('week') || lower.includes('hafte') || lower.includes('athvadiyu') ||
-    lower.includes('અઠવાડિયું') || lower.includes('हफ्ते')
+    lower.includes('અઠવ') || lower.includes('हफ्ते') || lower.includes('hafte mein')
   ) {
     urgency = 'week'
     matchedPoints += 1
   } else if (
     lower.includes('today') || lower.includes('aaj') || lower.includes('aaje') ||
-    lower.includes('now') || lower.includes('આજે') || lower.includes('आज') || lower.includes('अभी')
+    lower.includes('now') || lower.includes('આજ') || lower.includes('आज') ||
+    lower.includes('अभी') || lower.includes('abhi') || lower.includes('hemen')
   ) {
     urgency = 'today'
     matchedPoints += 1
   }
 
-  const confidence = Math.min(100, Math.max(60, matchedPoints * 25))
+  const confidence = Math.min(100, Math.max(60, matchedPoints * 20))
 
-  return { crop, quantity, location, urgency, confidence }
+  return { crop: finalCrop, quantity, location, urgency, confidence, targetMandi }
 }

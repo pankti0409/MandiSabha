@@ -195,22 +195,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             {/* Farmer Profile Pill */}
             <Link
-              href="/settings"
+              href={(!user?.village && !user?.district) || user?.name === 'Farmer' ? '/settings?onboarding=true' : '/settings'}
               className="flex items-center gap-2 rounded-lg p-1 -m-1 hover:bg-muted/50 transition-colors group cursor-pointer"
               title={t('nav.profile_tooltip')}
             >
-              <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 border border-primary/20 text-primary font-bold font-display text-xs group-hover:border-primary transition-colors shadow-2xs">
-                {(user?.name || 'Farmer').charAt(0)}
+              <div className={`grid size-8 shrink-0 place-items-center rounded-lg border font-bold font-display text-xs group-hover:border-primary transition-colors shadow-2xs ${
+                user?.name === 'Farmer' || (!user?.village && !user?.district)
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-500'
+                  : 'bg-primary/10 border-primary/20 text-primary'
+              }`}>
+                {(user?.name || 'F').charAt(0)}
               </div>
               <div className="hidden sm:block text-left min-w-0">
                 <p className="text-[13px] font-bold text-foreground leading-tight truncate group-hover:text-primary transition-colors">
-                  {user?.name || 'Farmer'}
+                  {user?.name && user.name !== 'Farmer' ? user.name : 'Farmer'}
                 </p>
-                <p className="text-[10px] text-muted-foreground leading-tight truncate">
+                <p className="text-[10px] leading-tight truncate">
                   {user?.village || user?.district ? (
-                    `${user.village ? `${tData('geo', user.village)}, ` : ''}${tData('geo', user.district || user.state || '')}`
+                    <span className="text-muted-foreground">
+                      {`${user.village ? `${tData('geo', user.village)}, ` : ''}${tData('geo', user.district || user.state || '')}`}
+                    </span>
                   ) : (
-                    'Location Not Set'
+                    <span className="text-amber-500 font-semibold">Complete profile →</span>
                   )}
                 </p>
               </div>
@@ -286,7 +292,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         isOpen={voiceOpen}
         onClose={() => setVoiceOpen(false)}
         onApply={(data) => {
-          router.push(`/sabha/new?crop=${data.crop}&quantity=${data.quantity}&location=${encodeURIComponent(data.location)}&urgency=${data.urgency}`)
+          const params = new URLSearchParams({
+            crop: data.crop,
+            quantity: String(data.quantity),
+            location: data.location,
+            urgency: data.urgency,
+          })
+          if (data.targetMandi) {
+            params.set('targetMandi', data.targetMandi)
+          }
+          router.push(`/sabha/new?${params.toString()}`)
         }}
       />
 

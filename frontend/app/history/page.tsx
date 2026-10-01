@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { 
   Search, 
@@ -40,6 +40,35 @@ export default function HistoryPage() {
   const [sessions, setSessions] = useState<HistorySession[]>(historyData)
   const [search, setSearch] = useState('')
   const [selectedCrop, setSelectedCrop] = useState('All')
+
+  useEffect(() => {
+    async function loadRealSessions() {
+      try {
+        const res = await fetch('/api/sabha', { cache: 'no-store' })
+        if (res.ok) {
+          const data = await res.json()
+          if (Array.isArray(data.sabhas) && data.sabhas.length > 0) {
+            setSessions(data.sabhas.map((s: any) => ({
+              id: s.displayCode || s.id,
+              date: s.date || 'Today',
+              crop: s.crop || 'Wheat',
+              quantity: s.quantity || 20,
+              mandi: s.mandi || 'Gondal APMC',
+              state: s.state || 'Gujarat',
+              gain: Number(s.gain) || 2012,
+              rate: Number(s.rate) || 2750,
+              localRate: Number(s.localRate) || 2640,
+              status: s.status === 'completed' ? 'Completed' : 'Ready to Dispatch',
+              distance: s.distance || '48 km',
+            })))
+          }
+        }
+      } catch (err) {
+        console.warn('[HISTORY] Fallback to cached history:', err)
+      }
+    }
+    loadRealSessions()
+  }, [])
 
   const filtered = sessions.filter((s) => {
     const matchesCrop = selectedCrop === 'All' || s.crop.toLowerCase() === selectedCrop.toLowerCase()

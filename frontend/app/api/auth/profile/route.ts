@@ -40,8 +40,16 @@ export async function POST(request: NextRequest) {
         : existingUser.crops || (body.cropDetails ? body.cropDetails.map((c: any) => c.name) : ['Onion']),
     }
 
-    const response = NextResponse.json({ success: true, user: updatedUser })
-    response.cookies.set(cookieName, encodeURIComponent(JSON.stringify(updatedUser)), {
+    let persistedUser = updatedUser
+    try {
+      const { saveUserToDb } = await import('@/lib/db')
+      persistedUser = await saveUserToDb(updatedUser)
+    } catch (dbErr) {
+      console.error('[DB] Failed to save profile to SQLite:', dbErr)
+    }
+
+    const response = NextResponse.json({ success: true, user: persistedUser })
+    response.cookies.set(cookieName, encodeURIComponent(JSON.stringify(persistedUser)), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
