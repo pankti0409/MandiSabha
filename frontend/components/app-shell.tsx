@@ -31,137 +31,6 @@ import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { VoiceAssistantModal } from '@/components/voice-assistant-modal'
 import { FarmerOnboardingModal } from '@/components/farmer-onboarding-modal'
-import { motion, AnimatePresence } from 'framer-motion'
-
-const liveMarketNewsEn = [
-  {
-    tag: 'Mandi Arrival',
-    headline: 'Nashik APMC: 42,000q Red Onion arrivals; modal rates steady at ₹2,140/q with heavy Surat & Ahmedabad buyer bidding',
-    badge: 'Onion ₹2,140/q',
-    time: '2m ago',
-  },
-  {
-    tag: 'Highway Corridor',
-    headline: 'NH48 Freight Radar: Clear traffic across Manor & Navsari toll plazas; average transit time 3.5 hrs with zero congestion',
-    badge: 'NH48 Clear',
-    time: '5m ago',
-  },
-  {
-    tag: 'Arbitrage Surge',
-    headline: 'Surat APMC: Onion auction hits ₹2,280/q peak; net farm gate arbitrage unlocks +₹8,200 pure surplus over local traders',
-    badge: '+₹410/q Spread',
-    time: '8m ago',
-  },
-  {
-    tag: 'Weather Advisory',
-    headline: 'IMD Agri Radar: Dry weather predicted across Maharashtra-Gujarat transport corridor for next 72 hrs; ideal harvest window',
-    badge: 'Zero Rain Risk',
-    time: '12m ago',
-  },
-  {
-    tag: 'Procurement',
-    headline: 'Madhya Pradesh & Malwa Mandis: Sharbati wheat trades firm at ₹2,740/q ahead of central procurement cycle',
-    badge: 'Wheat +3.5%',
-    time: '15m ago',
-  },
-  {
-    tag: 'Govt Policy',
-    headline: 'Agri Ministry: Buffer stock release prioritized for tier-1 cities; MSP direct bank transfer (DBT) centers operational',
-    badge: 'Policy Active',
-    time: '22m ago',
-  },
-  {
-    tag: 'Vegetable Rally',
-    headline: 'Pune Market Yard: Gultekdi terminal logs heavy vegetable arrivals; Tomato modal rates surge +4.8% to ₹2,480/q',
-    badge: 'Tomato ₹2,480/q',
-    time: '28m ago',
-  },
-  {
-    tag: 'Logistics & Fuel',
-    headline: 'Commercial Freight: Diesel stable at ₹89.4/L; FASTag electronic freight clearing averaging 42s across Western checkposts',
-    badge: 'FASTag 42s',
-    time: '35m ago',
-  }
-]
-
-const liveMarketNewsHi = [
-  {
-    tag: 'मंडी आवक',
-    headline: 'नासिक एपीएमसी: 42,000 क्विंटल लाल प्याज की आवक; सूरत और अहमदाबाद के व्यापारियों की भारी मांग से भाव ₹2,140/क्विं.',
-    badge: 'प्याज़ ₹2,140/क्विं.',
-    time: '2 मिनट पहले',
-  },
-  {
-    tag: 'हाईवे कॉरिडोर',
-    headline: 'NH48 माल ढुलाई रडार: मनोर व नवसारी टोल प्लाजा पर सुगम यातायात; 3.5 घंटे में सुरक्षित परिवहन',
-    badge: 'NH48 साफ़',
-    time: '5 मिनट पहले',
-  },
-  {
-    tag: 'मुनाफ़ा अंतर',
-    headline: 'सूरत एपीएमसी: प्याज नीलामी ₹2,280/क्विं. के शिखर पर; स्थानीय व्यापारियों की तुलना में +₹8,200 का शुद्ध लाभ',
-    badge: '+₹410/क्विं. फ़ायदा',
-    time: '8 मिनट पहले',
-  },
-  {
-    tag: 'मौसम सलाह',
-    headline: 'मौसम विभाग: महाराष्ट्र-गुजरात मार्ग पर अगले 72 घंटे सूखा मौसम; माल भेजने के लिए उत्तम समय',
-    badge: 'बारिश का जोखिम शून्य',
-    time: '12 मिनट पहले',
-  },
-  {
-    tag: 'सरकारी नीति',
-    headline: 'कृषि मंत्रालय: प्रमुख शहरों के लिए बफ़र स्टॉक जारी; डीबीटी केंद्र पूरी क्षमता से कार्यरत',
-    badge: 'नीति सक्रिय',
-    time: '22 मिनट पहले',
-  },
-  {
-    tag: 'सब्जी बाजार',
-    headline: 'पुणे मार्केट यार्ड: गुलटेकड़ी टर्मिनल में भारी आवक; टमाटर मॉडल दरें +4.8% बढ़कर ₹2,480/क्विं.',
-    badge: 'टमाटर ₹2,480/क्विं.',
-    time: '28 मिनट पहले',
-  }
-]
-
-const liveMarketNewsGu = [
-  {
-    tag: 'મંડી આવક',
-    headline: 'નાસિક એપીએમસી: 42,000 ક્વિન્ટલ લાલ ડુંગળીની આવક; સુરત અને અમદાવાદના વેપારીઓની ખરીદીથી મોડલ ભાવ ₹2,140/ક્વિં.',
-    badge: 'ડુંગળી ₹2,140/ક્વિં.',
-    time: '2 મિનિટ પહેલાં',
-  },
-  {
-    tag: 'હાઇવે કોરિડોર',
-    headline: 'NH48 ફ્રેઇટ રડાર: મનોર અને નવસારી ટોલ પ્લાઝા પર ટ્રાફિક ક્લિયર; 3.5 કલાકમાં સરળ પરિવહન',
-    badge: 'NH48 ક્લિયર',
-    time: '5 મિનિટ પહેલાં',
-  },
-  {
-    tag: 'નફો ઉછાળો',
-    headline: 'સુરત એપીએમસી: ડુંગળી હરાજી ₹2,280/ક્વિં. ની ઊંચાઈએ; સ્થાનિક વેપારીઓ કરતાં +₹8,200 નો ચોખ્ખો નફો',
-    badge: '+₹410/ક્વિં. નફો',
-    time: '8 મિનિટ પહેલાં',
-  },
-  {
-    tag: 'હવામાન સલાહ',
-    headline: 'હવામાન વિભાગ: મહારાષ્ટ્ર-ગુજરાત માર્ગ પર આગામી 72 કલાક સૂકું હવામાન; માલ મોકલવા માટે ઉત્તમ સમય',
-    badge: 'વરસાદનું જોખમ શૂન્ય',
-    time: '12 મિનિટ પહેલાં',
-  },
-  {
-    tag: 'શાકભાજી બજાર',
-    headline: 'પુણે માર્કેટ યાર્ડ: ગુલટેકડી ટર્મિનલમાં ભારે આવક; ટામેટાના મોડલ ભાવ +4.8% વધીને ₹2,480/ક્વિં.',
-    badge: 'ટામેટા ₹2,480/ક્વિં.',
-    time: '28 મિનિટ પહેલાં',
-  }
-]
-
-const newsByLang: Record<string, typeof liveMarketNewsEn> = {
-  en: liveMarketNewsEn,
-  hi: liveMarketNewsHi,
-  gu: liveMarketNewsGu,
-}
-
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname()
   const router = useRouter()
@@ -172,23 +41,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [dark, setDark] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [voiceOpen, setVoiceOpen] = useState(false)
-  const [newsIdx, setNewsIdx] = useState(0)
-  const [newsPaused, setNewsPaused] = useState(false)
-
-  const activeNewsList = newsByLang[language] || liveMarketNewsEn
 
   useEffect(() => {
     setMounted(true)
     setDark(document.documentElement.classList.contains('dark'))
   }, [])
-
-  useEffect(() => {
-    if (newsPaused) return
-    const interval = setInterval(() => {
-      setNewsIdx((prev) => (prev + 1) % activeNewsList.length)
-    }, 3800)
-    return () => clearInterval(interval)
-  }, [newsPaused, activeNewsList.length])
 
   function toggleTheme() {
     const next = !dark
@@ -220,8 +77,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { href: '/history', label: t('nav.history') || 'Sabha History', icon: History },
     { href: '/settings', label: t('nav.settings') || 'Farm & Crop Settings', icon: Settings },
   ]
-
-  const activeNews = activeNewsList[newsIdx % activeNewsList.length]
 
   return (
     <div className="min-h-dvh w-full bg-background text-foreground flex flex-col md:flex-row antialiased">
@@ -333,91 +188,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          {/* ── Live Agriculture & Market News Feed Ticker (Full-Width, Crisp & Minimal) ── */}
-          <div 
-            className="hidden md:flex flex-1 min-w-0 items-center justify-between gap-3 overflow-hidden text-xs rounded-lg border border-primary/25 bg-primary/[0.04] dark:bg-primary/[0.08] px-3 py-1.5 shadow-2xs backdrop-blur-md transition-all duration-300 hover:border-primary/40 mx-2 lg:mx-4"
-            onMouseEnter={() => setNewsPaused(true)}
-            onMouseLeave={() => setNewsPaused(false)}
-          >
-            {/* Live AgriPulse Badge */}
-            <div className="flex items-center gap-1.5 rounded-md border border-primary/25 bg-primary/10 px-2 py-0.5 font-semibold text-primary shrink-0">
-              <span className="relative flex size-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full size-1.5 bg-emerald-500" />
-              </span>
-              <Newspaper className="size-3" />
-              <span className="text-[10px] uppercase tracking-wider font-bold whitespace-nowrap">{t('nav.news_live')}</span>
-            </div>
-
-            {/* Auto-Slide Show News Headline */}
-            <div className="flex-1 min-w-0 overflow-hidden relative h-6 flex items-center">
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={newsIdx}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.25, ease: 'easeOut' }}
-                  className="flex items-center gap-2 w-full min-w-0"
-                >
-                  <span className="rounded border border-border/70 bg-background/80 px-1.5 py-0.5 text-[9.5px] font-mono font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
-                    {activeNews.tag}
-                  </span>
-                  <p className="truncate text-foreground font-medium text-xs sm:text-[12.5px] tracking-tight min-w-0 flex-1 leading-snug">
-                    {activeNews.headline}
-                  </p>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            {/* Quick Spread Badge, News Counter & Navigation Controls */}
-            <div className="flex items-center gap-2 shrink-0">
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.span
-                  key={`badge-${newsIdx}`}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  className="hidden sm:inline-flex rounded border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 shrink-0"
-                >
-                  {activeNews.badge}
-                </motion.span>
-              </AnimatePresence>
-
-              <span className="text-[9.5px] text-muted-foreground hidden lg:inline font-mono shrink-0">
-                {activeNews.time}
-              </span>
-
-              {/* Counter Indicator */}
-              <span className="text-[9.5px] font-mono font-medium text-muted-foreground/80 bg-background/70 px-1.5 py-0.5 rounded border border-border/50 hidden xl:inline shrink-0">
-                {newsIdx + 1}/{activeNewsList.length}
-              </span>
-
-              {/* Prev / Next News Buttons */}
-              <div className="flex items-center border border-border/70 rounded-md bg-background/90 overflow-hidden shrink-0 shadow-2xs">
-                <button
-                  type="button"
-                  onClick={() => setNewsIdx((prev) => (prev - 1 + activeNewsList.length) % activeNewsList.length)}
-                  className="px-1.5 py-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                  aria-label={t('nav.prev_news')}
-                  title={t('nav.prev_news')}
-                >
-                  <ChevronLeft className="size-3" />
-                </button>
-                <div className="w-[1px] h-2.5 bg-border/50" />
-                <button
-                  type="button"
-                  onClick={() => setNewsIdx((prev) => (prev + 1) % activeNewsList.length)}
-                  className="px-1.5 py-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                  aria-label={t('nav.next_news')}
-                  title={t('nav.next_news')}
-                >
-                  <ChevronRight className="size-3" />
-                </button>
-              </div>
-            </div>
-          </div>
+          {/* Empty spacer between brand and profile actions */}
+          <div className="flex-1" />
 
           {/* ── User Profile & Action Controls in Top Right Corner ── */}
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
@@ -474,24 +246,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </header>
-
-        {/* Mobile Live News Marquee */}
-        <div 
-          className="md:hidden w-full bg-gradient-to-r from-primary/10 via-emerald-500/5 to-primary/10 border-b border-primary/20 px-3 py-1.5 flex items-center justify-between gap-2 text-xs cursor-pointer"
-          onClick={() => setNewsIdx((prev) => (prev + 1) % activeNewsList.length)}
-          title="Click to advance news"
-        >
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-extrabold text-[10px] text-primary uppercase">{t('nav.news_live')}:</span>
-          </div>
-          <p className="truncate text-foreground font-black text-[11px] flex-1 min-w-0">
-            {activeNews.headline}
-          </p>
-          <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
-            {activeNews.badge}
-          </span>
-        </div>
 
         {/* Mobile Flyout Navigation */}
         {mobileMenuOpen && (
