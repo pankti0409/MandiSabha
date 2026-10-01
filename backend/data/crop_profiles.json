@@ -1,0 +1,12 @@
+{
+  "Onion": {"perishability": "high", "spoilagePctPerHour": 0.05, "referenceTemp": 25},
+  "Tomato": {"perishability": "very_high", "spoilagePctPerHour": 0.2, "referenceTemp": 25},
+  "Potato": {"perishability": "medium", "spoilagePctPerHour": 0.1, "referenceTemp": 25},
+  "Garlic": {"perishability": "low", "spoilagePctPerHour": 0.01, "referenceTemp": 30},
+  "Wheat": {"perishability": "very_low", "spoilagePctPerHour": 0.005, "referenceTemp": 35},
+  "Soybean": {"perishability": "very_low", "spoilagePctPerHour": 0.005, "referenceTemp": 35},
+  "Cotton": {"perishability": "very_low", "spoilagePctPerHour": 0.002, "referenceTemp": 40},
+  "Mustard": {"perishability": "very_low", "spoilagePctPerHour": 0.005, "referenceTemp": 35},
+  "Maize": {"perishability": "low", "spoilagePctPerHour": 0.01, "referenceTemp": 35},
+  "_note": "Spoilage rates are HEURISTIC estimates, not measured data. Scale by (actualTemp - referenceTemp) * 0.1 factor."
+}

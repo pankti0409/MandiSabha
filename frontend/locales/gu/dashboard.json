@@ -1,0 +1,73 @@
+{
+  "kicker": "ડેશબોર્ડ ઝાંખી",
+  "greeting": "નમસ્તે, {{name}}.",
+  "pulse_badge": "સુરત મંડીમાં ડુંગળીમાં +4.2% નો ઉછાળો · માલ મોકલવાનો શ્રેષ્ઠ સમય",
+  "start_new_sabha": "નવી સભા શરૂ કરો",
+  "stats": {
+    "total_extra": "કુલ વધારાનો નફો",
+    "total_extra_sub": "ભાડું બાદ કર્યા પછી ચોખ્ખો વધારાનો નફો",
+    "vs_local": "સ્થાનિક કરતા +22% વધુ",
+    "sabhas_convened": "યોજાયેલી સભાઓ",
+    "sessions_count": "{{count}} સત્રો",
+    "sabhas_cycle_sub": "આ સિઝનમાં +2 સભાઓ",
+    "top_mandi": "શ્રેષ્ઠ મંડી પાર્ટનર",
+    "win_rate": "50% સફળતા દર",
+    "top_mandi_sub": "સ્થાનિક મંડી કરતા સરેરાશ +₹410/ક્વિં. વધુ",
+    "agmarknet_sync": "એગમાર્કનેટ અપડેટ",
+    "mandis_unit": "મંડીઓ",
+    "live_feed": "લાઇવ ભાવ",
+    "sync_sub": "8 મિનિટ પહેલાં ભાવ તાજા કર્યા"
+  },
+  "chart": {
+    "kicker": "નાણાકીય પ્રગતિ",
+    "title": "સમય સાથે વધારાનો નફો",
+    "subtitle": "AI લોજિસ્ટિક્સ અને મંડી સરખામણી દ્વારા પ્રાપ્ત થયેલ કુલ વધારાનો નફો",
+    "range_3m": "3 મહિના",
+    "range_6m": "6 મહિના",
+    "range_1y": "1 વર્ષ",
+    "tooltip": "+{{amount}} · {{sabhas}} સભાઓ",
+    "net_profit": "ચોખ્ખો વધારાનો નફો",
+    "local_baseline": "સ્થાનિક મૂળ ભાવ",
+    "peak_month": "સૌથી વધુ નફો: {{month}} (+{{amount}})"
+  },
+  "winners": {
+    "kicker": "મંડી નફાનું પ્રદર્શન",
+    "title": "ક્યાં વધુ ફાયદો થયો",
+    "subtitle": "મંડી મુજબ શ્રેષ્ઠ વેચાણ ભલામણ",
+    "gain": "{{gain}} નફો",
+    "best_crop": "શ્રેષ્ઠ પાક: {{crop}}",
+    "top_notice": "સુરત મંડી હજુ પણ સૌથી વધુ વળતર આપી રહી છે",
+    "explore": "મંડીઓ જુઓ"
+  },
+  "radar": {
+    "kicker": "લાઇવ પાક ભાવ રડાર",
+    "title": "આજના મોડેલ ભાવ",
+    "view_all": "બધી 24 મંડીઓ જુઓ",
+    "best_at": "શ્રેષ્ઠ ભાવ: {{mandi}}",
+    "analyze": "{{crop}} નું વિશ્લેષણ કરો"
+  },
+  "sessions": {
+    "kicker": "લેણ-દેણ ઇતિહાસ",
+    "title": "તાજેતરની સભાઓ",
+    "subtitle": "તમારા પાક વેચાણ, માલ પરિવહન અને વધારાના નફાની સંપૂર્ણ વિગત",
+    "view_history": "ખાતાવહીમાં બધું જુઓ",
+    "empty_title": "હજુ સુધી કોઈ સભા યોજાઈ નથી",
+    "empty_subtitle": "મંડીઓના ભાવ સરખાવવા માટે તમારી પ્રથમ સભા બોલાવો.",
+    "col_session_crop": "સત્ર અને પાક",
+    "col_quantity": "જથ્થો",
+    "col_destination": "ગંતવ્ય મંડી",
+    "col_distance": "અંતર",
+    "col_modal_price": "મોડેલ ભાવ",
+    "col_crop": "પાક",
+    "col_extra": "ચોખ્ખો વધારાનો નફો",
+    "col_status": "સ્થિતિ",
+    "col_action": "કાર્ય",
+    "view_slip": "પહોંચ જુઓ",
+    "action_view": "સભા જુઓ",
+    "action_open": "ખોલો",
+    "ready_to_dispatch": "મોકલવા માટે તૈયાર",
+    "completed": "સફળ",
+    "quintals": "{{count}} ક્વિન્ટલ",
+    "approx_kg": "≈ {{count}} કિગ્રા"
+  }
+}

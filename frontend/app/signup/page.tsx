@@ -1,0 +1,394 @@
+'use client'
+
+import { FormEvent, useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { ArrowRight, Check, ChevronLeft, ShieldCheck, Sparkles, UserCheck, Leaf, LocateFixed, Loader2, MapPin, AlertCircle } from 'lucide-react'
+import { useAuth } from '@/components/auth-provider'
+import { useLocale } from '@/components/locale-provider'
+import { GoogleSignInButton } from '@/components/google-sign-in-button'
+import { detectUserLocation } from '@/lib/geolocation'
+
+export default function SignupPage() {
+  const router = useRouter()
+  const { t, tData, language: appLanguage } = useLocale()
+  const { requestOtp, verifyOtp } = useAuth()
+
+  const [step, setStep] = useState<1 | 2>(1)
+  const [name, setName] = useState('')
+  const [mobile, setMobile] = useState('')
+  const [village, setVillage] = useState('')
+  const [district, setDistrict] = useState('Nashik')
+  const [state, setState] = useState('Maharashtra')
+  const [language, setLanguage] = useState<'en' | 'hi' | 'gu'>(appLanguage)
+  const [crops, setCrops] = useState<string[]>(['Onion', 'Wheat'])
+  const [otp, setOtp] = useState('')
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [isLocating, setIsLocating] = useState(false)
+  const [locFeedback, setLocFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+
+  async function handleDetectLocation() {
+    setIsLocating(true)
+    setLocFeedback(null)
+    try {
+      const res = await detectUserLocation()
+      if (res.ok) {
+        if (res.village) setVillage(res.village)
+        if (res.district) setDistrict(res.district)
+        if (res.state) setState(res.state)
+        const display = res.village && res.district ? `${res.village}, ${res.district}` : res.formatted
+        setLocFeedback({ type: 'success', message: `Found: ${display}` })
+        setTimeout(() => setLocFeedback(null), 4500)
+      } else {
+        setLocFeedback({ type: 'error', message: res.error })
+        setTimeout(() => setLocFeedback(null), 5000)
+      }
+    } catch {
+      setLocFeedback({ type: 'error', message: 'Could not fetch GPS location.' })
+      setTimeout(() => setLocFeedback(null), 5000)
+    } finally {
+      setIsLocating(false)
+    }
+  }
+
+  const availableCrops = ['Onion', 'Wheat', 'Soybean', 'Cotton', 'Tomato', 'Garlic', 'Mustard', 'Maize']
+
+  function toggleCrop(crop: string) {
+    if (crops.includes(crop)) {
+      setCrops(crops.filter((c) => c !== crop))
+    } else {
+      setCrops([...crops, crop])
+    }
+  }
+
+  async function submitProfile(e: FormEvent) {
+    e.preventDefault()
+    if (!name.trim()) return setError(t('auth.validation.name_required'))
+    if (!mobile.match(/^[6-9]\d{9}$/)) return setError(t('auth.validation.invalid_mobile'))
+    if (!village.trim()) return setError(t('auth.validation.village_required'))
+    if (!crops.length) return setError(t('auth.validation.crops_required'))
+
+    setBusy(true)
+    setError('')
+    try {
+      await requestOtp(mobile)
+      setStep(2)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('auth.login.btn_sending'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function verify(e: FormEvent) {
+    e.preventDefault()
+    setBusy(true)
+    setError('')
+    try {
+      await verifyOtp(mobile, otp, {
+        name,
+        mobile,
+        village,
+        district,
+        state,
+        language,
+        crops,
+        onboarded: true,
+      })
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`farmer_onboarding_done_demo-${mobile}`, 'true')
+        localStorage.setItem(`farmer_onboarded_${mobile}`, 'true')
+        localStorage.setItem('farmer_global_onboarded', 'true')
+      }
+      router.push('/dashboard')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('auth.validation.invalid_otp'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+      <div className="w-full max-w-lg">
+        {/* Brand Header */}
+        <div className="mb-8 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-bold tracking-tight text-foreground group">
+            <span className="grid size-9 place-items-center rounded-full bg-primary text-white shadow-sm transition-transform group-hover:scale-105">
+              <Leaf className="size-5" />
+            </span>
+            <span>Mandi Sabha</span>
+          </Link>
+          <span className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-mono font-bold text-muted-foreground">
+            Step {step} of 2
+          </span>
+        </div>
+
+        {/* Minimalist Card Container */}
+        <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
+          {/* Progress Indicator */}
+          <div className="mb-6 flex items-center gap-2">
+            <span className="h-1.5 flex-1 rounded-full bg-primary" />
+            <span className={`h-1.5 flex-1 rounded-full transition-colors ${step === 2 ? 'bg-primary' : 'bg-border'}`} />
+          </div>
+
+          {step === 1 ? (
+            <form onSubmit={submitProfile} className="flex flex-col gap-4">
+              <div>
+                <span className="section-kicker">{t('auth.signup.step_1')}</span>
+                <h1 className="mt-1 font-display text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  {t('auth.signup.title')}
+                </h1>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t('auth.signup.subtitle')}
+                </p>
+              </div>
+
+              <GoogleSignInButton text={t('auth.login.google_signin')} />
+
+              <div className="relative flex items-center justify-center my-1">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border" />
+                </div>
+                <span className="relative bg-card px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Or register with details
+                </span>
+              </div>
+
+              {/* Name and Mobile */}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="name-input" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    {t('auth.signup.name_label')}
+                  </label>
+                  <input
+                    id="name-input"
+                    autoFocus
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder={t('auth.signup.name_placeholder')}
+                    className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm font-semibold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="mobile-input" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    {t('auth.signup.mobile_label')}
+                  </label>
+                  <input
+                    id="mobile-input"
+                    inputMode="numeric"
+                    value={mobile}
+                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="10-digit number"
+                    className="h-11 rounded-xl border border-border bg-background px-3.5 font-mono text-sm font-semibold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+              </div>
+
+              {/* Location Fields */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <MapPin className="size-3.5 text-primary" />
+                    Farm Location
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleDetectLocation}
+                    disabled={isLocating}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/90 transition-all bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg disabled:opacity-50 active:scale-95"
+                    title="Detect location automatically via device GPS"
+                  >
+                    {isLocating ? (
+                      <>
+                        <Loader2 className="size-3.5 animate-spin" />
+                        <span>Detecting GPS...</span>
+                      </>
+                    ) : (
+                      <>
+                        <LocateFixed className="size-3.5" />
+                        <span>Detect My Location</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {locFeedback && (
+                  <p
+                    className={`text-xs font-medium flex items-center gap-1.5 transition-opacity ${
+                      locFeedback.type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
+                    }`}
+                  >
+                    {locFeedback.type === 'success' ? <Check className="size-3.5" /> : <AlertCircle className="size-3.5" />}
+                    {locFeedback.message}
+                  </p>
+                )}
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="village-input" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      {t('auth.signup.village_label')}
+                    </label>
+                    <input
+                      id="village-input"
+                      value={village}
+                      onChange={(e) => setVillage(e.target.value)}
+                      placeholder={t('auth.signup.village_placeholder')}
+                      className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm font-semibold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="district-input" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      {t('auth.signup.district_label')}
+                    </label>
+                    <input
+                      id="district-input"
+                      value={district}
+                      onChange={(e) => setDistrict(e.target.value)}
+                      placeholder="e.g. Nashik"
+                      className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm font-semibold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Crops Selection */}
+              <div className="flex flex-col gap-2 pt-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Leaf className="size-3.5 text-primary" />
+                    {t('auth.signup.crops_label')}
+                  </label>
+                  <span className="text-[11px] font-mono text-primary font-bold">{crops.length} selected</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {availableCrops.map((cropName) => {
+                    const isSelected = crops.includes(cropName)
+                    return (
+                      <button
+                        type="button"
+                        key={cropName}
+                        onClick={() => toggleCrop(cropName)}
+                        className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                          isSelected
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted'
+                        }`}
+                      >
+                        {tData('crop', cropName)}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Terms and Privacy Checkbox */}
+              <label className="flex items-start gap-2.5 text-xs text-muted-foreground cursor-pointer select-none py-1">
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-0.5 size-4 rounded border-border text-primary focus:ring-primary accent-[var(--primary)] cursor-pointer"
+                />
+                <span>
+                  {t('auth.agree_terms', {
+                    terms: '',
+                    privacy: ''
+                  }).split(/\{\{.*?\}\}/)[0] || 'I agree to the '}
+                  <Link href="/terms" target="_blank" className="font-semibold text-foreground underline hover:text-primary">
+                    {t('auth.terms_link')}
+                  </Link>{' '}
+                  &{' '}
+                  <Link href="/privacy" target="_blank" className="font-semibold text-foreground underline hover:text-primary">
+                    {t('auth.privacy_link')}
+                  </Link>
+                </span>
+              </label>
+
+              <button
+                type="submit"
+                disabled={busy || !agreedToTerms}
+                className="button-primary min-h-12 w-full justify-center text-sm font-bold shadow-sm mt-2 disabled:opacity-50"
+              >
+                <span>{busy ? t('auth.login.btn_sending') : t('auth.signup.btn_continue')}</span>
+                <ArrowRight className="size-4" />
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={verify} className="flex flex-col gap-4">
+              <div>
+                <span className="section-kicker">{t('auth.signup.step_2')}</span>
+                <h1 className="mt-1 font-display text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  {t('auth.login.otp_title')}
+                </h1>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t('auth.login.otp_subtitle', { mobile })}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="signup-otp" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    {t('auth.login.otp_title')}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setOtp('123456')}
+                    className="text-[11px] font-mono font-bold text-primary hover:underline cursor-pointer"
+                  >
+                    {t('auth.login.demo_code')}
+                  </button>
+                </div>
+                <input
+                  id="signup-otp"
+                  autoFocus
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="••••••"
+                  className="h-14 w-full rounded-xl border border-border bg-background px-4 text-center font-mono text-2xl tracking-[0.35em] font-bold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={busy || otp.length !== 6}
+                className="button-primary min-h-12 w-full justify-center text-sm font-bold shadow-sm disabled:opacity-50"
+              >
+                <span>{busy ? t('auth.login.btn_sending') : t('auth.login.btn_verify')}</span>
+                <Check className="size-4" />
+              </button>
+
+              <button
+                type="button"
+                className="flex min-h-10 items-center justify-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setStep(1)}
+              >
+                <ChevronLeft className="size-3.5" />
+                <span>{t('auth.login.btn_change')}</span>
+              </button>
+            </form>
+          )}
+
+          {error && (
+            <p role="alert" className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs font-bold text-red-600 dark:text-red-400">
+              {error}
+            </p>
+          )}
+
+          <div className="mt-6 border-t border-border pt-5 text-center text-xs text-muted-foreground">
+            {t('auth.signup.already_account')}{' '}
+            <Link className="font-bold text-primary hover:underline ml-1" href="/login">
+              {t('auth.signup.link_login')}
+            </Link>
+          </div>
+        </div>
+      </div>
+    </main>
+  )
+}

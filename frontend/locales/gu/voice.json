@@ -1,0 +1,17 @@
+{
+  "kicker": "AI વૉઇસ સહાયક",
+  "badge": "વૉઇસ AI સક્રિય",
+  "title": "તમારી પાક વિગતો બોલો",
+  "listening_hint": "હિન્દી, ગુજરાતી અથવા અંગ્રેજીમાં સાંભળી રહ્યાં છીએ…",
+  "match_badge": "100% સચોટ મેળ",
+  "understood_title": "AI દ્વારા સમજાયેલી માહિતી:",
+  "commodity": "પાક",
+  "volume": "જથ્થો",
+  "origin_farm": "ખેતરનું સ્થળ",
+  "urgency": "પ્રાથમિકતા",
+  "prompt_switcher_label": "બીજું બોલેલું ઉદાહરણ અજમાવો:",
+  "apply_cta": "સભામાં લાગુ કરો",
+  "urgency_today": "આજે",
+  "urgency_soon": "ટૂંક સમયમાં",
+  "urgency_week": "આ અઠવાડિયે"
+}

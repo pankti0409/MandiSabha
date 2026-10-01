@@ -1,0 +1,49 @@
+{
+  "kicker": "ARBITRAGE RADAR",
+  "title": "Mandi Price Explorer.",
+  "subtitle": "Real-time modal prices, freight-deducted net spreads, and inter-mandi arbitrage windows.",
+  "convene_cta": "Convene Sabha for This Crop",
+  "highlights": {
+    "highest_rate": "Highest Modal Rate",
+    "daily_surge": "+4.2% daily surge (Agmarknet verified)",
+    "regional_average": "Regional Average",
+    "mandis_count": "{{count}} Mandis",
+    "weighted_sub": "Weighted across Western corridor",
+    "peak_spread": "Peak Arbitrage Spread",
+    "net_spread_sub": "Net +₹410/q after ₹110/q freight deduction"
+  },
+  "duel": {
+    "kicker": "Arbitrage Comparison",
+    "title": "Interactive Mandi Arbitrage Duel",
+    "volume_label": "Volume:",
+    "destination_a": "Destination A",
+    "destination_b": "Destination B",
+    "distance_freight": "Distance: {{distance}} km · Freight: -₹{{freight}}/q",
+    "net_payoff": "Net Payoff ({{qty}}q):",
+    "net_spread": "Net Spread"
+  },
+  "filters": {
+    "search_placeholder": "Search mandi name, district, or state…",
+    "all_crops": "All Crops",
+    "all_states": "All States (India)",
+    "sort_by": "Sort by:",
+    "sort_modal": "Price",
+    "sort_change": "Change",
+    "sort_volume": "Volume"
+  },
+  "table": {
+    "kicker": "Live Quotations",
+    "title": "Active Mandi Auctions ({{count}})",
+    "col_mandi": "Mandi & Location",
+    "col_crop": "Commodity",
+    "col_modal": "Modal Price",
+    "col_range": "Day Range (Min–Max)",
+    "col_trend": "24h Movement",
+    "col_volume": "Arrival Volume",
+    "col_freight": "Distance & Freight",
+    "col_action": "Action",
+    "action_convene": "Start Sabha",
+    "freight_sub": "-₹{{freight}}/q freight",
+    "empty": "No mandis match your search criteria."
+  }
+}

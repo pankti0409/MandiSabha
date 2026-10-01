@@ -1,0 +1,29 @@
+{
+  "generatedAt": "2026-10-01T12:25:39.761Z",
+  "desktop": {
+    "count": 240,
+    "prefix": "frames/f_",
+    "width": 1280,
+    "sampleFile": "f_0001.webp",
+    "aspectRatio": "16:9",
+    "height": 720,
+    "totalMB": "13.79",
+    "digits": 4,
+    "fps": 24,
+    "extension": ".webp"
+  },
+  "poster": "poster.webp",
+  "mobile": {
+    "count": 120,
+    "prefix": "frames-mobile/f_",
+    "width": 640,
+    "sampleFile": "f_0001.webp",
+    "aspectRatio": "16:9",
+    "height": 360,
+    "totalMB": "2.93",
+    "digits": 4,
+    "fps": 12,
+    "extension": ".webp"
+  },
+  "source": "Green_wheat_crop_camera_pullback_20261001121030.mp4"
+}

@@ -1,0 +1,73 @@
+{
+  "units": {
+    "quintal": "quintal",
+    "quintals": "quintals",
+    "quintal_short": "q",
+    "kg": "kg",
+    "ton": "ton",
+    "km": "km",
+    "hrs": "hrs",
+    "mins": "mins",
+    "rate_per_q": "/quintal",
+    "rate_per_km": "/km",
+    "spread_per_q": "/q spread"
+  },
+  "actions": {
+    "save": "Save",
+    "saving": "Saving...",
+    "save_information": "Save Information",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "done": "Done",
+    "continue": "Continue",
+    "back": "Back",
+    "apply": "Apply",
+    "refresh": "Refresh",
+    "close": "Close",
+    "retry": "Try again",
+    "export_csv": "Export CSV",
+    "print": "Print",
+    "share": "Share",
+    "view": "View",
+    "convene": "Convene",
+    "search": "Search"
+  },
+  "status": {
+    "live": "Live",
+    "active": "Active",
+    "ready": "Ready",
+    "queued": "Queued",
+    "completed": "Completed",
+    "pending": "Pending",
+    "verified": "Verified",
+    "saved": "Saved",
+    "success": "Success"
+  },
+  "labels": {
+    "all": "All",
+    "date": "Date",
+    "time": "Time",
+    "volume": "Volume",
+    "quantity": "Quantity",
+    "distance": "Distance",
+    "commodity": "Commodity",
+    "crop": "Crop",
+    "mandi": "Mandi",
+    "state": "State",
+    "district": "District",
+    "village": "Village",
+    "name": "Name",
+    "freight": "Freight",
+    "net_rate": "Net Rate",
+    "modal_rate": "Modal Rate",
+    "trend": "Trend",
+    "today": "Today"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Network connection error. Check your internet.",
+    "page_not_found": "Page not found",
+    "server_error": "Server error. Your data is safe."
+  }
+}

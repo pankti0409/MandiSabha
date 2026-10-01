@@ -1,0 +1,17 @@
+{
+  "kicker": "AI Voice Assistant",
+  "badge": "Voice AI Active",
+  "title": "Speak Your Harvest Details",
+  "listening_hint": "Listening for speech in Hindi, Gujarati or English…",
+  "match_badge": "100% Match",
+  "understood_title": "AI Understood Parameters:",
+  "commodity": "Commodity",
+  "volume": "Volume",
+  "origin_farm": "Origin Farm",
+  "urgency": "Urgency",
+  "prompt_switcher_label": "Try a different spoken prompt:",
+  "apply_cta": "Apply to Sabha Workbench",
+  "urgency_today": "Today",
+  "urgency_soon": "Soon",
+  "urgency_week": "This Week"
+}
