@@ -1,4 +1,4 @@
-# 🌾 MandiSabha (VyaaparMitra)
+# 🌾 MandiSabha
 ### *Autonomous Multi-Agent Agricultural Market Intelligence & Real-Time Net Realization Engine*
 
 ---
