@@ -1,0 +1,1825 @@
+openapi: 3.1.0
+info:
+  title: Mandi Sabha API
+  description: AI-powered agricultural mandi advisory system
+  version: 0.1.0
+paths:
+  /auth/signup:
+    post:
+      tags:
+      - auth
+      summary: Signup
+      description: Create or update a pending user and send OTP.
+      operationId: signup_auth_signup_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+        required: true
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /auth/request-otp:
+    post:
+      tags:
+      - auth
+      summary: Request Otp
+      description: Request OTP for login (existing active user only).
+      operationId: request_otp_auth_request_otp_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestOtpRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestOtpResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /auth/verify-otp:
+    post:
+      tags:
+      - auth
+      summary: Verify Otp
+      description: Verify OTP, activate user, return tokens.
+      operationId: verify_otp_auth_verify_otp_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyOtpRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /auth/refresh:
+    post:
+      tags:
+      - auth
+      summary: Refresh Token
+      description: Rotate refresh token.
+      operationId: refresh_token_auth_refresh_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /auth/logout:
+    post:
+      tags:
+      - auth
+      summary: Logout
+      description: Revoke refresh token.
+      operationId: logout_auth_logout_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /me:
+    get:
+      tags:
+      - user
+      summary: Get Me
+      operationId: get_me_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+      security:
+      - HTTPBearer: []
+    patch:
+      tags:
+      - user
+      summary: Update Me
+      description: Partial profile update. Re-geocodes home coords when location changes.
+      operationId: update_me_me_patch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMeRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /me/dashboard:
+    get:
+      tags:
+      - user
+      summary: Get Dashboard
+      description: "Dashboard data \u2014 all from stored sabha records."
+      operationId: get_dashboard_me_dashboard_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /sabha:
+    post:
+      tags:
+      - sabha
+      summary: Create Sabha
+      description: Create a new sabha and start the background run.
+      operationId: create_sabha_sabha_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSabhaRequest'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - sabha
+      summary: List Sabhas
+      description: List user's sabhas, newest first.
+      operationId: list_sabhas_sabha_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /sabha/{sabha_id}/stream-token:
+    post:
+      tags:
+      - sabha
+      summary: Get Stream Token
+      description: Issue a short-lived stream token for SSE auth.
+      operationId: get_stream_token_sabha__sabha_id__stream_token_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: sabha_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Sabha Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreamTokenResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /sabha/{sabha_id}/stream:
+    get:
+      tags:
+      - sabha
+      summary: Stream Sabha
+      description: SSE stream for live sabha events.
+      operationId: stream_sabha_sabha__sabha_id__stream_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: sabha_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Sabha Id
+      - name: Last-Event-ID
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Last-Event-Id
+      - name: token
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /sabha/{sabha_id}:
+    get:
+      tags:
+      - sabha
+      summary: Get Sabha
+      description: Get full sabha with draft, status, recommendation, and event log.
+      operationId: get_sabha_sabha__sabha_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: sabha_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Sabha Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /sabha/{sabha_id}/ask:
+    post:
+      tags:
+      - sabha
+      summary: Ask Sabha
+      description: Answer a follow-up question based on stored data.
+      operationId: ask_sabha_sabha__sabha_id__ask_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: sabha_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Sabha Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AskSabhaRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /sabha/{sabha_id}/approve:
+    post:
+      tags:
+      - sabha
+      summary: Approve Sabha
+      description: Draft a share link (does NOT send anything).
+      operationId: approve_sabha_sabha__sabha_id__approve_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: sabha_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Sabha Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /sabha/{sabha_id}/complete:
+    post:
+      tags:
+      - sabha
+      summary: Complete Sabha
+      description: Mark as sold with optional actual price.
+      operationId: complete_sabha_sabha__sabha_id__complete_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: sabha_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Sabha Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /markets/prices:
+    get:
+      tags:
+      - markets
+      summary: Get Market Prices
+      description: "Explorer endpoint \u2014 mandi prices with freight estimates."
+      operationId: get_market_prices_markets_prices_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: crop
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Crop
+      - name: state
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: State
+      - name: district
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: District
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Q
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          default: modal
+          title: Sort
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketPricesResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /markets/trend:
+    get:
+      tags:
+      - markets
+      summary: Get Trend
+      description: Historical price trend for a specific mandi/crop.
+      operationId: get_trend_markets_trend_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: crop
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Crop
+      - name: mandi
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Mandi
+      - name: days
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 30
+          title: Days
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /markets/reverse-geocode:
+    get:
+      tags:
+      - markets
+      summary: Reverse Geocode Coords
+      description: 'Reverse geocode latitude and longitude to village, district, state.
+
+
+        Open endpoint accessible by farmers during registration or sabha creation.'
+      operationId: reverse_geocode_coords_markets_reverse_geocode_get
+      parameters:
+      - name: lat
+        in: query
+        required: true
+        schema:
+          type: number
+          description: Latitude
+          title: Lat
+        description: Latitude
+      - name: lon
+        in: query
+        required: true
+        schema:
+          type: number
+          description: Longitude
+          title: Lon
+        description: Longitude
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReverseGeocodeResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /markets/geocode:
+    get:
+      tags:
+      - markets
+      summary: Forward Geocode
+      description: Forward geocode a place name to latitude/longitude coordinates.
+      operationId: forward_geocode_markets_geocode_get
+      parameters:
+      - name: q
+        in: query
+        required: true
+        schema:
+          type: string
+          description: Place name or address to geocode
+          title: Q
+        description: Place name or address to geocode
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /voice/transcribe:
+    post:
+      tags:
+      - voice
+      summary: Transcribe
+      description: "Audio \u2192 transcript only."
+      operationId: transcribe_voice_transcribe_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_transcribe_voice_transcribe_post'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranscribeResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /voice/parse:
+    post:
+      tags:
+      - voice
+      summary: Parse Voice
+      description: "Audio \u2192 transcript \u2192 parsed sabha draft fields."
+      operationId: parse_voice_voice_parse_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_parse_voice_voice_parse_post'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseVoiceResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /voice/speak:
+    post:
+      tags:
+      - voice
+      summary: Speak
+      description: "Text \u2192 audio. Cached by hash."
+      operationId: speak_voice_speak_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpeakRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /voice/{sabha_id}/speech:
+    get:
+      tags:
+      - voice
+      summary: Get Speech Summary
+      description: Spoken summary of recommendation.
+      operationId: get_speech_summary_voice__sabha_id__speech_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: sabha_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Sabha Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /health:
+    get:
+      tags:
+      - health
+      summary: Health
+      description: "Health check \u2014 no secrets exposed."
+      operationId: health_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /db/user:
+    post:
+      tags:
+      - database-sync
+      summary: Sync User
+      description: Upsert user into SQLite users table.
+      operationId: sync_user_db_user_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSyncPayload'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - database-sync
+      summary: Get User
+      description: Retrieve user from SQLite users table.
+      operationId: get_user_db_user_get
+      parameters:
+      - name: identifier
+        in: query
+        required: true
+        schema:
+          type: string
+          description: Mobile or user ID
+          title: Identifier
+        description: Mobile or user ID
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /db/sabha:
+    post:
+      tags:
+      - database-sync
+      summary: Sync Sabha
+      description: Save or update a Sabha held by the user in SQLite sabhas table.
+      operationId: sync_sabha_db_sabha_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SabhaSyncPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /db/sabha/{sabha_id}:
+    get:
+      tags:
+      - database-sync
+      summary: Get Single Sabha
+      description: Retrieve single Sabha by id from SQLite sabhas table.
+      operationId: get_single_sabha_db_sabha__sabha_id__get
+      parameters:
+      - name: sabha_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Sabha Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /db/sabhas:
+    get:
+      tags:
+      - database-sync
+      summary: List Sabhas
+      description: Retrieve all Sabhas held by user from SQLite sabhas table.
+      operationId: list_sabhas_db_sabhas_get
+      parameters:
+      - name: userId
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Userid
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /db/dashboard:
+    get:
+      tags:
+      - database-sync
+      summary: Get Dashboard Stats
+      description: Compute real dashboard statistics directly from SQLite sabhas table.
+      operationId: get_dashboard_stats_db_dashboard_get
+      parameters:
+      - name: userId
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Userid
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    ApproveRequest:
+      properties:
+        channel:
+          type: string
+          enum:
+          - whatsapp
+          - sms
+          title: Channel
+        recipientMobile:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Recipientmobile
+        language:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Language
+      type: object
+      required:
+      - channel
+      title: ApproveRequest
+    AskSabhaRequest:
+      properties:
+        question:
+          type: string
+          title: Question
+      type: object
+      required:
+      - question
+      title: AskSabhaRequest
+    Body_parse_voice_voice_parse_post:
+      properties:
+        audio:
+          type: string
+          format: binary
+          title: Audio
+        language:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Language
+      type: object
+      required:
+      - audio
+      title: Body_parse_voice_voice_parse_post
+    Body_transcribe_voice_transcribe_post:
+      properties:
+        audio:
+          type: string
+          format: binary
+          title: Audio
+        language:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Language
+      type: object
+      required:
+      - audio
+      title: Body_transcribe_voice_transcribe_post
+    CompleteRequest:
+      properties:
+        actualPricePerQuintal:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Actualpriceperquintal
+      type: object
+      title: CompleteRequest
+    CreateSabhaRequest:
+      properties:
+        crop:
+          type: string
+          title: Crop
+        quantity:
+          type: number
+          title: Quantity
+        location:
+          type: string
+          title: Location
+        urgency:
+          type: string
+          enum:
+          - today
+          - soon
+          - week
+          title: Urgency
+        targetDate:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Targetdate
+        radius:
+          type: number
+          title: Radius
+          default: 200
+        vehicleType:
+          anyOf:
+          - type: string
+            enum:
+            - pickup
+            - truck
+            - heavy
+          - type: 'null'
+          title: Vehicletype
+        qualityGrade:
+          anyOf:
+          - type: string
+            enum:
+            - A
+            - B
+            - C
+          - type: 'null'
+          title: Qualitygrade
+        targetMandi:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Targetmandi
+        transcript:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Transcript
+        language:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Language
+        originCoords:
+          anyOf:
+          - items:
+              type: number
+            type: array
+          - type: 'null'
+          title: Origincoords
+      type: object
+      required:
+      - crop
+      - quantity
+      - location
+      - urgency
+      title: CreateSabhaRequest
+    CropDetailSchema:
+      properties:
+        name:
+          type: string
+          title: Name
+        acres:
+          type: number
+          title: Acres
+        harvestMonth:
+          type: string
+          title: Harvestmonth
+        variety:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Variety
+        isPrimary:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Isprimary
+      type: object
+      required:
+      - name
+      - acres
+      - harvestMonth
+      title: CropDetailSchema
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    MarketPriceRow:
+      properties:
+        mandiId:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Mandiid
+        mandi:
+          type: string
+          title: Mandi
+        district:
+          type: string
+          title: District
+        state:
+          type: string
+          title: State
+        crop:
+          type: string
+          title: Crop
+        variety:
+          type: string
+          title: Variety
+        minPrice:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Minprice
+        maxPrice:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Maxprice
+        modalPrice:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Modalprice
+        priceDate:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Pricedate
+        changePct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Changepct
+        trend5D:
+          items:
+            type: number
+          type: array
+          title: Trend5D
+          default: []
+        arrivalsQty:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Arrivalsqty
+        distanceKm:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Distancekm
+        freightEstPerQuintal:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Freightestperquintal
+        stale:
+          type: boolean
+          title: Stale
+          default: false
+        source:
+          type: string
+          title: Source
+          default: live
+      type: object
+      required:
+      - mandi
+      - district
+      - state
+      - crop
+      - variety
+      title: MarketPriceRow
+    MarketPricesResponse:
+      properties:
+        rows:
+          items:
+            $ref: '#/components/schemas/MarketPriceRow'
+          type: array
+          title: Rows
+        total:
+          type: integer
+          title: Total
+        dataAsOf:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Dataasof
+        fetchedAt:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Fetchedat
+        source:
+          type: string
+          title: Source
+        isSample:
+          type: boolean
+          title: Issample
+          default: false
+      type: object
+      required:
+      - rows
+      - total
+      - source
+      title: MarketPricesResponse
+    ParseVoiceResponse:
+      properties:
+        transcript:
+          type: string
+          title: Transcript
+        detectedLanguage:
+          type: string
+          title: Detectedlanguage
+        draft:
+          type: object
+          title: Draft
+        fieldConfidence:
+          type: object
+          title: Fieldconfidence
+          default: {}
+        assumedFromProfile:
+          items:
+            type: string
+          type: array
+          title: Assumedfromprofile
+          default: []
+        missing:
+          items:
+            type: string
+          type: array
+          title: Missing
+          default: []
+      type: object
+      required:
+      - transcript
+      - detectedLanguage
+      - draft
+      title: ParseVoiceResponse
+    RefreshRequest:
+      properties:
+        refreshToken:
+          type: string
+          title: Refreshtoken
+      type: object
+      required:
+      - refreshToken
+      title: RefreshRequest
+    RequestOtpRequest:
+      properties:
+        mobile:
+          type: string
+          title: Mobile
+      type: object
+      required:
+      - mobile
+      title: RequestOtpRequest
+    RequestOtpResponse:
+      properties:
+        demo:
+          type: boolean
+          title: Demo
+        resendAfterSeconds:
+          type: integer
+          title: Resendafterseconds
+      type: object
+      required:
+      - demo
+      - resendAfterSeconds
+      title: RequestOtpResponse
+    ReverseGeocodeResponse:
+      properties:
+        village:
+          type: string
+          title: Village
+        district:
+          type: string
+          title: District
+        state:
+          type: string
+          title: State
+        displayName:
+          type: string
+          title: Displayname
+        lat:
+          type: number
+          title: Lat
+        lon:
+          type: number
+          title: Lon
+        postcode:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Postcode
+        source:
+          type: string
+          title: Source
+          default: live
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+      type: object
+      required:
+      - village
+      - district
+      - state
+      - displayName
+      - lat
+      - lon
+      title: ReverseGeocodeResponse
+    SabhaSyncPayload:
+      properties:
+        id:
+          type: string
+          title: Id
+        userId:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Userid
+        displayCode:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Displaycode
+        status:
+          type: string
+          title: Status
+          default: completed
+        draft:
+          type: object
+          title: Draft
+        recommendation:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Recommendation
+        userStatus:
+          type: string
+          title: Userstatus
+          default: none
+        actualPricePerQ:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Actualpriceperq
+      type: object
+      required:
+      - id
+      title: SabhaSyncPayload
+    SignupRequest:
+      properties:
+        mobile:
+          type: string
+          title: Mobile
+        name:
+          type: string
+          title: Name
+        language:
+          type: string
+          enum:
+          - en
+          - hi
+          - gu
+          title: Language
+          default: en
+        village:
+          type: string
+          title: Village
+          default: ''
+        district:
+          type: string
+          title: District
+          default: ''
+        state:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: State
+        crops:
+          items:
+            type: string
+          type: array
+          title: Crops
+          default: []
+        transportCostPerKm:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Transportcostperkm
+        vehicleType:
+          anyOf:
+          - type: string
+            enum:
+            - pickup
+            - truck
+            - heavy
+          - type: 'null'
+          title: Vehicletype
+        farmSizeAcres:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Farmsizeacres
+        cropDetails:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/CropDetailSchema'
+            type: array
+          - type: 'null'
+          title: Cropdetails
+      type: object
+      required:
+      - mobile
+      - name
+      title: SignupRequest
+    SpeakRequest:
+      properties:
+        text:
+          type: string
+          title: Text
+        language:
+          type: string
+          title: Language
+      type: object
+      required:
+      - text
+      - language
+      title: SpeakRequest
+    StreamTokenResponse:
+      properties:
+        token:
+          type: string
+          title: Token
+        expiresIn:
+          type: integer
+          title: Expiresin
+      type: object
+      required:
+      - token
+      - expiresIn
+      title: StreamTokenResponse
+    TokenResponse:
+      properties:
+        accessToken:
+          type: string
+          title: Accesstoken
+        refreshToken:
+          type: string
+          title: Refreshtoken
+        expiresIn:
+          type: integer
+          title: Expiresin
+        user:
+          $ref: '#/components/schemas/UserOut'
+      type: object
+      required:
+      - accessToken
+      - refreshToken
+      - expiresIn
+      - user
+      title: TokenResponse
+    TranscribeResponse:
+      properties:
+        transcript:
+          type: string
+          title: Transcript
+        detectedLanguage:
+          type: string
+          title: Detectedlanguage
+      type: object
+      required:
+      - transcript
+      - detectedLanguage
+      title: TranscribeResponse
+    UpdateMeRequest:
+      properties:
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+        village:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Village
+        district:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: District
+        state:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: State
+        language:
+          anyOf:
+          - type: string
+            enum:
+            - en
+            - hi
+            - gu
+          - type: 'null'
+          title: Language
+        crops:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Crops
+        cropDetails:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/CropDetailSchema'
+            type: array
+          - type: 'null'
+          title: Cropdetails
+        transportCostPerKm:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Transportcostperkm
+        vehicleType:
+          anyOf:
+          - type: string
+            enum:
+            - pickup
+            - truck
+            - heavy
+          - type: 'null'
+          title: Vehicletype
+        farmSizeAcres:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Farmsizeacres
+        priceAlerts:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Pricealerts
+        weatherAlerts:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Weatheralerts
+        primaryMandi:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Primarymandi
+      type: object
+      title: UpdateMeRequest
+    UserOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        mobile:
+          type: string
+          title: Mobile
+        village:
+          type: string
+          title: Village
+        district:
+          type: string
+          title: District
+        state:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: State
+        language:
+          type: string
+          enum:
+          - en
+          - hi
+          - gu
+          title: Language
+          default: en
+        crops:
+          items:
+            type: string
+          type: array
+          title: Crops
+        cropDetails:
+          items:
+            $ref: '#/components/schemas/CropDetailSchema'
+          type: array
+          title: Cropdetails
+        farmSizeAcres:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Farmsizeacres
+        transportCostPerKm:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Transportcostperkm
+        vehicleType:
+          anyOf:
+          - type: string
+            enum:
+            - pickup
+            - truck
+            - heavy
+          - type: 'null'
+          title: Vehicletype
+        priceAlerts:
+          type: boolean
+          title: Pricealerts
+          default: false
+        weatherAlerts:
+          type: boolean
+          title: Weatheralerts
+          default: false
+        primaryMandi:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Primarymandi
+        email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Email
+        avatar:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Avatar
+      type: object
+      required:
+      - id
+      - name
+      - mobile
+      - village
+      - district
+      title: UserOut
+    UserSyncPayload:
+      properties:
+        id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Id
+        mobile:
+          type: string
+          title: Mobile
+        name:
+          type: string
+          title: Name
+          default: Farmer
+        village:
+          type: string
+          title: Village
+          default: ''
+        district:
+          type: string
+          title: District
+          default: ''
+        state:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: State
+        language:
+          type: string
+          title: Language
+          default: en
+        crops:
+          items:
+            type: string
+          type: array
+          title: Crops
+        crop_details:
+          items:
+            type: object
+          type: array
+          title: Crop Details
+        farm_size_acres:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Farm Size Acres
+        transport_cost_per_km:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Transport Cost Per Km
+          default: 14.0
+        vehicle_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Vehicle Type
+          default: pickup
+        price_alerts:
+          type: boolean
+          title: Price Alerts
+          default: true
+        weather_alerts:
+          type: boolean
+          title: Weather Alerts
+          default: true
+        primary_mandi:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Primary Mandi
+          default: Gondal APMC
+        email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Email
+        avatar:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Avatar
+        home_lat:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Home Lat
+          default: 22.3039
+        home_lon:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Home Lon
+          default: 70.8022
+      type: object
+      required:
+      - mobile
+      title: UserSyncPayload
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    VerifyOtpRequest:
+      properties:
+        mobile:
+          type: string
+          title: Mobile
+        otp:
+          type: string
+          title: Otp
+        profile:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Profile
+      type: object
+      required:
+      - mobile
+      - otp
+      title: VerifyOtpRequest
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer

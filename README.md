@@ -85,7 +85,7 @@ MandiSabha strictly enforces the BHARAT AGENTIC 2026 Core Workflow:
 $$\mathbf{Understand} \longrightarrow \mathbf{Reason} \longrightarrow \mathbf{Plan} \longrightarrow \mathbf{Use\ Tools} \longrightarrow \mathbf{Act} \longrightarrow \mathbf{Deliver}$$
 
 ```mermaid
-flowchart TD
+flowchart LR
     %% Styling
     classDef startStyle fill:#059669,stroke:#047857,stroke-width:2px,color:#fff;
     classDef agentStyle fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#93c5fd;
@@ -93,36 +93,37 @@ flowchart TD
     classDef mathStyle fill:#312e81,stroke:#6366f1,stroke-width:2px,color:#e0e7ff;
     classDef outStyle fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#a7f3d0;
 
-    A[Farmer Input: Vernacular Voice / Text<br>Gujarati | Hindi | English]:::startStyle --> B[Intake Agent<br>Sarvam AI & Whisper STT]:::agentStyle
-    
-    subgraph S1 [1. UNDERSTAND & PLAN]
-        B -->|Entity Extraction & Geocoding| C{Plan & Coordinate<br>Sabha Orchestrator}:::agentStyle
+    subgraph S1 ["1. UNDERSTAND & PLAN"]
+        direction TB
+        A["Farmer Voice / Text<br>(Gujarati / Hindi / English)"]:::startStyle --> B["Intake Agent<br>(Sarvam AI & Whisper STT)"]:::agentStyle
+        B --> C{"Sabha Orchestrator<br>(Plan & Coordinate)"}:::agentStyle
     end
 
-    subgraph S2 [2. USE TOOLS - PARALLEL EXECUTION]
-        C -->|Query Live APMC Books| T1[Tool: get_mandi_prices<br>Agmarknet & Direct APMC Feed]:::toolStyle
-        C -->|Compute Highway Telemetry| T2[Tool: get_route<br>Project-OSRM Engine]:::toolStyle
-        C -->|Scan Satellite Corridor| T3[Tool: get_weather<br>Open-Meteo Radar]:::toolStyle
-        C -->|Fetch Historical Trends & MSP| T4[Tool: get_msp & price_trend<br>PIB CACP Official Registry]:::toolStyle
+    subgraph S2 ["2. TOOLS & SCOUTS"]
+        direction TB
+        T1["get_mandi_prices<br>(Agmarknet Live)"]:::toolStyle --> A1["Price Scout Agent<br>(Arbitrage)"]:::agentStyle
+        T2["get_route<br>(Project-OSRM)"]:::toolStyle --> A2["Route Planner Agent<br>(Logistics)"]:::agentStyle
+        T3["get_weather<br>(Open-Meteo)"]:::toolStyle --> A3["Weather Watch Agent<br>(Moisture Risk)"]:::agentStyle
+        T4["get_msp & price_trend<br>(PIB CACP Registry)"]:::toolStyle --> A4["Market Analyst Agent<br>(Trends & Timing)"]:::agentStyle
     end
 
-    subgraph S3 [3. REASON & DELIBERATE - MULTI-AGENT QUORUM]
-        T1 --> A1[Agent 1: Price Scout<br>Arbitrage Analysis]:::agentStyle
-        T2 --> A2[Agent 2: Route Planner<br>Freight & Vehicle Trips]:::agentStyle
-        T3 --> A3[Agent 3: Weather Watch<br>Moisture & Transit Risk]:::agentStyle
-        T4 --> A4[Agent 4: Market Analyst<br>MSP Spread & Sell/Hold Timing]:::agentStyle
+    subgraph S3 ["3. ACT & DELIBERATE"]
+        direction TB
+        M1["Deterministic Economics<br>(Pure Python Decimal)"]:::mathStyle
+        A5["Advisor Chair Agent<br>(Consensus Engine)"]:::agentStyle
+        M1 --> A5
     end
 
-    subgraph S4 [4. ACT - DETERMINISTIC ARBITRATION]
-        A1 & A2 & A3 & A4 --> M1[Deterministic Economics Engine<br>Pure Python Decimal Net Calculation]:::mathStyle
-        M1 --> A5[Agent 5: Advisor Chair<br>Consensus Synthesis & Outlier Challenge]:::agentStyle
+    subgraph S4 ["4. DELIVER"]
+        direction TB
+        D1["Live Sabha Cockpit<br>(Race Bar Chart & Telemetry)"]:::outStyle
+        D2["GIS Road Route Radar<br>(Turn-by-Turn Map)"]:::outStyle
+        D3["Official APMC Gate Pass<br>(Verified Bilty Receipt)"]:::outStyle
     end
 
-    subgraph S5 [5. DELIVER - ACTIONABLE OUTPUT]
-        A5 --> D1[Interactive Live Sabha Cockpit<br>Dynamic Race Bar Chart & Radar]:::outStyle
-        A5 --> D2[GIS Road Routing Telemetry<br>Turn-by-Turn Corridor Map]:::outStyle
-        A5 --> D3[Official APMC Gate Pass & Transit Bilty<br>Verified Print Pass & WhatsApp Dispatch]:::outStyle
-    end
+    C --> T1 & T2 & T3 & T4
+    A1 & A2 & A3 & A4 --> M1
+    A5 --> D1 & D2 & D3
 ```
 
 ---
@@ -132,57 +133,48 @@ flowchart TD
 MandiSabha is built as a high-performance, decoupled micro-architecture combining asynchronous Python backend processing with a responsive Next.js frontend:
 
 ```mermaid
-graph TB
-    subgraph Client ["Client Presentation Tier (Next.js 16 + React 19)"]
-        UI_Voice["Vernacular Voice Modal<br>(Web Audio API + Waveforms)"]
-        UI_Dash["Farmer Dashboard & Ledger<br>(Multi-Stat Cards + Recharts)"]
-        UI_Sabha["Live Sabha Cockpit<br>(Agent Quorum + Live SSE Telemetry)"]
-        UI_Map["GIS Highway Radar<br>(Leaflet + Google Maps Tiles)"]
-        UI_Bilty["Official APMC Gate Pass<br>(CSS Print Engine + QR Generator)"]
+graph LR
+    subgraph Client ["1. Client Presentation Tier (Next.js 16)"]
+        direction TB
+        UI_Voice["Voice Assistant Modal<br>(Web Audio & Waveforms)"]
+        UI_Dash["Farmer Dashboard<br>(Ledger & Recharts)"]
+        UI_Sabha["Live Sabha Cockpit<br>(Agent Quorum & SSE)"]
+        UI_Map["GIS Highway Radar<br>(Leaflet GIS Tiles)"]
+        UI_Bilty["APMC Gate Pass<br>(CSS Print Bilty Engine)"]
     end
 
-    subgraph API_GW ["FastAPI High-Performance Gateway (Port 8000)"]
-        MW_CORS["CORS & Request ID Middleware"]
-        MW_Rate["Sliding Window Rate Limiter"]
-        Router_Auth["Auth & OTP Router (/api/auth)"]
-        Router_Sabha["Sabha Orchestrator Router (/api/sabha)"]
-        Router_Markets["Mandi Discovery Router (/api/markets)"]
-        Router_Voice["Indic Speech Router (/api/voice)"]
-        Router_Sync["Offline-First Sync Router (/api/db_sync)"]
+    subgraph API_GW ["2. FastAPI Gateway (Port 8000)"]
+        direction TB
+        MW_Rate["Rate Limiting & CORS"]
+        Router_Auth["Auth & OTP Router"]
+        Router_Sabha["Sabha Orchestrator Router"]
+        Router_Markets["Mandi Discovery Router"]
+        Router_Voice["Indic Speech Gateway"]
     end
 
-    subgraph Core_Engine ["Autonomous Multi-Agent Core (Python AsyncIO)"]
-        Orchestrator["Sabha Orchestrator Engine"]
-        Agent_Intake["Intake Agent (Qwen 2.5 / Whisper)"]
-        Agent_Scout["Price Scout Agent (Llama 3.1 8B)"]
-        Agent_Route["Route Planner Agent (Llama 3.1 8B)"]
-        Agent_Risk["Weather Watch Agent (Llama 3.1 8B)"]
-        Agent_Analyst["Market Analyst Agent (Llama 3.1 70B)"]
-        Agent_Chair["Advisor Chair (Qwen 3 / Gemini Pro)"]
-        Math_Engine["Deterministic Decimal Economics Engine"]
+    subgraph Core_Engine ["3. Multi-Agent Engine (Python AsyncIO)"]
+        direction TB
+        Agent_Intake["Intake Agent (Qwen/Whisper)"]
+        Agent_Scout["Price Scout (Llama 3.1 8B)"]
+        Agent_Route["Route Planner (Llama 3.1 8B)"]
+        Agent_Risk["Weather Watch (Llama 3.1 8B)"]
+        Agent_Analyst["Market Analyst (Llama 3.1 70B)"]
+        Agent_Chair["Advisor Chair (Qwen 3 / Gemini)"]
+        Math_Engine["Deterministic Decimal Engine"]
     end
 
-    subgraph Upstream_APIs ["External Upstream Providers & Public Infrastructure"]
-        Ext_Agmark["Agmarknet OGD India<br>(data.gov.in API)"]
-        Ext_OSRM["Project-OSRM Routing<br>(router.project-osrm.org)"]
-        Ext_Weather["Open-Meteo Satellite Radar<br>(api.open-meteo.com)"]
-        Ext_Nominatim["OSM Nominatim Geocoding<br>(nominatim.openstreetmap.org)"]
-        Ext_Sarvam["Sarvam AI Indic Speech<br>(api.sarvam.ai)"]
-        Ext_Groq["Groq Cloud LPUs<br>(api.groq.com)"]
-        Ext_Smsgate["Android SMS Gateway<br>(sms-gate.app)"]
+    subgraph Upstream ["4. Upstreams & Persistence"]
+        direction TB
+        Ext_Agmark["Agmarknet (data.gov.in API)"]
+        Ext_OSRM["Project-OSRM Road Routing"]
+        Ext_Weather["Open-Meteo Satellite Radar"]
+        Ext_Sarvam["Sarvam AI Indic Speech"]
+        DB_SQL["SQLAlchemy 2.0 (mandi.db)"]
     end
 
-    subgraph Persistence ["Persistence & Cache Tier"]
-        DB_SQL["SQLAlchemy 2.0 ORM<br>(SQLite aiosqlite / PostgreSQL)"]
-        Cache_APMC["ApiCache (6h TTL Cache)"]
-        Dir_Mandi["Mandi Directory (Curated Lat/Lon Seed)"]
-        Store_MSP["Official CCEA/PIB MSP Registry"]
-    end
-
-    Client <-->|REST JSON & SSE Streams| API_GW
-    API_GW <--> Core_Engine
-    Core_Engine <--> Upstream_APIs
-    Core_Engine <--> Persistence
+    Client -->|REST & SSE| API_GW
+    API_GW --> Core_Engine
+    Core_Engine --> Upstream
 ```
 
 ---
@@ -202,23 +194,23 @@ graph TB
 
 ## 🧮 Mathematical Economics Engine: The True Net Formula
 
-Unlike consumer price apps that simply compare $P_{\text{mandi}}$, MandiSabha executes pure `Decimal` arithmetic:
+Unlike consumer price apps that simply compare $P_{\text{modal}}$, MandiSabha executes pure `Decimal` arithmetic:
 
 $$\text{Gross Produce Value} = Q \times P_{\text{modal}} \times \mu_{\text{grade}}$$
 
 $$\text{Vehicle Trips} = \left\lceil \frac{Q}{\text{Capacity}_{\text{vehicle}}} \right\rceil$$
 
-$$\text{Freight Total} = \text{Trips} \times \text{Distance}_{\text{km}} \times \text{Rate}_{\text{vehicle}} \times f_{\text{return\_leg}}$$
+$$\text{Freight Total} = \text{Trips} \times \text{Distance}_{\text{km}} \times \text{Rate}_{\text{vehicle}} \times f_{\text{return-leg}}$$
 
-$$\text{Net Payoff} = \text{Gross Produce Value} - \text{Freight Total} - \text{Tolls} - \text{Loading Charges} - (\text{Gross} \times \text{Spoilage}_{\%})$$
+$$\text{Net Payoff} = \text{Gross Produce Value} - \text{Freight Total} - \text{Tolls} - \text{Loading Charges} - (\text{Gross} \times \text{Spoilage Rate})$$
 
-$$\text{Net Surplus vs Local} = \text{Net Payoff}_{\text{candidate}} - \text{Net Payoff}_{\text{local\_baseline}}$$
+$$\text{Net Surplus vs Local} = \text{Net Payoff}_{\text{candidate}} - \text{Net Payoff}_{\text{local-baseline}}$$
 
-*Where:*
+**Where:**
 * $Q$: Quantity in Quintals
 * $P_{\text{modal}}$: Mandi Modal Price per Quintal
-* $\mu_{\text{grade}}$: Crop Grade Multiplier ($A = 1.05, B = 1.00, C = 0.92$)
-* $f_{\text{return\_leg}}$: Empty return-leg factor ($2.0\times$ default)
+* $\mu_{\text{grade}}$: Crop Grade Multiplier ($A = 1.05,\ B = 1.00,\ C = 0.92$)
+* $f_{\text{return-leg}}$: Empty return-leg factor ($2.0\times$ default)
 * $\text{Capacity}$: Pickup ($15\text{ q}$), Truck ($60\text{ q}$), Heavy ($150\text{ q}$)
 * $\text{Rate}$: Pickup ($₹14\text{/km}$), Truck ($₹28\text{/km}$), Heavy ($₹40\text{/km}$)
 
