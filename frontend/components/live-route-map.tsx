@@ -240,6 +240,13 @@ function generateCorridorPath(origin: [number, number], target: [number, number]
   return path
 }
 
+// ─── Google Maps Tile Servers (No API key needed, zero watermark) ─────────────
+const GOOGLE_TILE_URLS: Record<string, string> = {
+  road: 'https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+  satellite: 'https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+  terrain: 'https://mt{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
+}
+
 export function LiveRouteMap({
   originLocation = 'Nashik, Maharashtra',
   originCoords,
@@ -261,9 +268,23 @@ export function LiveRouteMap({
       setActiveMandi(targetMandi)
     }
   }, [targetMandi])
-  const [mapStyle, setMapStyle] = useState<'voyager' | 'dark' | 'satellite'>('voyager')
+  const [mapStyle, setMapStyle] = useState<'road' | 'satellite' | 'terrain'>('road')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isMapReady, setIsMapReady] = useState(false)
+  const [liveRoute, setLiveRoute] = useState<{
+    distanceKm: number
+    durationMin: number
+    formattedDuration: string
+    summary: string
+    coordinates: [number, number][]
+    alternatives: {
+      distanceKm: number
+      durationMin: number
+      formattedDuration: string
+      summary: string
+      coordinates: [number, number][]
+    }[]
+  } | null>(null)
 
   // Dynamic origin coordinates resolved from prop or geocoding
   const [resolvedCoords, setResolvedCoords] = useState<[number, number]>(() => {
@@ -316,6 +337,38 @@ export function LiveRouteMap({
       setActiveMandi(targetMandi)
     }
   }, [targetMandi])
+
+  // Fetch real highway turn-by-turn road route whenever activeMandi or resolvedCoords change
+  useEffect(() => {
+    let cancelled = false
+    const def = MANDI_DEFINITIONS[activeMandi]
+    if (!def) return
+
+    const [lat1, lon1] = resolvedCoords
+    const [lat2, lon2] = def.targetCoords
+
+    async function fetchLiveRoadRoute() {
+      try {
+        const res = await fetch(`/api/route?lat1=${lat1}&lon1=${lon1}&lat2=${lat2}&lon2=${lon2}`)
+        if (res.ok) {
+          const data = await res.json()
+          if (!cancelled && data.success && data.coordinates?.length) {
+            setLiveRoute(data)
+            if (onDistanceChange) {
+              onDistanceChange(data.distanceKm)
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[MAP] Live road route fetch fallback to generated corridor', err)
+      }
+    }
+
+    fetchLiveRoadRoute()
+    return () => {
+      cancelled = true
+    }
+  }, [activeMandi, resolvedCoords, onDistanceChange])
 
   // Dynamically compute corridors based on current resolvedCoords
   const corridors = useMemo<Record<string, CorridorData>>(() => {
@@ -461,17 +514,11 @@ export function LiveRouteMap({
 
       mapInstanceRef.current = map
 
-      const tileUrls: Record<string, string> = {
-        voyager: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-        dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-        satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      }
-
-      const initialUrl = tileUrls[mapStyle] || tileUrls.voyager
+      const initialUrl = GOOGLE_TILE_URLS[mapStyle] || GOOGLE_TILE_URLS.road
       const tileLayer = L.tileLayer(initialUrl, {
-        maxZoom: 19,
-        subdomains: 'abcd',
-        attribution: '&copy; CARTO &copy; OpenStreetMap',
+        maxZoom: 20,
+        subdomains: ['0', '1', '2', '3'],
+        attribution: '&copy; Google Maps',
       }).addTo(map)
       tileLayerRef.current = tileLayer
 
@@ -509,13 +556,7 @@ export function LiveRouteMap({
 
   // Update Tile Layer immediately when style changes
   useEffect(() => {
-    const tileUrls: Record<string, string> = {
-      voyager: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-      dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-      satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    }
-
-    const newUrl = tileUrls[mapStyle]
+    const newUrl = GOOGLE_TILE_URLS[mapStyle]
     if (!newUrl) return
 
     if (tileLayerRef.current && typeof tileLayerRef.current.setUrl === 'function') {
@@ -528,14 +569,15 @@ export function LiveRouteMap({
           mapInstanceRef.current.removeLayer(tileLayerRef.current)
         }
         tileLayerRef.current = L.tileLayer(newUrl, {
-          maxZoom: 19,
-          subdomains: 'abcd',
+          maxZoom: 20,
+          subdomains: ['0', '1', '2', '3'],
+          attribution: '&copy; Google Maps',
         }).addTo(mapInstanceRef.current)
       })
     }
   }, [mapStyle])
 
-  // Update Route Polyline and Markers when corridor or resolvedCoords change
+  // Update Route Polyline and Markers when corridor, liveRoute, or resolvedCoords change
   useEffect(() => {
     if (!mapInstanceRef.current || !layerGroupRef.current || !isMapReady || !corridor) return
 
@@ -547,105 +589,160 @@ export function LiveRouteMap({
 
       layerGroup.clearLayers()
 
-      // 1. Draw glowing Route Polyline
-      L.polyline(corridor.routePath, {
-        color: '#0F6B47',
-        weight: 9,
-        opacity: 0.35,
-        lineCap: 'round',
-        lineJoin: 'round',
-      }).addTo(layerGroup)
+      // Exact turn-by-turn road coordinates from live OSRM (or fallback)
+      const primaryRouteCoords = liveRoute?.coordinates?.length ? liveRoute.coordinates : corridor.routePath
 
-      L.polyline(corridor.routePath, {
-        color: '#10B981',
-        weight: 4.5,
-        opacity: 0.95,
-        dashArray: '6, 8',
-        lineCap: 'round',
-        lineJoin: 'round',
-      }).addTo(layerGroup)
+      // ── 1. Draw Alternative Route (Muted Slate, matching Google Maps image 2) ──
+      if (liveRoute?.alternatives?.[0]?.coordinates?.length) {
+        const altRoute = liveRoute.alternatives[0]
+        L.polyline(altRoute.coordinates, {
+          color: '#94A3B8',
+          weight: 6,
+          opacity: 0.85,
+          lineCap: 'round',
+          lineJoin: 'round',
+        }).addTo(layerGroup)
 
-      // 2. Add Waypoint Markers
-      corridor.waypoints.forEach((wp) => {
-        let iconHtml = ''
-
-        if (wp.type === 'origin') {
-          iconHtml = `
-            <div class="custom-map-pin relative flex items-center justify-center">
-              <span class="beacon-pulse bg-emerald-500/40"></span>
-              <div class="size-8 rounded-full bg-emerald-700 border-2 border-white shadow-xl flex items-center justify-center text-white">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
-              </div>
+        const altMidIndex = Math.floor(altRoute.coordinates.length * 0.45)
+        const altMidCoord = altRoute.coordinates[altMidIndex]
+        if (altMidCoord) {
+          const altChipHtml = `
+            <div class="px-2 py-0.5 rounded-lg bg-card/95 text-stone-700 dark:text-stone-300 border border-border shadow-md text-[10px] font-bold whitespace-nowrap pointer-events-none">
+              ${altRoute.formattedDuration} · No tolls
             </div>
           `
-        } else if (wp.type === 'target') {
-          iconHtml = `
-            <div class="custom-map-pin relative flex items-center justify-center">
-              <span class="beacon-pulse bg-amber-500/40"></span>
-              <div class="px-2.5 py-1 rounded-full bg-amber-600 border-2 border-white shadow-2xl flex items-center gap-1.5 text-white font-black text-[11px] whitespace-nowrap">
-                <span class="size-2 rounded-full bg-white animate-ping"></span>
-                <span>${wp.badge}</span>
-              </div>
-            </div>
-          `
-        } else if (wp.type === 'toll') {
-          iconHtml = `
-            <div class="custom-map-pin flex items-center justify-center">
-              <div class="px-2 py-0.5 rounded-md bg-stone-900/95 text-amber-400 border border-amber-400/50 shadow-md text-[10px] font-mono font-bold whitespace-nowrap">
-                ${wp.badge}
-              </div>
-            </div>
-          `
-        } else if (wp.type === 'weather') {
-          iconHtml = `
-            <div class="custom-map-pin flex items-center justify-center">
-              <div class="px-2 py-0.5 rounded-md bg-sky-950/95 text-sky-300 border border-sky-400/50 shadow-md text-[10px] font-sans font-bold whitespace-nowrap">
-                ${wp.badge}
-              </div>
-            </div>
-          `
-        } else if (wp.type === 'truck') {
-          iconHtml = `
-            <div class="custom-map-pin relative flex items-center justify-center">
-              <div class="size-7 rounded-full bg-primary text-white border-2 border-white shadow-xl flex items-center justify-center">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-              </div>
-            </div>
-          `
+          L.marker(altMidCoord, {
+            icon: L.divIcon({
+              html: altChipHtml,
+              className: 'leaflet-clean-pin',
+              iconSize: [80, 24],
+              iconAnchor: [40, 12],
+            }),
+          }).addTo(layerGroup)
         }
+      }
 
-        const divIcon = L.divIcon({
-          html: iconHtml,
-          className: 'leaflet-clean-pin',
-          iconSize: [36, 36],
-          iconAnchor: [18, 18],
-        })
+      // ── 2. Draw Active Highway Route (Google Maps solid royal blue) ────────
+      // Dark blue casing border
+      L.polyline(primaryRouteCoords, {
+        color: '#1E40AF',
+        weight: 8,
+        opacity: 0.95,
+        lineCap: 'round',
+        lineJoin: 'round',
+      }).addTo(layerGroup)
 
-        const marker = L.marker(wp.coords, { icon: divIcon }).addTo(layerGroup)
+      // Vibrant Google Maps blue solid inner line
+      L.polyline(primaryRouteCoords, {
+        color: '#2563EB',
+        weight: 5,
+        opacity: 1.0,
+        lineCap: 'round',
+        lineJoin: 'round',
+      }).addTo(layerGroup)
 
-        const popupContent = `
-          <div class="flex flex-col gap-1 text-xs p-1">
-            <span class="font-extrabold text-foreground text-sm">${wp.title}</span>
-            <span class="text-primary font-bold font-mono text-xs">${wp.badge}</span>
-            <p class="text-muted-foreground text-[11px] leading-snug mt-0.5">${wp.detail}</p>
+      // ── 3. Route Duration Callout Chip (Floating on road, Google Maps style) ─
+      const midIndex = Math.floor(primaryRouteCoords.length * 0.48)
+      const midCoord = primaryRouteCoords[midIndex]
+      if (midCoord) {
+        const routeChipHtml = `
+          <div class="px-2.5 py-1 rounded-xl bg-blue-600 text-white shadow-xl border border-white/90 flex flex-col items-center pointer-events-none whitespace-nowrap">
+            <span class="font-extrabold text-[11px] leading-tight tracking-wide">
+              ${liveRoute?.formattedDuration || corridor.transitHours}
+            </span>
+            <span class="text-[9.5px] opacity-90 font-mono">
+              ₹${corridor.toll}.00 · ${liveRoute?.distanceKm || corridor.distanceKm} km
+            </span>
           </div>
         `
+        L.marker(midCoord, {
+          icon: L.divIcon({
+            html: routeChipHtml,
+            className: 'leaflet-clean-pin',
+            iconSize: [110, 38],
+            iconAnchor: [55, 19],
+          }),
+        }).addTo(layerGroup)
+      }
 
-        marker.bindPopup(popupContent, {
-          closeButton: false,
-          offset: [0, -12],
-        })
-      })
+      // ── 4. Origin Marker (Google Maps blue location dot with "Home" badge) ─
+      const originHtml = `
+        <div class="relative flex flex-col items-center">
+          <span class="mb-1 px-1.5 py-0.5 rounded-md bg-card/95 border border-border shadow-md text-[10px] font-bold text-foreground whitespace-nowrap">
+            Home
+          </span>
+          <div class="relative flex items-center justify-center">
+            <span class="size-6 rounded-full bg-blue-500/30 animate-ping absolute"></span>
+            <div class="size-4 rounded-full bg-blue-600 border-2 border-white shadow-lg flex items-center justify-center">
+              <div class="size-1.5 rounded-full bg-white"></div>
+            </div>
+          </div>
+        </div>
+      `
+      L.marker(resolvedCoords, {
+        icon: L.divIcon({
+          html: originHtml,
+          className: 'leaflet-clean-pin',
+          iconSize: [50, 40],
+          iconAnchor: [25, 30],
+        }),
+      }).addTo(layerGroup)
 
-      // Smooth pan and fit bounds around new origin & destination
-      map.flyToBounds(corridor.bounds, {
-        padding: [35, 35],
-        duration: 0.7,
+      // ── 5. Destination Marker (Google Maps red location pin with Mandi name) ─
+      const destHtml = `
+        <div class="relative flex flex-col items-center">
+          <span class="mb-1 px-2 py-0.5 rounded-md bg-red-600 text-white shadow-md text-[10px] font-bold whitespace-nowrap">
+            ${corridor.shortName}
+          </span>
+          <div class="size-7 rounded-full bg-red-600 border-2 border-white shadow-xl flex items-center justify-center text-white">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          </div>
+        </div>
+      `
+      L.marker(corridor.targetCoords, {
+        icon: L.divIcon({
+          html: destHtml,
+          className: 'leaflet-clean-pin',
+          iconSize: [80, 48],
+          iconAnchor: [40, 42],
+        }),
+      }).addTo(layerGroup)
+
+      // ── 6. Along-Route FASTag Toll Badge ──────────────────────────────────
+      const tollIndex = Math.floor(primaryRouteCoords.length * 0.3)
+      const tollCoord = primaryRouteCoords[tollIndex]
+      if (tollCoord) {
+        const tollHtml = `
+          <div class="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-stone-900/90 text-amber-300 border border-amber-400/40 shadow-sm text-[9.5px] font-mono font-bold whitespace-nowrap">
+            FASTag ₹${corridor.toll}
+          </div>
+        `
+        L.marker(tollCoord, {
+          icon: L.divIcon({
+            html: tollHtml,
+            className: 'leaflet-clean-pin',
+            iconSize: [70, 20],
+            iconAnchor: [35, 10],
+          }),
+        }).addTo(layerGroup)
+      }
+
+      // Smooth pan and fit bounds around real road coordinates
+      const latList = primaryRouteCoords.map((p) => p[0])
+      const lonList = primaryRouteCoords.map((p) => p[1])
+      const bounds: [[number, number], [number, number]] = [
+        [Math.min(...latList) - 0.03, Math.min(...lonList) - 0.03],
+        [Math.max(...latList) + 0.03, Math.max(...lonList) + 0.03],
+      ]
+
+      map.flyToBounds(bounds, {
+        padding: [30, 30],
+        duration: 0.8,
       })
 
       setTimeout(() => map.invalidateSize(), 200)
     })
-  }, [corridor, isMapReady])
+  }, [corridor, isMapReady, liveRoute, resolvedCoords])
 
   const handleSelectCorridor = (mandiName: string) => {
     setActiveMandi(mandiName)
@@ -793,20 +890,20 @@ export function LiveRouteMap({
             </div>
 
             <div className="flex items-center gap-1 bg-card/90 backdrop-blur-md p-1 rounded-xl border border-border shadow-md">
-              {(['voyager', 'dark', 'satellite'] as const).map((style) => (
+              {(['road', 'satellite', 'terrain'] as const).map((style) => (
                 <button
                   key={style}
                   type="button"
                   onClick={() => setMapStyle(style)}
-                  title={`Switch map layer to ${style}`}
+                  title={`Switch map layer to Google ${style}`}
                   className={cn(
                     'px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase transition-all cursor-pointer',
                     mapStyle === style
-                      ? 'bg-primary text-white shadow-2xs'
+                      ? 'bg-blue-600 text-white shadow-2xs'
                       : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  {style === 'voyager' ? 'Road' : style === 'dark' ? 'Dark' : 'Sat'}
+                  {style === 'road' ? 'Road' : style === 'satellite' ? 'Sat' : 'Terrain'}
                 </button>
               ))}
             </div>
@@ -817,31 +914,48 @@ export function LiveRouteMap({
             <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
             <strong className="font-extrabold text-foreground">{corridor.name}</strong>
             <span className="text-muted-foreground">·</span>
-            <span className="font-mono text-muted-foreground">{corridor.transitHours}</span>
+            <span className="font-mono text-muted-foreground">{liveRoute?.formattedDuration || corridor.transitHours}</span>
             <span className="text-muted-foreground">·</span>
             <span className="font-mono text-primary font-bold">Toll: ₹{corridor.toll}</span>
           </div>
         </div>
 
-        {/* ── Bottom Telemetry & Backend Integration Banner ─────────────── */}
-        <div className="px-3.5 py-2 bg-gradient-to-r from-card to-background border-t border-border z-20 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs">
-          <div className="flex flex-wrap items-center gap-2 text-muted-foreground text-[10px]">
-            <span className="flex items-center gap-1 font-semibold text-foreground">
-              <Truck className="size-3 text-primary" /> {corridor.speedLimit}
-            </span>
-            <span>·</span>
-            <span className="flex items-center gap-1">
-              <CloudSun className="size-3 text-sky" /> {corridor.weatherStatus}
-            </span>
-            <span>·</span>
-            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
-              <ShieldCheck className="size-3" /> FASTag Active
-            </span>
+        {/* ── Google Maps Style Drive Bar (Matching Reference Image) ───────── */}
+        <div className="p-3 sm:p-3.5 bg-card border-t border-border z-20 flex flex-col gap-2">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <span className="size-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="flex items-baseline gap-1.5 flex-wrap">
+                <span className="font-extrabold text-sm sm:text-base text-foreground">Drive</span>
+                <span className="text-blue-600 dark:text-blue-400 font-extrabold text-sm sm:text-base font-mono">
+                  {liveRoute?.formattedDuration || corridor.transitHours}
+                </span>
+                <span className="text-muted-foreground font-semibold text-xs sm:text-sm">
+                  ({liveRoute?.distanceKm || corridor.distanceKm} km)
+                </span>
+              </div>
+            </div>
+
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&origin=${resolvedCoords[0]},${resolvedCoords[1]}&destination=${corridor.targetCoords[0]},${corridor.targetCoords[1]}&travelmode=driving`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+            >
+              <Navigation className="size-3.5" />
+              <span>Start in Google Maps</span>
+            </a>
           </div>
 
-          <div className="flex items-center gap-1.5 text-[9px] font-mono text-muted-foreground">
-            <span className="size-1.5 rounded-full bg-emerald-500" />
-            <span>GPS Calibrated: {resolvedCoords[0].toFixed(3)}°N, {resolvedCoords[1].toFixed(3)}°E</span>
+          <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs text-muted-foreground border-t border-border/40 pt-1.5">
+            <span className="flex items-center gap-1 text-[11px]">
+              Fastest route now via <strong className="text-foreground">{corridor.highway}</strong> · FASTag: ₹{corridor.toll}
+            </span>
+            <div className="flex items-center gap-2 text-[10px] font-mono">
+              <span className="text-emerald-600 dark:text-emerald-400 font-bold">FASTag Active</span>
+              <span>·</span>
+              <span>{corridor.weatherStatus.split(' · ')[0]}</span>
+            </div>
           </div>
         </div>
       </div>
