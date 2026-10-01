@@ -91,7 +91,7 @@ const AVAILABLE_CROPS: Crop[] = [
 
 export default function SettingsPage() {
   const { user, updateUser, logout } = useAuth()
-  const { language, setLanguage } = useLocale()
+  const { language, setLanguage, t, tData } = useLocale()
 
   // Profile fields
   const [name, setName] = useState(user?.name || '')
@@ -106,6 +106,7 @@ export default function SettingsPage() {
       ? user.village.split(',')[1].trim()
       : user?.district || '')
   )
+  const [mobile, setMobile] = useState(user?.mobile || '9876543210')
   const [saving, setSaving] = useState(false)
   const [profileSaved, setProfileSaved] = useState(false)
 
@@ -134,6 +135,9 @@ export default function SettingsPage() {
       } else {
         setVillage(user.village)
       }
+    }
+    if (user?.mobile) {
+      setMobile(user.mobile)
     }
     if (user?.state) {
       setStateName(user.state)
@@ -190,6 +194,7 @@ export default function SettingsPage() {
         village: village.trim(),
         state: stateName.trim(),
         district: stateName.trim(),
+        mobile: mobile.replace(/\D/g, '').slice(0, 10),
       })
       setProfileSaved(true)
       triggerSave()
@@ -214,7 +219,7 @@ export default function SettingsPage() {
     triggerSave()
   }
 
-  const cropsLabel = selectedCrops.length > 0 ? selectedCrops.join(', ') : 'None selected'
+  const cropsLabel = selectedCrops.length > 0 ? selectedCrops.map((c) => tData('crop', c)).join(', ') : 'None selected'
 
   return (
     <AppShell>
@@ -223,16 +228,16 @@ export default function SettingsPage() {
         <div className="mb-6 flex items-start justify-between">
           <div>
             <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-emerald-700 dark:text-emerald-400 block mb-1">
-              PREFERENCES
+              {t('settings.kicker')}
             </span>
             <h1 className="font-display text-3xl sm:text-4xl font-normal tracking-tight text-foreground">
-              Settings.
+              {t('settings.title')}
             </h1>
           </div>
 
           {savedIndicator && (
             <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 animate-in fade-in flex items-center gap-1 mt-1">
-              <Check className="size-3.5" /> Saved
+              <Check className="size-3.5" /> {t('settings.saved')}
             </span>
           )}
         </div>
@@ -242,7 +247,7 @@ export default function SettingsPage() {
           {/* Card 1: Profile */}
           <section className="rounded-2xl border border-border/80 bg-card p-5 shadow-2xs">
             <h2 className="text-xs font-semibold text-foreground mb-3.5">
-              Profile
+              {t('settings.profile.title')}
             </h2>
 
             <form onSubmit={handleSaveProfile} className="flex flex-col gap-3.5">
@@ -251,7 +256,7 @@ export default function SettingsPage() {
                   htmlFor="profile-name" 
                   className="text-[11px] font-medium text-foreground block mb-1.5"
                 >
-                  Name
+                  {t('settings.profile.name_label')}
                 </label>
                 <input
                   id="profile-name"
@@ -259,8 +264,32 @@ export default function SettingsPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full rounded-lg bg-muted/40 border border-transparent focus:border-primary/40 focus:bg-background px-3 py-2 text-xs font-normal text-foreground outline-none transition-all placeholder:text-muted-foreground/60"
-                  placeholder="Enter name"
+                  placeholder={t('settings.profile.name_placeholder')}
                 />
+              </div>
+
+              <div>
+                <label 
+                  htmlFor="profile-phone" 
+                  className="text-[11px] font-medium text-foreground block mb-1.5"
+                >
+                  {t('settings.profile.phone_label')}
+                </label>
+                <div className="relative flex items-center">
+                  <span className="absolute left-3 text-xs text-muted-foreground font-mono select-none pointer-events-none">
+                    +91
+                  </span>
+                  <input
+                    id="profile-phone"
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    value={mobile}
+                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    className="w-full rounded-lg bg-muted/40 border border-transparent focus:border-primary/40 focus:bg-background pl-11 pr-3 py-2 text-xs font-mono text-foreground outline-none transition-all placeholder:text-muted-foreground/60"
+                    placeholder={t('settings.profile.phone_placeholder')}
+                  />
+                </div>
               </div>
 
               <div>
@@ -268,7 +297,7 @@ export default function SettingsPage() {
                   htmlFor="profile-village" 
                   className="text-[11px] font-medium text-foreground block mb-1.5"
                 >
-                  Village
+                  {t('settings.profile.village_label')}
                 </label>
                 <input
                   id="profile-village"
@@ -276,7 +305,7 @@ export default function SettingsPage() {
                   value={village}
                   onChange={(e) => setVillage(e.target.value)}
                   className="w-full rounded-lg bg-muted/40 border border-transparent focus:border-primary/40 focus:bg-background px-3 py-2 text-xs font-normal text-foreground outline-none transition-all placeholder:text-muted-foreground/60"
-                  placeholder="Enter village"
+                  placeholder={t('settings.profile.village_placeholder')}
                 />
               </div>
 
@@ -285,7 +314,7 @@ export default function SettingsPage() {
                   htmlFor="profile-state" 
                   className="text-[11px] font-medium text-foreground block mb-1.5"
                 >
-                  State
+                  {t('settings.profile.state_label')}
                 </label>
                 <input
                   id="profile-state"
@@ -293,7 +322,7 @@ export default function SettingsPage() {
                   value={stateName}
                   onChange={(e) => setStateName(e.target.value)}
                   className="w-full rounded-lg bg-muted/40 border border-transparent focus:border-primary/40 focus:bg-background px-3 py-2 text-xs font-normal text-foreground outline-none transition-all placeholder:text-muted-foreground/60"
-                  placeholder="Enter state"
+                  placeholder={t('settings.profile.state_placeholder')}
                 />
               </div>
 
@@ -303,12 +332,12 @@ export default function SettingsPage() {
                   disabled={saving}
                   className="button-primary !min-h-[32px] !px-4 text-xs font-semibold rounded-lg shadow-2xs hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
                 >
-                  {saving ? 'Saving...' : 'Save Information'}
+                  {saving ? t('settings.profile.saving_btn') : t('settings.profile.save_btn')}
                 </button>
 
                 {profileSaved && (
                   <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 animate-in fade-in flex items-center gap-1">
-                    <Check className="size-3.5 stroke-[2.5]" /> Information saved
+                    <Check className="size-3.5 stroke-[2.5]" /> {t('settings.profile.saved_success')}
                   </span>
                 )}
               </div>
@@ -318,13 +347,13 @@ export default function SettingsPage() {
           {/* Card 2: Language & appearance */}
           <section className="rounded-2xl border border-border/80 bg-card px-5 py-2 shadow-2xs">
             <h2 className="text-xs font-semibold text-foreground pt-3 pb-1">
-              Language & appearance
+              {t('settings.appearance.title')}
             </h2>
 
             <div className="divide-y divide-border/60">
               {/* Language */}
               <div className="py-3 flex items-center justify-between text-xs">
-                <span className="font-medium text-foreground">Language</span>
+                <span className="font-medium text-foreground">{t('settings.appearance.language')}</span>
                 <CustomSelect
                   value={language}
                   options={[
@@ -341,13 +370,13 @@ export default function SettingsPage() {
 
               {/* Theme */}
               <div className="py-3 flex items-center justify-between text-xs">
-                <span className="font-medium text-foreground">Theme</span>
+                <span className="font-medium text-foreground">{t('settings.appearance.theme')}</span>
                 <CustomSelect
                   value={theme}
                   options={[
-                    { value: 'system', label: 'System default' },
-                    { value: 'light', label: 'Light' },
-                    { value: 'dark', label: 'Dark' },
+                    { value: 'system', label: t('settings.appearance.theme_system') },
+                    { value: 'light', label: t('settings.appearance.theme_light') },
+                    { value: 'dark', label: t('settings.appearance.theme_dark') },
                   ]}
                   onChange={(val) => handleThemeChange(val as any)}
                 />
@@ -355,12 +384,12 @@ export default function SettingsPage() {
 
               {/* Notifications */}
               <div className="py-3 flex items-center justify-between text-xs">
-                <span className="font-medium text-foreground">Notifications</span>
+                <span className="font-medium text-foreground">{t('settings.appearance.notifications')}</span>
                 <CustomSelect
                   value={notifications}
                   options={[
-                    { value: 'on', label: 'On' },
-                    { value: 'off', label: 'Off' },
+                    { value: 'on', label: t('settings.appearance.on') },
+                    { value: 'off', label: t('settings.appearance.off') },
                   ]}
                   onChange={(val) => {
                     setNotifications(val as any)
@@ -374,13 +403,13 @@ export default function SettingsPage() {
           {/* Card 3: Selling preferences */}
           <section className="rounded-2xl border border-border/80 bg-card px-5 py-2 shadow-2xs">
             <h2 className="text-xs font-semibold text-foreground pt-3 pb-1">
-              Selling preferences
+              {t('settings.selling.title')}
             </h2>
 
             <div className="divide-y divide-border/60">
               {/* Default crops */}
               <div className="py-3 flex items-center justify-between text-xs">
-                <span className="font-medium text-foreground">Default crops</span>
+                <span className="font-medium text-foreground">{t('settings.selling.default_crops')}</span>
                 <button
                   type="button"
                   onClick={() => setCropModalOpen(true)}
@@ -394,9 +423,9 @@ export default function SettingsPage() {
               {/* Transport cost */}
               <div className="py-3 flex items-center justify-between text-xs">
                 <div className="pr-4">
-                  <span className="font-medium text-foreground block">Transport cost</span>
+                  <span className="font-medium text-foreground block">{t('settings.selling.transport_cost')}</span>
                   <span className="text-[10.5px] text-muted-foreground block mt-0.5">
-                    This helps us calculate the true net price after transport.
+                    {t('settings.selling.transport_sub')}
                   </span>
                 </div>
                 <CustomSelect
@@ -419,12 +448,12 @@ export default function SettingsPage() {
 
               {/* Data saver */}
               <div className="py-3 flex items-center justify-between text-xs">
-                <span className="font-medium text-foreground">Data saver</span>
+                <span className="font-medium text-foreground">{t('settings.selling.data_saver')}</span>
                 <CustomSelect
                   value={dataSaver}
                   options={[
-                    { value: 'off', label: 'Off' },
-                    { value: 'on', label: 'On' },
+                    { value: 'off', label: t('settings.appearance.off') },
+                    { value: 'on', label: t('settings.appearance.on') },
                   ]}
                   onChange={(val) => {
                     setDataSaver(val as any)
@@ -435,16 +464,28 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          {/* Delete Account Link */}
-          <div className="pt-2">
-            <button
-              type="button"
-              onClick={() => setDeleteModalOpen(true)}
-              className="text-xs font-normal text-[#C25E30] hover:underline cursor-pointer"
-            >
-              Delete account
-            </button>
-          </div>
+          {/* Card 4: Account */}
+          <section className="rounded-2xl border border-border/80 bg-card px-5 py-2 shadow-2xs">
+            <h2 className="text-xs font-semibold text-foreground pt-3 pb-1">
+              {t('settings.account.title')}
+            </h2>
+
+            <div className="py-3 flex items-center justify-between text-xs">
+              <div className="pr-4">
+                <span className="font-medium text-foreground block">{t('settings.account.delete_label')}</span>
+                <span className="text-[10.5px] text-muted-foreground block mt-0.5">
+                  {t('settings.account.delete_sub')}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeleteModalOpen(true)}
+                className="text-xs font-normal text-red-600 dark:text-red-400 hover:underline cursor-pointer shrink-0"
+              >
+                {t('settings.account.delete_btn')}
+              </button>
+            </div>
+          </section>
         </div>
 
         {/* ── Crop Selection Modal ───────────────────────────────────────── */}
@@ -452,7 +493,7 @@ export default function SettingsPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
             <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-xl animate-in zoom-in-95 duration-200">
               <div className="flex items-center justify-between pb-3 border-b border-border/80">
-                <h3 className="text-xs font-semibold text-foreground">Select Default Crops</h3>
+                <h3 className="text-xs font-semibold text-foreground">{t('settings.modals.crops_title')}</h3>
                 <button
                   type="button"
                   onClick={() => setCropModalOpen(false)}
@@ -477,7 +518,7 @@ export default function SettingsPage() {
                           : 'border-border/70 bg-background/50 text-foreground hover:bg-muted/40'
                       )}
                     >
-                      <span>{crop}</span>
+                      <span>{tData('crop', crop)}</span>
                       {isSelected && <Check className="size-3.5 text-primary" />}
                     </button>
                   )
@@ -490,7 +531,7 @@ export default function SettingsPage() {
                   onClick={() => setCropModalOpen(false)}
                   className="button-primary !min-h-[34px] !px-4 text-xs font-semibold"
                 >
-                  Done
+                  {t('settings.modals.crops_done')}
                 </button>
               </div>
             </div>
@@ -501,20 +542,20 @@ export default function SettingsPage() {
         {deleteModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
             <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-xl animate-in zoom-in-95 duration-200">
-              <div className="flex items-center gap-2.5 text-orange-600 mb-2">
+              <div className="flex items-center gap-2 text-red-600 dark:text-red-400 mb-2">
                 <AlertTriangle className="size-4" />
-                <h3 className="text-xs font-semibold text-foreground">Delete Account Data</h3>
+                <h3 className="text-xs font-semibold text-foreground">{t('settings.modals.delete_title')}</h3>
               </div>
               <p className="text-xs text-muted-foreground mb-4">
-                This will reset your session preferences and sign you out of Mandi Sabha.
+                {t('settings.modals.delete_warning')}
               </p>
               <div className="flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setDeleteModalOpen(false)}
-                  className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
+                  className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted cursor-pointer"
                 >
-                  Cancel
+                  {t('settings.modals.cancel')}
                 </button>
                 <button
                   type="button"
@@ -522,9 +563,9 @@ export default function SettingsPage() {
                     await logout()
                     window.location.href = '/'
                   }}
-                  className="rounded-lg bg-orange-600 hover:bg-orange-700 px-3 py-1.5 text-xs font-semibold text-white shadow-2xs"
+                  className="rounded-lg bg-red-600 hover:bg-red-700 px-3 py-1.5 text-xs font-semibold text-white shadow-2xs cursor-pointer transition-colors"
                 >
-                  Confirm Delete
+                  {t('settings.modals.confirm_delete')}
                 </button>
               </div>
             </div>

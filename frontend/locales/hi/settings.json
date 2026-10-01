@@ -1,0 +1,51 @@
+{
+  "kicker": "प्राथमिकताएं",
+  "title": "सेटिंग्स।",
+  "saved": "सहेजा गया",
+  "profile": {
+    "title": "किसान प्रोफ़ाइल",
+    "name_label": "नाम",
+    "name_placeholder": "अपना नाम दर्ज करें",
+    "village_label": "गांव",
+    "village_placeholder": "गांव का नाम दर्ज करें",
+    "state_label": "राज्य",
+    "state_placeholder": "राज्य का नाम दर्ज करें",
+    "phone_label": "फोन नंबर",
+    "phone_placeholder": "10 अंकों का मोबाइल नंबर",
+    "save_btn": "जानकारी सहेजें",
+    "saving_btn": "सहेजा जा रहा है...",
+    "saved_success": "जानकारी सहेज ली गई"
+  },
+  "appearance": {
+    "title": "भाषा और रूप-रंग",
+    "language": "भाषा",
+    "theme": "थीम",
+    "theme_system": "सिस्टम डिफ़ॉल्ट",
+    "theme_light": "लाइट",
+    "theme_dark": "डार्क",
+    "notifications": "सूचनाएं",
+    "on": "चालू",
+    "off": "बंद"
+  },
+  "selling": {
+    "title": "बिक्री प्राथमिकताएं",
+    "default_crops": "मुख्य फसलें",
+    "transport_cost": "भाड़ा दर",
+    "transport_sub": "इससे भाड़े के बाद वास्तविक शुद्ध भाव निकालने में मदद मिलती है।",
+    "data_saver": "डेटा सेवर"
+  },
+  "account": {
+    "title": "खाता",
+    "delete_label": "खाता हटाएं",
+    "delete_sub": "अपनी खाता प्राथमिकताएं और सत्र डेटा हमेशा के लिए हटाएं।",
+    "delete_btn": "खाता हटाएं"
+  },
+  "modals": {
+    "crops_title": "मुख्य फसलें चुनें",
+    "crops_done": "पूर्ण",
+    "delete_title": "खाता डेटा हटाएं",
+    "delete_warning": "इससे आपकी प्राथमिकताएं रीसेट हो जाएंगी और आप मंडी सभा से बाहर हो जाएंगे।",
+    "cancel": "रद्द करें",
+    "confirm_delete": "हटाने की पुष्टि करें"
+  }
+}

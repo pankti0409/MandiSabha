@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { 
   ArrowRight, 
   Check, 
@@ -25,31 +25,78 @@ import {
 } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { useAuth } from '@/components/auth-provider'
+import { useLocale } from '@/components/locale-provider'
 import { allCrops, createSabha, formatINR, type Crop } from '@/lib/api/sabha'
 import { detectUserLocation } from '@/lib/geolocation'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { VoiceAssistantModal } from '@/components/voice-assistant-modal'
 import { LiveRouteMap } from '@/components/live-route-map'
 import { cn } from '@/lib/utils'
 
-export default function NewSabhaPage() {
+function NewSabhaContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user } = useAuth()
+  const { t, tData, formatCurrency } = useLocale()
 
-  const [crop, setCrop] = useState<Crop>('Onion')
-  const [quantity, setQuantity] = useState(20)
-  const [location, setLocation] = useState(
-    user?.village
-      ? `${user.village}, ${user.district || user.state || ''}`
-      : user?.district
-      ? `${user.district}, ${user.state || ''}`
-      : ''
-  )
-  const [urgency, setUrgency] = useState<'today' | 'soon' | 'week'>('today')
+  const cropParam = searchParams.get('crop')
+  const matchedCrop = cropParam
+    ? allCrops.find((c) => c.name.toLowerCase() === cropParam.trim().toLowerCase())?.name
+    : null
+
+  const qtyParam = searchParams.get('quantity') || searchParams.get('qty')
+  const initialQty = qtyParam && !isNaN(Number(qtyParam)) && Number(qtyParam) > 0 ? Number(qtyParam) : 20
+
+  const locParam = searchParams.get('location') || searchParams.get('origin')
+  const defaultLoc = user?.village
+    ? `${user.village}, ${user.district || user.state || 'Maharashtra'}`
+    : user?.district
+    ? `${user.district}, ${user.state || 'Maharashtra'}`
+    : 'Nashik, Maharashtra'
+  const initialLoc = locParam || defaultLoc
+
+  const urgencyParam = searchParams.get('urgency')
+  const initialUrgency = (urgencyParam === 'today' || urgencyParam === 'soon' || urgencyParam === 'week') ? urgencyParam : 'today'
+
+  const targetMandiParam = searchParams.get('targetMandi') || searchParams.get('mandi')
+  const initialMandi = targetMandiParam || 'Surat APMC'
+
+  const [crop, setCrop] = useState<Crop>(matchedCrop || 'Onion')
+  const [quantity, setQuantity] = useState(initialQty)
+  const [location, setLocation] = useState(initialLoc)
+  const [urgency, setUrgency] = useState<'today' | 'soon' | 'week'>(initialUrgency)
   const getTodayISO = () => new Date().toISOString().split('T')[0]
   const [targetDate, setTargetDate] = useState<string>(getTodayISO())
-  const [activeTimingPreset, setActiveTimingPreset] = useState<'today' | 'soon' | 'week' | 'custom'>('today')
+  const [activeTimingPreset, setActiveTimingPreset] = useState<'today' | 'soon' | 'week' | 'custom'>(initialUrgency)
+
+  // React to search parameter changes dynamically if user switches crop via link/radar
+  useEffect(() => {
+    const cParam = searchParams.get('crop')
+    if (cParam) {
+      const found = allCrops.find((c) => c.name.toLowerCase() === cParam.trim().toLowerCase())
+      if (found) {
+        setCrop(found.name)
+      }
+    }
+    const qParam = searchParams.get('quantity') || searchParams.get('qty')
+    if (qParam && !isNaN(Number(qParam)) && Number(qParam) > 0) {
+      setQuantity(Number(qParam))
+    }
+    const lParam = searchParams.get('location') || searchParams.get('origin')
+    if (lParam) {
+      setLocation(lParam)
+    }
+    const uParam = searchParams.get('urgency')
+    if (uParam === 'today' || uParam === 'soon' || uParam === 'week') {
+      setUrgency(uParam)
+      setActiveTimingPreset(uParam)
+    }
+    const mParam = searchParams.get('targetMandi') || searchParams.get('mandi')
+    if (mParam) {
+      setSelectedMandiTarget(mParam)
+    }
+  }, [searchParams])
 
   function handlePresetSelect(presetId: 'today' | 'soon' | 'week', offsetDays: number) {
     setActiveTimingPreset(presetId)
@@ -101,7 +148,7 @@ export default function NewSabhaPage() {
   const [radius, setRadius] = useState(200)
   const [vehicle, setVehicle] = useState<'pickup' | 'truck' | 'heavy'>('pickup')
   const [qualityGrade, setQualityGrade] = useState<'A' | 'B' | 'C'>('A')
-  const [selectedMandiTarget, setSelectedMandiTarget] = useState('Gondal APMC')
+  const [selectedMandiTarget, setSelectedMandiTarget] = useState(initialMandi)
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
   const [voiceOpen, setVoiceOpen] = useState(false)
@@ -189,12 +236,20 @@ export default function NewSabhaPage() {
         originCoords: originCoords || [22.3039, 70.8022],
         targetMandi: selectedMandiTarget || 'Gondal APMC',
       })
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('latest_sabha', JSON.stringify({ ...sabha, crop, quantity, location: effectiveLocation, targetMandi: selectedMandiTarget }))
+        } catch (e) {}
+      }
       const query = new URLSearchParams({
         crop,
         qty: String(quantity),
+        quantity: String(quantity),
         loc: effectiveLocation,
+        location: effectiveLocation,
         rad: String(radius),
         veh: vehicle,
+        targetMandi: selectedMandiTarget || '',
       }).toString()
       router.push(`/sabha/${sabha.id}?${query}`)
     } catch (e) {
@@ -234,12 +289,12 @@ export default function NewSabhaPage() {
         {/* ── Page Header with Voice Trigger ───────────────────────────── */}
         <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-border/80">
           <div>
-            <span className="section-kicker">NEW SESSION CONVENER</span>
+            <span className="section-kicker">{t('sabha.wizard.kicker')}</span>
             <h1 className="page-title">
-              Start a New Mandi Sabha.
+              {t('sabha.wizard.title')}
             </h1>
             <p className="page-subtitle">
-              Provide your crop specifications. 5 AI agents will simultaneously analyze price spreads, weather risks, and transport logistics.
+              {t('sabha.wizard.subtitle')}
             </p>
           </div>
 
@@ -265,14 +320,14 @@ export default function NewSabhaPage() {
               <div className="flex items-center justify-between">
                 <label className="text-sm font-bold text-foreground flex items-center gap-2">
                   <span className="grid size-6 place-items-center rounded-full bg-primary text-white text-xs">1</span>
-                  Select Commodity / Crop
+                  {t('sabha.wizard.step_crop')}
                 </label>
                 <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-1 text-xs">
                   <Search className="size-3.5 text-muted-foreground" />
                   <input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search crops..."
+                    placeholder={t('common.actions.search')}
                     className="bg-transparent outline-none w-28 text-xs"
                   />
                 </div>
@@ -296,7 +351,7 @@ export default function NewSabhaPage() {
                       <div className="flex items-start justify-between gap-1 mb-2">
                         <div>
                           <span className="block text-sm font-bold text-foreground leading-tight group-hover:text-primary transition-colors">
-                            {item.name}
+                            {tData('crop', item.name)}
                           </span>
                           <span className="text-[11px] text-muted-foreground block truncate mt-0.5">
                             {item.local}
@@ -317,7 +372,7 @@ export default function NewSabhaPage() {
                       <div className="pt-2 border-t border-border/50 flex items-center justify-between">
                         <span className="text-[10px] text-muted-foreground uppercase font-mono">Modal</span>
                         <span className="font-mono text-xs font-bold text-primary">
-                          {formatINR(item.price)}/q
+                          {formatCurrency(item.price)}/q
                         </span>
                       </div>
                     </button>
@@ -332,7 +387,7 @@ export default function NewSabhaPage() {
               <div className="flex flex-col gap-3">
                 <label className="text-sm font-bold text-foreground flex items-center gap-2">
                   <span className="grid size-6 place-items-center rounded-full bg-primary text-white text-xs">2</span>
-                  Volume (Quintals)
+                  {t('sabha.wizard.step_quantity')}
                 </label>
 
                 <div className="flex items-center gap-3">
@@ -353,7 +408,7 @@ export default function NewSabhaPage() {
                       onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
                       className="w-20 bg-transparent text-center text-xl font-bold tabular-nums outline-none text-foreground"
                     />
-                    <span className="text-xs font-bold text-muted-foreground ml-1">quintals</span>
+                    <span className="text-xs font-bold text-muted-foreground ml-1">{t('common.units.quintals')}</span>
                   </div>
 
                   <button
@@ -386,14 +441,14 @@ export default function NewSabhaPage() {
               <div className="flex flex-col gap-3">
                 <label className="text-sm font-bold text-foreground flex items-center gap-2">
                   <span className="grid size-6 place-items-center rounded-full bg-primary text-white text-xs">3</span>
-                  Crop Grade & Moisture
+                  {t('sabha.wizard.step_quality')}
                 </label>
 
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { grade: 'A', label: 'Grade A (Top)', bonus: '+5%' },
-                    { grade: 'B', label: 'Grade B (Modal)', bonus: '0%' },
-                    { grade: 'C', label: 'Grade C (Fair)', bonus: '-8%' },
+                    { grade: 'A', label: t('sabha.wizard.grade_a_title'), bonus: '+5%' },
+                    { grade: 'B', label: t('sabha.wizard.grade_b_title'), bonus: '0%' },
+                    { grade: 'C', label: t('sabha.wizard.grade_c_title'), bonus: '-8%' },
                   ].map((g) => (
                     <button
                       key={g.grade}
@@ -413,7 +468,7 @@ export default function NewSabhaPage() {
                 </div>
 
                 <p className="text-[11px] text-muted-foreground">
-                  Effective rate: <strong className="font-mono text-primary font-bold">{formatINR(baseRate)}/q</strong>
+                  {t('sabha.wizard.effective_rate', { rate: `${formatCurrency(baseRate)}/q` })}
                 </p>
               </div>
             </div>
@@ -424,7 +479,7 @@ export default function NewSabhaPage() {
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-bold text-foreground flex items-center gap-2">
                     <span className="grid size-6 place-items-center rounded-full bg-primary text-white text-xs">4</span>
-                    Farm Origin
+                    {t('sabha.wizard.step_origin')}
                   </label>
                   <div className="flex items-center gap-2 rounded-2xl border border-border bg-background px-3 h-11 transition-all focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary">
                     <MapPin className="size-4 text-primary shrink-0" />
@@ -432,14 +487,14 @@ export default function NewSabhaPage() {
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
                       className="w-full bg-transparent text-sm outline-none font-medium placeholder:text-muted-foreground/60"
-                      placeholder="e.g. Niphad, Nashik"
+                      placeholder={t('sabha.wizard.step_origin_placeholder')}
                     />
                     <button
                       type="button"
                       onClick={handleAutoDetectLocation}
                       disabled={isLocating}
                       className="text-primary hover:scale-110 active:scale-95 transition-all p-1.5 rounded-lg hover:bg-primary/10 disabled:opacity-50"
-                      title="Detect My Location (GPS)"
+                      title={t('sabha.wizard.gps_locate')}
                     >
                       {isLocating ? (
                         <Loader2 className="size-4 animate-spin text-primary" />
@@ -474,7 +529,7 @@ export default function NewSabhaPage() {
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-bold text-foreground flex items-center gap-2">
                       <span className="grid size-6 place-items-center rounded-full bg-primary text-white text-xs">5</span>
-                      Target Sale & Dispatch Date
+                      {t('sabha.wizard.step_timing')}
                     </label>
                     <span className="text-[11px] font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
                       {formatDisplayDate(targetDate)}
@@ -484,9 +539,9 @@ export default function NewSabhaPage() {
                   {/* Preset Quick Timing Options */}
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: 'today', label: 'Immediately', sub: 'Today', offset: 0 },
-                      { id: 'soon', label: 'In 2–3 Days', sub: 'Short Notice', offset: 3 },
-                      { id: 'week', label: 'Next Week', sub: 'Harvest Window', offset: 7 },
+                      { id: 'today', label: t('sabha.wizard.preset_today'), sub: 'Today', offset: 0 },
+                      { id: 'soon', label: t('sabha.wizard.preset_soon'), sub: '2–3 Days', offset: 3 },
+                      { id: 'week', label: t('sabha.wizard.preset_week'), sub: 'Next Week', offset: 7 },
                     ].map((u) => (
                       <button
                         key={u.id}
@@ -516,10 +571,10 @@ export default function NewSabhaPage() {
                       value={targetDate}
                       onChange={(e) => handleCustomDateChange(e.target.value)}
                       className="w-full bg-transparent text-xs font-semibold outline-none text-foreground cursor-pointer"
-                      title="Click to select specific sale date from calendar"
+                      title={t('sabha.wizard.preset_custom')}
                     />
                     <span className="text-[10px] font-mono text-muted-foreground font-semibold shrink-0 uppercase tracking-wider">
-                      Pick Date
+                      {t('sabha.wizard.preset_custom')}
                     </span>
                   </div>
                 </div>
@@ -527,12 +582,12 @@ export default function NewSabhaPage() {
 
               {/* Vehicle selector */}
               <div className="flex flex-col gap-2 pt-2 border-t border-border">
-                <label className="text-xs font-bold text-muted-foreground">Transport Vehicle</label>
+                <label className="text-xs font-bold text-muted-foreground">{t('sabha.wizard.step_vehicle')}</label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: 'pickup', label: 'Pickup (1.5 Ton)', rate: '₹7/km' },
-                    { id: 'truck', label: 'Medium (5 Ton)', rate: '₹12/km' },
-                    { id: 'heavy', label: 'Heavy (10 Ton)', rate: '₹18/km' },
+                    { id: 'pickup', label: t('sabha.wizard.vehicle_pickup'), rate: '₹7/km' },
+                    { id: 'truck', label: t('sabha.wizard.vehicle_truck'), rate: '₹12/km' },
+                    { id: 'heavy', label: t('sabha.wizard.vehicle_heavy'), rate: '₹18/km' },
                   ].map((v) => (
                     <button
                       key={v.id}
@@ -566,35 +621,35 @@ export default function NewSabhaPage() {
             {/* Live Financial Breakdown Card */}
             <div className="card-luxury relative overflow-hidden bg-gradient-to-b from-card to-primary/5 flex flex-col gap-4">
               <h3 className="text-xs sm:text-sm font-semibold text-foreground pb-3 border-b border-border">
-                Live Payoff Calculator
+                {t('sabha.wizard.payoff_title')}
               </h3>
 
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Gross Value ({quantity}q @ {formatINR(baseRate)}/q)</span>
-                  <span className="font-semibold text-foreground tabular-nums">{formatINR(grossEstimated)}</span>
+                  <span className="text-muted-foreground">{t('sabha.wizard.gross_value', { qty: quantity, rate: `${formatCurrency(baseRate)}/q` })}</span>
+                  <span className="font-semibold text-foreground tabular-nums">{formatCurrency(grossEstimated)}</span>
                 </div>
 
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Estimated Freight ({distanceKm} km)</span>
-                  <span className="font-semibold text-orange-600 tabular-nums">- {formatINR(estimatedFreight)}</span>
+                  <span className="text-muted-foreground">{t('sabha.wizard.est_freight', { distance: distanceKm })}</span>
+                  <span className="font-semibold text-orange-600 tabular-nums">- {formatCurrency(estimatedFreight)}</span>
                 </div>
 
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Local Mandi Baseline</span>
-                  <span className="font-medium text-muted-foreground tabular-nums">{formatINR(localBenchmark)}</span>
+                  <span className="text-muted-foreground">{t('sabha.wizard.local_baseline')}</span>
+                  <span className="font-medium text-muted-foreground tabular-nums">{formatCurrency(localBenchmark)}</span>
                 </div>
 
                 <div className="pt-3 border-t border-border/70 flex flex-col gap-1">
                   <div className="flex items-baseline justify-between">
-                    <span className="text-xs font-bold text-foreground">Estimated Net In-Hand</span>
+                    <span className="text-xs font-bold text-foreground">{t('sabha.wizard.est_net')}</span>
                     <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                      {formatINR(netEstimated)}
+                      {formatCurrency(netEstimated)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs font-semibold text-primary mt-0.5">
-                    <span>Pure Arbitrage Surplus:</span>
-                    <span className="tabular-nums font-bold">+{formatINR(netSurplus)}</span>
+                    <span>{t('sabha.wizard.arbitrage_surplus')}</span>
+                    <span className="tabular-nums font-bold">+{formatCurrency(netSurplus)}</span>
                   </div>
                 </div>
               </div>
@@ -602,8 +657,7 @@ export default function NewSabhaPage() {
               {/* Radius Range Slider */}
               <div className="pt-3 border-t border-border/70 flex flex-col gap-1.5">
                 <div className="flex items-center justify-between text-xs font-semibold">
-                  <span className="text-foreground">Search Radius Filter</span>
-                  <span className="text-primary font-bold">{radius} km</span>
+                  <span className="text-foreground">{t('sabha.wizard.step_radius', { radius })}</span>
                 </div>
                 <input
                   type="range"
@@ -624,10 +678,10 @@ export default function NewSabhaPage() {
                 className="button-primary !min-h-[40px] w-full mt-1 text-xs font-semibold"
               >
                 {loading ? (
-                  <span>Calling Mandi Sabha Agents…</span>
+                  <span>{t('sabha.wizard.submitting')}</span>
                 ) : (
                   <>
-                    <span>Convene 5-Agent Sabha</span>
+                    <span>{t('sabha.wizard.submit_convene')}</span>
                     <ArrowRight className="size-3.5" />
                   </>
                 )}
@@ -637,5 +691,13 @@ export default function NewSabhaPage() {
         </div>
       </div>
     </AppShell>
+  )
+}
+
+export default function NewSabhaPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-background" />}>
+      <NewSabhaContent />
+    </Suspense>
   )
 }

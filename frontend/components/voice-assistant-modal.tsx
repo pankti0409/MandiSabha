@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Mic, X, Sparkles, Check, Volume2, ArrowRight, Radio, MicOff, Globe2, AlertCircle, Loader2, Cpu } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { parseHarvestDetails, ParsedHarvest } from '@/lib/voice-parser'
+import { useLocale } from '@/components/locale-provider'
 
 interface VoiceAssistantModalProps {
   isOpen: boolean
@@ -34,10 +35,13 @@ const samplePhrases = [
 ]
 
 export function VoiceAssistantModal({ isOpen, onClose, onApply }: VoiceAssistantModalProps) {
-  const [selectedLang, setSelectedLang] = useState<string>('gu-IN')
+  const { language, t, tData } = useLocale()
+  const initialLang = language === 'gu' ? 'gu-IN' : language === 'hi' ? 'hi-IN' : 'en-IN'
+  const initialPreset = language === 'gu' ? 0 : language === 'hi' ? 2 : 4
+  const [selectedLang, setSelectedLang] = useState<string>(initialLang)
   const [isRecording, setIsRecording] = useState(false)
   const [isProcessingSTT, setIsProcessingSTT] = useState(false)
-  const [selectedPreset, setSelectedPreset] = useState<number | null>(0)
+  const [selectedPreset, setSelectedPreset] = useState<number | null>(initialPreset)
   const [transcribedText, setTranscribedText] = useState('')
   const [micError, setMicError] = useState<string | null>(null)
   const [sttProvider, setSttProvider] = useState<string>('Sarvam AI / Groq Whisper')
@@ -353,7 +357,7 @@ export function VoiceAssistantModal({ isOpen, onClose, onApply }: VoiceAssistant
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <span className="section-kicker">Multi-Lingual Voice AI</span>
+              <span className="section-kicker">{t('voice.kicker')}</span>
               <span className={cn(
                 'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold',
                 isRecording
@@ -372,13 +376,13 @@ export function VoiceAssistantModal({ isOpen, onClose, onApply }: VoiceAssistant
                   </>
                 ) : (
                   <>
-                    <Cpu className="size-3" /> Multi-Lingual STT Engine Ready
+                    <Cpu className="size-3" /> {t('voice.badge')}
                   </>
                 )}
               </span>
             </div>
             <h3 className="font-display text-xl sm:text-2xl font-extrabold text-foreground">
-              Speak Your Harvest Details
+              {t('voice.title')}
             </h3>
           </div>
         </div>
@@ -484,30 +488,32 @@ export function VoiceAssistantModal({ isOpen, onClose, onApply }: VoiceAssistant
 
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="rounded-xl border border-border bg-card p-2.5 flex flex-col justify-between">
-              <span className="text-muted-foreground block text-[10px] font-semibold">Commodity / Crop</span>
-              <strong className="font-bold text-foreground text-sm text-primary">{extractedData.crop}</strong>
+              <span className="text-muted-foreground block text-[10px] font-semibold">{t('voice.commodity')}</span>
+              <strong className="font-bold text-foreground text-sm text-primary">{tData('crop', extractedData.crop)}</strong>
             </div>
 
             <div className="rounded-xl border border-border bg-card p-2.5 flex flex-col justify-between">
-              <span className="text-muted-foreground block text-[10px] font-semibold">Harvest Quantity</span>
-              <strong className="font-bold text-foreground text-sm font-mono">{extractedData.quantity} Quintals</strong>
+              <span className="text-muted-foreground block text-[10px] font-semibold">{t('voice.volume')}</span>
+              <strong className="font-bold text-foreground text-sm font-mono">{extractedData.quantity} {t('common.units.quintals')}</strong>
             </div>
 
             <div className="rounded-xl border border-border bg-card p-2.5 flex flex-col justify-between">
-              <span className="text-muted-foreground block text-[10px] font-semibold">Origin Location</span>
+              <span className="text-muted-foreground block text-[10px] font-semibold">{t('voice.origin_farm')}</span>
               <strong className="font-bold text-foreground truncate block text-xs">{extractedData.location}</strong>
             </div>
 
             <div className="rounded-xl border border-border bg-card p-2.5 flex flex-col justify-between">
-              <span className="text-muted-foreground block text-[10px] font-semibold">Sale Urgency</span>
-              <strong className="font-bold text-emerald-600 dark:text-emerald-400 capitalize text-xs">{extractedData.urgency}</strong>
+              <span className="text-muted-foreground block text-[10px] font-semibold">{t('voice.urgency')}</span>
+              <strong className="font-bold text-emerald-600 dark:text-emerald-400 capitalize text-xs">
+                {extractedData.urgency === 'today' ? t('voice.urgency_today') : extractedData.urgency === 'soon' ? t('voice.urgency_soon') : t('voice.urgency_week')}
+              </strong>
             </div>
           </div>
         </div>
 
-        {/* Regional Spoken Presets */}
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-bold text-muted-foreground">Or tap a simulated regional voice prompt:</span>
+        {/* Sample Voice Prompts Switcher */}
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-bold text-muted-foreground">{t('voice.prompt_switcher_label')}</span>
           <div className="flex flex-wrap gap-1.5">
             {samplePhrases.map((phrase, i) => (
               <button
@@ -524,7 +530,7 @@ export function VoiceAssistantModal({ isOpen, onClose, onApply }: VoiceAssistant
                     : 'border-border bg-background text-muted-foreground hover:text-foreground'
                 )}
               >
-                <span>{phrase.lang}</span>: {phrase.crop} ({phrase.quantity}q)
+                <span>{phrase.lang}</span>: {tData('crop', phrase.crop)} ({phrase.quantity}q)
               </button>
             ))}
           </div>
@@ -537,7 +543,7 @@ export function VoiceAssistantModal({ isOpen, onClose, onApply }: VoiceAssistant
             onClick={handleConfirm}
             className="button-primary !min-h-[46px] flex-1 text-sm font-bold shadow-lg shadow-primary/25 hover:scale-[1.02] cursor-pointer"
           >
-            <span>Apply {extractedData.quantity}q {extractedData.crop} to Sabha</span>
+            <span>{t('voice.apply_cta')} ({extractedData.quantity}q {tData('crop', extractedData.crop)})</span>
             <ArrowRight className="size-4" />
           </button>
         </div>

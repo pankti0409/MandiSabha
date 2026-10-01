@@ -5,22 +5,25 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Check, ChevronLeft, ShieldCheck, Sparkles, UserCheck, Leaf, LocateFixed, Loader2, MapPin, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/components/auth-provider'
+import { useLocale } from '@/components/locale-provider'
 import { GoogleSignInButton } from '@/components/google-sign-in-button'
 import { detectUserLocation } from '@/lib/geolocation'
 
 export default function SignupPage() {
   const router = useRouter()
+  const { t, tData, language: appLanguage } = useLocale()
   const { requestOtp, verifyOtp } = useAuth()
 
   const [step, setStep] = useState<1 | 2>(1)
   const [name, setName] = useState('')
   const [mobile, setMobile] = useState('')
   const [village, setVillage] = useState('')
-  const [district, setDistrict] = useState('')
-  const [state, setState] = useState('')
-  const [language, setLanguage] = useState<'en' | 'hi' | 'gu'>('en')
-  const [crops, setCrops] = useState<string[]>([])
+  const [district, setDistrict] = useState('Nashik')
+  const [state, setState] = useState('Maharashtra')
+  const [language, setLanguage] = useState<'en' | 'hi' | 'gu'>(appLanguage)
+  const [crops, setCrops] = useState<string[]>(['Onion', 'Wheat'])
   const [otp, setOtp] = useState('')
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [isLocating, setIsLocating] = useState(false)
@@ -62,10 +65,10 @@ export default function SignupPage() {
 
   async function submitProfile(e: FormEvent) {
     e.preventDefault()
-    if (!name.trim()) return setError('Please enter your full name.')
-    if (!mobile.match(/^[6-9]\d{9}$/)) return setError('Please enter a valid 10-digit mobile number.')
-    if (!village.trim()) return setError('Please enter your village/town.')
-    if (!crops.length) return setError('Please select at least one crop that you grow.')
+    if (!name.trim()) return setError(t('auth.validation.name_required'))
+    if (!mobile.match(/^[6-9]\d{9}$/)) return setError(t('auth.validation.invalid_mobile'))
+    if (!village.trim()) return setError(t('auth.validation.village_required'))
+    if (!crops.length) return setError(t('auth.validation.crops_required'))
 
     setBusy(true)
     setError('')
@@ -73,7 +76,7 @@ export default function SignupPage() {
       await requestOtp(mobile)
       setStep(2)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to send code')
+      setError(err instanceof Error ? err.message : t('auth.login.btn_sending'))
     } finally {
       setBusy(false)
     }
@@ -92,10 +95,16 @@ export default function SignupPage() {
         state,
         language,
         crops,
+        onboarded: true,
       })
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`farmer_onboarding_done_demo-${mobile}`, 'true')
+        localStorage.setItem(`farmer_onboarded_${mobile}`, 'true')
+        localStorage.setItem('farmer_global_onboarded', 'true')
+      }
       router.push('/dashboard')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Invalid verification code. Please check and try again.')
+      setError(err instanceof Error ? err.message : t('auth.validation.invalid_otp'))
     } finally {
       setBusy(false)
     }
@@ -128,16 +137,16 @@ export default function SignupPage() {
           {step === 1 ? (
             <form onSubmit={submitProfile} className="flex flex-col gap-4">
               <div>
-                <span className="section-kicker">Account Setup</span>
+                <span className="section-kicker">{t('auth.signup.step_1')}</span>
                 <h1 className="mt-1 font-display text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                  Let’s set up your profile.
+                  {t('auth.signup.title')}
                 </h1>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Personalize your dashboard with your local village and the commodities you harvest.
+                  {t('auth.signup.subtitle')}
                 </p>
               </div>
 
-              <GoogleSignInButton text="Sign up with Google" />
+              <GoogleSignInButton text={t('auth.login.google_signin')} />
 
               <div className="relative flex items-center justify-center my-1">
                 <div className="absolute inset-0 flex items-center">
@@ -152,21 +161,21 @@ export default function SignupPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="name-input" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Full Name
+                    {t('auth.signup.name_label')}
                   </label>
                   <input
                     id="name-input"
                     autoFocus
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Ramesh Patel"
+                    placeholder={t('auth.signup.name_placeholder')}
                     className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm font-semibold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="mobile-input" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Mobile Number
+                    {t('auth.signup.mobile_label')}
                   </label>
                   <input
                     id="mobile-input"
@@ -221,20 +230,20 @@ export default function SignupPage() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="village-input" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                      Village / Tehsil
+                      {t('auth.signup.village_label')}
                     </label>
                     <input
                       id="village-input"
                       value={village}
                       onChange={(e) => setVillage(e.target.value)}
-                      placeholder="e.g. Pimpalgaon"
+                      placeholder={t('auth.signup.village_placeholder')}
                       className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm font-semibold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                     />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="district-input" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                      District
+                      {t('auth.signup.district_label')}
                     </label>
                     <input
                       id="district-input"
@@ -252,7 +261,7 @@ export default function SignupPage() {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                     <Leaf className="size-3.5 text-primary" />
-                    What do you grow or sell?
+                    {t('auth.signup.crops_label')}
                   </label>
                   <span className="text-[11px] font-mono text-primary font-bold">{crops.length} selected</span>
                 </div>
@@ -270,38 +279,70 @@ export default function SignupPage() {
                             : 'border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted'
                         }`}
                       >
-                        {cropName}
+                        {tData('crop', cropName)}
                       </button>
                     )
                   })}
                 </div>
               </div>
 
+              {/* Terms and Privacy Checkbox */}
+              <label className="flex items-start gap-2.5 text-xs text-muted-foreground cursor-pointer select-none py-1">
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-0.5 size-4 rounded border-border text-primary focus:ring-primary accent-[var(--primary)] cursor-pointer"
+                />
+                <span>
+                  {t('auth.agree_terms', {
+                    terms: '',
+                    privacy: ''
+                  }).split(/\{\{.*?\}\}/)[0] || 'I agree to the '}
+                  <Link href="/terms" target="_blank" className="font-semibold text-foreground underline hover:text-primary">
+                    {t('auth.terms_link')}
+                  </Link>{' '}
+                  &{' '}
+                  <Link href="/privacy" target="_blank" className="font-semibold text-foreground underline hover:text-primary">
+                    {t('auth.privacy_link')}
+                  </Link>
+                </span>
+              </label>
+
               <button
                 type="submit"
-                disabled={busy}
+                disabled={busy || !agreedToTerms}
                 className="button-primary min-h-12 w-full justify-center text-sm font-bold shadow-sm mt-2 disabled:opacity-50"
               >
-                <span>{busy ? 'Sending OTP…' : 'Continue to Verification'}</span>
+                <span>{busy ? t('auth.login.btn_sending') : t('auth.signup.btn_continue')}</span>
                 <ArrowRight className="size-4" />
               </button>
             </form>
           ) : (
             <form onSubmit={verify} className="flex flex-col gap-4">
               <div>
-                <span className="section-kicker">Step 2 of 2</span>
+                <span className="section-kicker">{t('auth.signup.step_2')}</span>
                 <h1 className="mt-1 font-display text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                  Verify your number.
+                  {t('auth.login.otp_title')}
                 </h1>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Enter the 6-digit one-time code sent to +91 {mobile}.
+                  {t('auth.login.otp_subtitle', { mobile })}
                 </p>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="signup-otp" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Verification Code
-                </label>
+                <div className="flex items-center justify-between">
+                  <label htmlFor="signup-otp" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    {t('auth.login.otp_title')}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setOtp('123456')}
+                    className="text-[11px] font-mono font-bold text-primary hover:underline cursor-pointer"
+                  >
+                    {t('auth.login.demo_code')}
+                  </button>
+                </div>
                 <input
                   id="signup-otp"
                   autoFocus
@@ -319,7 +360,7 @@ export default function SignupPage() {
                 disabled={busy || otp.length !== 6}
                 className="button-primary min-h-12 w-full justify-center text-sm font-bold shadow-sm disabled:opacity-50"
               >
-                <span>{busy ? 'Setting up…' : 'Verify & Launch Dashboard'}</span>
+                <span>{busy ? t('auth.login.btn_sending') : t('auth.login.btn_verify')}</span>
                 <Check className="size-4" />
               </button>
 
@@ -329,7 +370,7 @@ export default function SignupPage() {
                 onClick={() => setStep(1)}
               >
                 <ChevronLeft className="size-3.5" />
-                <span>Back to profile details</span>
+                <span>{t('auth.login.btn_change')}</span>
               </button>
             </form>
           )}
@@ -341,9 +382,9 @@ export default function SignupPage() {
           )}
 
           <div className="mt-6 border-t border-border pt-5 text-center text-xs text-muted-foreground">
-            Already have an account?{' '}
+            {t('auth.signup.already_account')}{' '}
             <Link className="font-bold text-primary hover:underline ml-1" href="/login">
-              Sign in
+              {t('auth.signup.link_login')}
             </Link>
           </div>
         </div>

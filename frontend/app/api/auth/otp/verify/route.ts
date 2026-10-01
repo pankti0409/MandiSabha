@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { mobileSchema, otpSchema } from '@/lib/api/auth'
+import { mobileSchema, otpSchema, DemoUser } from '@/lib/api/auth'
 import { verifyOtpChallenge } from '@/lib/sms-gate'
 
 const cookieName = process.env.AUTH_COOKIE_NAME || 'mandi_session'
@@ -27,16 +27,44 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const rawSession = request.cookies.get(cookieName)?.value
+    let existingUser: Partial<DemoUser> | null = null
+    if (rawSession) {
+      try {
+        existingUser = JSON.parse(decodeURIComponent(rawSession))
+      } catch {}
+    }
+
     const profile = body.profile || {}
-    const user = {
-      id: `usr-${mobile}`,
-      name: profile.name || 'Farmer',
+    const hasProfile = Boolean(profile.name && profile.name.trim() !== '' && profile.village && profile.village.trim() !== '')
+    const wasAlreadyOnboarded = Boolean(
+      existingUser?.onboarded === true &&
+      existingUser?.name &&
+      existingUser.name.trim() !== '' &&
+      existingUser.name.toLowerCase() !== 'farmer' &&
+      existingUser?.village &&
+      existingUser.village.trim() !== ''
+    )
+
+    const user: DemoUser = {
+      id: existingUser?.id || `usr-${mobile}`,
+      name: profile.name || (wasAlreadyOnboarded ? existingUser!.name : 'Farmer'),
       mobile,
-      village: profile.village || '',
-      district: profile.district || '',
-      state: profile.state || '',
-      language: profile.language || 'en',
-      crops: profile.crops || [],
+      village: profile.village || (wasAlreadyOnboarded ? existingUser!.village : ''),
+      district: profile.district || (wasAlreadyOnboarded ? existingUser!.district : ''),
+      state: profile.state || (wasAlreadyOnboarded ? existingUser!.state : ''),
+      language: profile.language || existingUser?.language || 'en',
+      crops: profile.crops || existingUser?.crops || [],
+      cropDetails: profile.cropDetails || existingUser?.cropDetails,
+      farmSizeAcres: profile.farmSizeAcres || existingUser?.farmSizeAcres,
+      transportCostPerKm: profile.transportCostPerKm || existingUser?.transportCostPerKm,
+      vehicleType: profile.vehicleType || existingUser?.vehicleType,
+      priceAlerts: profile.priceAlerts ?? existingUser?.priceAlerts,
+      weatherAlerts: profile.weatherAlerts ?? existingUser?.weatherAlerts,
+      primaryMandi: profile.primaryMandi || existingUser?.primaryMandi,
+      email: profile.email || existingUser?.email,
+      avatar: profile.avatar || existingUser?.avatar,
+      onboarded: hasProfile || wasAlreadyOnboarded,
     }
 
     const response = NextResponse.json({ user, success: true })
@@ -62,3 +90,4 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+

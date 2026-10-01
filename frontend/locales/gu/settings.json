@@ -1,0 +1,51 @@
+{
+  "kicker": "પસંદગીઓ",
+  "title": "સેટિંગ્સ.",
+  "saved": "સાચવેલ",
+  "profile": {
+    "title": "ખેડૂત પ્રોફાઇલ",
+    "name_label": "નામ",
+    "name_placeholder": "તમારું નામ દાખલ કરો",
+    "village_label": "ગામ",
+    "village_placeholder": "ગામનું નામ દાખલ કરો",
+    "state_label": "રાજ્ય",
+    "state_placeholder": "રાજ્યનું નામ દાખલ કરો",
+    "phone_label": "ફોન નંબર",
+    "phone_placeholder": "10 અંકનો મોબાઇલ નંબર",
+    "save_btn": "માહિતી સાચવો",
+    "saving_btn": "સાચવી રહ્યાં છીએ...",
+    "saved_success": "માહિતી સાચવવામાં આવી"
+  },
+  "appearance": {
+    "title": "ભાષા અને દેખાવ",
+    "language": "ભાષા",
+    "theme": "થીમ",
+    "theme_system": "સિસ્ટમ ડિફૉલ્ટ",
+    "theme_light": "લાઇટ",
+    "theme_dark": "ડાર્ક",
+    "notifications": "સૂચનાઓ",
+    "on": "ચાલુ",
+    "off": "બંધ"
+  },
+  "selling": {
+    "title": "વેચાણ પસંદગીઓ",
+    "default_crops": "મુખ્ય પાક",
+    "transport_cost": "ભાડા દર",
+    "transport_sub": "આનાથી ભાડું બાદ કર્યા પછીનો સાચો ચોખ્ખો ભાવ મેળવવામાં મદદ મળે છે.",
+    "data_saver": "ડેટા સેવર"
+  },
+  "account": {
+    "title": "ખાતું",
+    "delete_label": "ખાતું કાઢી નાખો",
+    "delete_sub": "તમારી ખાતા પસંદગીઓ અને સત્ર ડેટા કાયમ માટે કાઢી નાખો.",
+    "delete_btn": "ખાતું કાઢી નાખો"
+  },
+  "modals": {
+    "crops_title": "મુખ્ય પાક પસંદ કરો",
+    "crops_done": "પૂર્ણ",
+    "delete_title": "ખાતાનો ડેટા કાઢી નાખો",
+    "delete_warning": "આનાથી તમારી પસંદગીઓ રીસેટ થશે અને તમે મંડી સભામાંથી બહાર નીકળી જશો.",
+    "cancel": "રદ કરો",
+    "confirm_delete": "કાઢી નાખવાની ખાતરી કરો"
+  }
+}

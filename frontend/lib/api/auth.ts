@@ -27,6 +27,7 @@ export type DemoUser = {
   primaryMandi?: string
   email?: string
   avatar?: string
+  onboarded?: boolean
 }
 
 export async function requestOtp(mobile: string) {

@@ -9,11 +9,10 @@ import {
   ArrowUpRight, 
   FileSpreadsheet,
   ArrowRight,
-  History,
-  TrendingUp
+  History
 } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
-import { formatINR } from '@/lib/api/sabha'
+import { useLocale } from '@/components/locale-provider'
 import { cn } from '@/lib/utils'
 
 export interface HistorySession {
@@ -30,8 +29,15 @@ export interface HistorySession {
   distance: string
 }
 
+const historyData: HistorySession[] = [
+  { id: 'SB-2026-0929', date: '29 Sep 2026, 10:42 AM', crop: 'Onion', quantity: 20, mandi: 'Surat APMC', state: 'Gujarat', gain: 8200, rate: 2140, localRate: 1730, status: 'Ready to Dispatch', distance: '142 km' },
+  { id: 'SB-2026-0918', date: '18 Sep 2026, 09:15 AM', crop: 'Wheat', quantity: 35, mandi: 'Pune Market Yard', state: 'Maharashtra', gain: 5600, rate: 2640, localRate: 2480, status: 'Completed', distance: '188 km' },
+  { id: 'SB-2026-0909', date: '09 Sep 2026, 04:30 PM', crop: 'Tomato', quantity: 15, mandi: 'Ahmedabad APMC', state: 'Gujarat', gain: 4120, rate: 2480, localRate: 2200, status: 'Completed', distance: '260 km' },
+]
+
 export default function HistoryPage() {
-  const [sessions, setSessions] = useState<HistorySession[]>([])
+  const { t, tData, formatCurrency } = useLocale()
+  const [sessions, setSessions] = useState<HistorySession[]>(historyData)
   const [search, setSearch] = useState('')
   const [selectedCrop, setSelectedCrop] = useState('All')
 
@@ -52,12 +58,12 @@ export default function HistoryPage() {
         {/* ── Page Header ─────────────────────────────────────────────── */}
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border/80">
           <div>
-            <span className="section-kicker">TRADE LEDGER</span>
+            <span className="section-kicker">{t('history.kicker')}</span>
             <h1 className="page-title">
-              Sabha Trade History.
+              {t('history.title')}
             </h1>
             <p className="page-subtitle">
-              Audit trail of all multi-agent trade recommendations, freight deductions, and verified buyer slips.
+              {t('history.subtitle')}
             </p>
           </div>
 
@@ -65,14 +71,14 @@ export default function HistoryPage() {
             <button
               type="button"
               disabled={sessions.length === 0}
-              onClick={() => alert('Exporting all trade records to Excel CSV...')}
+              onClick={() => alert(t('history.export_alert'))}
               className={cn(
                 'button-secondary !min-h-[34px] !px-3 text-xs font-semibold',
                 sessions.length === 0 && 'opacity-50 cursor-not-allowed'
               )}
             >
               <FileSpreadsheet className="size-3.5" />
-              <span>Export CSV</span>
+              <span>{t('history.export_csv')}</span>
             </button>
             <Link
               href="/sabha/new"
@@ -88,44 +94,44 @@ export default function HistoryPage() {
         <section className="grid gap-3.5 sm:grid-cols-3">
           <div className="card-luxury p-4 flex flex-col justify-between">
             <span className="stat-label-clean">
-              Total Realized Gain
+              {t('history.stats.total_gain')}
             </span>
             <div className="mt-1 stat-number-clean text-emerald-600 dark:text-emerald-400">
-              {sessions.length > 0 ? `+${formatINR(totalGain)}` : '₹0'}
+              +{formatCurrency(totalGain)}
             </div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              {sessions.length > 0 ? 'Direct surplus pocketed by choosing optimal mandis' : 'Surplus realized over nearest local mandi benchmark'}
+              {t('history.stats.total_gain_sub')}
             </p>
           </div>
 
           <div className="card-luxury p-4 flex flex-col justify-between">
             <span className="stat-label-clean">
-              Total Sabhas Convened
+              {t('history.stats.sessions_held')}
             </span>
             <div className="mt-1 flex items-baseline gap-1.5">
               <span className="stat-number-clean">
                 {sessions.length}
               </span>
               <span className="text-xs font-normal text-muted-foreground">
-                Sessions
+                {t('common.units.sessions')}
               </span>
             </div>
             <p className="mt-0.5 text-[11px] text-primary font-medium">
               {sessions.length > 0
-                ? `Average surplus: +${formatINR(Math.round(totalGain / sessions.length))} / sabha`
+                ? `Average surplus: +${formatCurrency(Math.round(totalGain / sessions.length))} / sabha`
                 : 'No historical sessions recorded'}
             </p>
           </div>
 
           <div className="card-luxury p-4 flex flex-col justify-between">
             <span className="stat-label-clean">
-              Buyer Trust Score
+              {t('history.stats.top_mandi')}
             </span>
             <div className="mt-1 stat-number-clean">
               {sessions.length > 0 ? '100%' : '—'}
             </div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Verified APMC electronic weighbridges & settlement records
+              {t('history.stats.top_mandi_sub')}
             </p>
           </div>
         </section>
@@ -137,7 +143,7 @@ export default function HistoryPage() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search session ID, crop, or mandi..."
+              placeholder={t('history.search_placeholder')}
               className="w-full bg-transparent text-xs outline-none"
             />
           </div>
@@ -154,7 +160,7 @@ export default function HistoryPage() {
                     : 'bg-muted/50 text-muted-foreground hover:text-foreground'
                 )}
               >
-                {crop}
+                {crop === 'All' ? t('history.all_crops') : tData('crop', crop)}
               </button>
             ))}
           </div>
@@ -200,8 +206,8 @@ export default function HistoryPage() {
                   <div className="flex items-start sm:items-center gap-3">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-bold text-xs sm:text-sm text-foreground">{session.crop}</h3>
-                        <span className="text-xs font-mono font-medium text-muted-foreground">· {session.quantity} quintals</span>
+                        <h3 className="font-bold text-xs sm:text-sm text-foreground">{tData('crop', session.crop)}</h3>
+                        <span className="text-xs font-mono font-medium text-muted-foreground">· {session.quantity} {t('common.units.quintals')}</span>
                         <span className="rounded bg-muted px-1.5 py-0.5 text-[9.5px] font-mono text-muted-foreground">
                           {session.id}
                         </span>
@@ -209,7 +215,7 @@ export default function HistoryPage() {
                       <div className="flex flex-wrap items-center gap-2.5 text-xs text-muted-foreground mt-0.5">
                         <span className="flex items-center gap-1 font-medium text-foreground">
                           <MapPin className="size-3 text-primary" />
-                          {session.mandi}, {session.state} ({session.distance})
+                          {tData('mandi', session.mandi)}, {tData('geo', session.state)} ({session.distance.replace('km', t('common.units.km'))})
                         </span>
                         <span>·</span>
                         <span className="flex items-center gap-1">
@@ -223,10 +229,10 @@ export default function HistoryPage() {
                   <div className="flex items-center justify-between lg:justify-end gap-5 pt-2 lg:pt-0 border-t lg:border-t-0 border-border/70">
                     <div className="text-left lg:text-right">
                       <span className="block font-mono text-sm sm:text-base font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                        +{formatINR(session.gain)}
+                        +{formatCurrency(session.gain)}
                       </span>
                       <span className="text-[10.5px] text-muted-foreground">
-                        {formatINR(session.rate)}/q vs local {formatINR(session.localRate)}/q
+                        {formatCurrency(session.rate)}{t('common.units.rate_per_q')} vs {formatCurrency(session.localRate)}{t('common.units.rate_per_q')}
                       </span>
                     </div>
 
@@ -234,7 +240,7 @@ export default function HistoryPage() {
                       href={`/sabha/${session.id}`}
                       className="button-secondary !min-h-[32px] !px-3 text-xs font-semibold hover:border-primary shrink-0"
                     >
-                      <span>View Slip</span>
+                      <span>{t('dashboard.sessions.view_slip')}</span>
                       <ArrowUpRight className="size-3" />
                     </Link>
                   </div>

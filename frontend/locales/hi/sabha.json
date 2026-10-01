@@ -1,0 +1,98 @@
+{
+  "wizard": {
+    "kicker": "नया एआई सभा सत्र",
+    "title": "अपनी मंडी सभा आयोजित करें।",
+    "subtitle": "5 एआई एजेंट मिलकर भाव, भाड़ा, मौसम और भुगतान की जांच कर सर्वोत्तम मंडी चुनते हैं।",
+    "voice_btn": "आवाज़ से बोलकर बताएं",
+    "step_crop": "1. अपनी फसल चुनें",
+    "step_quantity": "2. कुल फसल की मात्रा",
+    "step_origin": "3. खेत / गांव का स्थान",
+    "step_origin_placeholder": "गांव, ज़िला",
+    "gps_locate": "जीपीएस से पहचानें",
+    "step_timing": "4. माल भेजने की तारीख",
+    "preset_today": "आज, तत्काल",
+    "preset_tomorrow": "कल",
+    "preset_soon": "3 दिनों के भीतर",
+    "preset_week": "इस सप्ताह",
+    "preset_custom": "कैलेंडर से तारीख चुनें",
+    "step_quality": "5. फसल की गुणवत्ता (ग्रेड)",
+    "grade_a_title": "ग्रेड A (उत्कृष्ट)",
+    "grade_a_desc": "साफ़ और बढ़िया दाना, एकसमान आकार, कम नमी",
+    "grade_b_title": "ग्रेड B (सामान्य मंडी ग्रेड)",
+    "grade_b_desc": "औसत गुणवत्ता (FAQ), मानक मंडी आवक",
+    "grade_c_title": "ग्रेड C (प्रसंस्करण हेतु)",
+    "grade_c_desc": "छोटा या मिश्रित दाना, स्थानीय उपयोग",
+    "step_vehicle": "6. परिवहन वाहन",
+    "vehicle_pickup": "पिकअप / बोलेरो",
+    "vehicle_pickup_desc": "25 क्विंटल तक · ग्रामीण सड़कों पर तेज़",
+    "vehicle_truck": "ट्रक (6-टायर)",
+    "vehicle_truck_desc": "90 क्विंटल तक · सबसे किफायती भाड़ा दर",
+    "vehicle_heavy": "बड़ा मल्टी-एक्सल ट्रक",
+    "vehicle_heavy_desc": "सहकारी या सामूहिक बड़ा लदान",
+    "step_radius": "7. खोजने का दायरा ({{radius}} किमी)",
+    "target_mandi_preview": "प्रस्तावित मंडी: {{mandi}} (लगभग {{distance}} किमी)",
+    "submit_convene": "मंडी सभा शुरू करें",
+    "submitting": "5 एआई एजेंट विश्लेषण कर रहे हैं...",
+    "effective_rate": "प्रभावी भाव: {{rate}}",
+    "payoff_title": "लाइव मुनाफा कैलकुलेटर",
+    "gross_value": "कुल मूल्य ({{qty}}क्विं. @ {{rate}})",
+    "est_freight": "अनुमानित भाड़ा ({{distance}} किमी)",
+    "local_baseline": "स्थानीय मंडी का आधार भाव",
+    "est_net": "हाथ में शुद्ध अपेक्षित कमाई",
+    "arbitrage_surplus": "शुद्ध अतिरिक्त मुनाफा:"
+  },
+  "live": {
+    "kicker": "लाइव एआई मंडी सभा",
+    "title": "आपके लिए सर्वोत्तम मंडी की खोज।",
+    "subtitle": "{{origin}} से {{crop}} के {{qty}} क्विंटल का विश्लेषण · {{progress}}% संपन्न",
+    "agents_active_badge": "5 एजेंट सक्रिय",
+    "pause": "रोकें",
+    "resume": "शुरू करें",
+    "progress_header": "एजेंट {{index}}/5: {{name}} विश्लेषण कर रहे हैं",
+    "consensus_reached": "सर्वसम्मति बन गई!",
+    "agents_panel_title": "सभा के एजेंट",
+    "agents_done_badge": "{{done}}/5 पूर्ण",
+    "agents_active_badge_sm": "{{active}}/5 सक्रिय",
+    "tab_race": "मुनाफ़ा दौड़",
+    "tab_corridor": "हाईवे रडार",
+    "race_title": "सर्वाधिक शुद्ध मुनाफ़े की तुलना",
+    "race_subtitle": "कुल बिक्री मूल्य में से भाड़ा, टोल और तुलाई घटाकर",
+    "corridor_title": "लाइव हाईवे व टोल रडार",
+    "corridor_subtitle": "फास्टैग मार्ग और जीआईएस दूरी",
+    "status_consensus_valid": "सिफारिश तैयार है",
+    "status_simulating": "भाव विश्लेषण जारी है",
+    "decision_title": "सभा का अंतिम निर्णय",
+    "decision_winner": "सर्वोत्तम मंडी: {{mandi}}",
+    "decision_advantage": "स्थानीय मंडी से +{{amount}} का शुद्ध अतिरिक्त मुनाफ़ा",
+    "btn_commit": "{{mandi}} के लिए पक्का करें",
+    "btn_print": "लदान पर्ची प्रिंट करें",
+    "btn_share": "ड्राइवर को भेजें"
+  },
+  "agents": {
+    "price_scout": {
+      "name": "भाव खोजी",
+      "role": "मंडी भाव तुलना",
+      "desc": "सूरत, पुणे, अहमदाबाद के ताज़ा सौदों की तुलना"
+    },
+    "route_planner": {
+      "name": "मार्ग नियोजक",
+      "role": "भाड़ा व ईंधन",
+      "desc": "NH48 टोल, डीजल और ड्राइवर भाड़े की सटीक गणना"
+    },
+    "weather_watch": {
+      "name": "मौसम प्रहरी",
+      "role": "रास्ते का मौसम व जोखिम",
+      "desc": "परिवहन मार्ग में बारिश और नमी की निगरानी"
+    },
+    "buyer_network": {
+      "name": "व्यापारी नेटवर्क",
+      "role": "मंडी आढ़ती सत्यापन",
+      "desc": "विश्वसनीय आढ़तियों और नकद भुगतान की पुष्टि"
+    },
+    "advisor_chair": {
+      "name": "सभा अध्यक्ष",
+      "role": "अंतिम सहमति",
+      "desc": "सभी जोखिमों और मुनाफ़े को तौलकर अंतिम निर्णय"
+    }
+  }
+}

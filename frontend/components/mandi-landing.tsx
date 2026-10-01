@@ -228,11 +228,13 @@ function Footer() {
             Better information for every crop, every season, every farmer.
           </p>
         </div>
-        <div className="flex flex-wrap gap-6 text-sm font-semibold text-secondary-text">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-semibold text-secondary-text">
           <Link href="/explore" className="hover:text-brand transition-colors">Explore prices</Link>
           <Link href="/dashboard" className="hover:text-brand transition-colors">Dashboard</Link>
           <Link href="/settings" className="hover:text-brand transition-colors">Settings</Link>
           <a href="#faq" className="hover:text-brand transition-colors">Help & FAQ</a>
+          <Link href="/privacy" className="hover:text-brand transition-colors">Privacy Policy</Link>
+          <Link href="/terms" className="hover:text-brand transition-colors">Terms of Use</Link>
           <span className="text-muted-text">© 2026 Mandi Sabha</span>
         </div>
       </div>
@@ -331,10 +333,13 @@ export default function MandiLanding() {
               </div>
               <Link
                 href="/signup"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-white/20 bg-white px-6 text-sm font-bold text-brand hover:bg-white/90 transition-all shadow-md active:scale-[.98] cursor-pointer"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-white px-6 text-sm font-bold !text-emerald-950 hover:bg-emerald-50 hover:!text-emerald-900 transition-all shadow-md active:scale-[.98] cursor-pointer"
+                style={{ color: '#064e3b' }}
               >
-                <span>Join Mandi Sabha</span>
-                <ArrowRight className="size-4" />
+                <span className="font-bold !text-emerald-950" style={{ color: '#064e3b' }}>
+                  Join Mandi Sabha
+                </span>
+                <ArrowRight className="size-4 !text-emerald-950" style={{ color: '#064e3b' }} />
               </Link>
             </div>
           </section>

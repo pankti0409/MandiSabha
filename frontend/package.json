@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint app components lib",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "i18n:check": "node scripts/check-i18n.js"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

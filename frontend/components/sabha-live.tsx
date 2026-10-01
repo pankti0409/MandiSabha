@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { 
   ArrowRight, 
   Check, 
@@ -25,16 +25,18 @@ import {
 import { AppShell } from '@/components/app-shell'
 import { formatINR, formatNumber, evaluateSabhaCandidates, SabhaDraft, EvaluatedMandi } from '@/lib/api/sabha'
 import { useAuth } from '@/components/auth-provider'
+import { useLocale } from '@/components/locale-provider'
 import { cn } from '@/lib/utils'
 import { LiveRouteMap } from '@/components/live-route-map'
 
 export function SabhaLive({ id }: { id: string }) {
   const { user } = useAuth()
+  const { t, tData, formatCurrency } = useLocale()
   const searchParams = useSearchParams()
 
   const queryCrop = searchParams?.get('crop')
-  const queryQty = searchParams?.get('qty') ? Number(searchParams.get('qty')) : null
-  const queryLoc = searchParams?.get('loc')
+  const queryQty = searchParams?.get('qty') ? Number(searchParams.get('qty')) : (searchParams?.get('quantity') ? Number(searchParams.get('quantity')) : null)
+  const queryLoc = searchParams?.get('loc') || searchParams?.get('location')
   const queryRadius = searchParams?.get('rad') ? Number(searchParams.get('rad')) : null
   const queryVeh = (searchParams?.get('veh') as 'pickup' | 'truck' | 'heavy') || null
 
@@ -45,7 +47,7 @@ export function SabhaLive({ id }: { id: string }) {
     if (typeof window === 'undefined') return
     try {
       const decodedId = decodeURIComponent(id)
-      const stored = localStorage.getItem(`sabha_draft_${decodedId}`) || localStorage.getItem(`sabha_draft_${id}`) || localStorage.getItem('sabha_latest_draft')
+      const stored = localStorage.getItem(`sabha_draft_${decodedId}`) || localStorage.getItem(`sabha_draft_${id}`) || localStorage.getItem('sabha_latest_draft') || localStorage.getItem('latest_sabha')
       if (stored) {
         setDraft(JSON.parse(stored))
       }
@@ -73,12 +75,12 @@ export function SabhaLive({ id }: { id: string }) {
   const { winner, localBaseline, ranked, originCoords } = evaluation
 
   const agents = useMemo(() => [
-    { name: 'Price Scout', role: 'Mandi Arbitrage', desc: `Scanning ${ranked.slice(0, 3).map((m) => m.name).join(', ')} live books` },
-    { name: 'Route Planner', role: 'Logistics & Fuel', desc: `Calculating ${winner.highway} freight from ${originName}` },
-    { name: 'Weather Watch', role: 'Risk & Moisture', desc: 'Monitoring humidity & rainfall across transport corridor' },
-    { name: 'Buyer Network', role: 'APMC Clearing', desc: `Verifying ${winner.name} commission agent cash settlements` },
-    { name: 'Advisor Chair', role: 'Consensus Engine', desc: `Synthesizing net payoff vs ${localBaseline?.name || 'local'} benchmark` },
-  ], [ranked, winner, originName, localBaseline])
+    { name: t('sabha.agents.price_scout.name') || 'Price Scout', role: t('sabha.agents.price_scout.role') || 'Mandi Arbitrage', desc: `Scanning ${ranked.slice(0, 3).map((m) => tData('mandi', m.name)).join(', ')} live books` },
+    { name: t('sabha.agents.route_planner.name') || 'Route Planner', role: t('sabha.agents.route_planner.role') || 'Logistics & Fuel', desc: `Calculating ${winner.highway} freight from ${originName}` },
+    { name: t('sabha.agents.weather_watch.name') || 'Weather Watch', role: t('sabha.agents.weather_watch.role') || 'Risk & Moisture', desc: 'Monitoring humidity & rainfall across transport corridor' },
+    { name: t('sabha.agents.buyer_network.name') || 'Buyer Network', role: t('sabha.agents.buyer_network.role') || 'APMC Clearing', desc: `Verifying ${tData('mandi', winner.name)} commission agent cash settlements` },
+    { name: t('sabha.agents.advisor_chair.name') || 'Advisor Chair', role: t('sabha.agents.advisor_chair.role') || 'Consensus Engine', desc: `Synthesizing net payoff vs ${tData('mandi', localBaseline?.name || 'local')} benchmark` },
+  ], [ranked, winner, originName, localBaseline, t, tData])
 
   const [progress, setProgress] = useState(15)
   const [paused, setPaused] = useState(false)
@@ -105,11 +107,11 @@ export function SabhaLive({ id }: { id: string }) {
   }, [ranked])
 
   const defaultMessages = useMemo(() => [
-    { sender: 'Price Scout', text: `${winner.name} ${cropName.toLowerCase()} modal surged to ₹${winner.price.toLocaleString('en-IN')}/q on high wholesale demand.` },
+    { sender: 'Price Scout', text: `${winner.name} ${tData('crop', cropName)} modal surged to ₹${winner.price.toLocaleString('en-IN')}/q on high wholesale demand.` },
     { sender: 'Route Planner', text: `${originName} to ${winner.name} freight estimated at ₹${winner.freight.toLocaleString('en-IN')} via ${draft?.vehicleType || '1.5T pickup'} (${winner.distance}).` },
     { sender: 'Weather Watch', text: `Clear weather along ${winner.highway}. Zero transit spoilage or rainfall risk.` },
     { sender: 'Advisor Chair', text: `${winner.name} net payout of ₹${winner.net.toLocaleString('en-IN')} delivers +₹${winner.advantage.toLocaleString('en-IN')} pure surplus over ${localBaseline?.name || 'local mandi'} benchmark.` },
-  ], [winner, cropName, originName, draft, localBaseline])
+  ], [winner, cropName, originName, draft, localBaseline, tData])
 
   return (
     <AppShell>
@@ -118,21 +120,21 @@ export function SabhaLive({ id }: { id: string }) {
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
-              <span className="section-kicker">Live Multi-Agent Sabha</span>
+              <span className="section-kicker">{t('sabha.live.kicker')}</span>
               <span>·</span>
               <span className="font-mono">#{id.replace('demo-', '').slice(0, 8)}</span>
             </div>
             <h1 className="page-title">
-              Finding Your Best Mandi Deal.
+              {t('sabha.live.title')}
             </h1>
             <p className="page-subtitle">
-              Analyzing {cropName} trade corridors from {originName} · {progress}% computed
+              {t('sabha.live.subtitle', { qty: quantity, crop: tData('crop', cropName), origin: originName, progress }) || `Analyzing ${cropName} trade corridors from ${originName} · ${progress}% computed`}
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-              <span className="status-pulse !size-2" /> 5 Agents Active
+              <span className="status-pulse !size-2" /> {t('sabha.live.agents_active_badge')}
             </span>
 
             <button
@@ -140,106 +142,54 @@ export function SabhaLive({ id }: { id: string }) {
               className="button-secondary !min-h-[42px] !px-4 text-xs font-bold"
             >
               {paused ? <Play className="size-3.5" /> : <Pause className="size-3.5" />}
-              <span>{paused ? 'Resume' : 'Pause'}</span>
+              <span>{paused ? t('sabha.live.resume') : t('sabha.live.pause')}</span>
             </button>
           </div>
         </header>
 
-        {/* ── Real-time Progress Bar ──────────────────────────────────── */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between text-xs font-bold font-mono">
-            <span className="text-primary flex items-center gap-1.5">
-              <Sparkles className="size-3.5" />
-              {done ? 'Consensus Reached!' : `Agent ${activeAgentIndex + 1} of 5: ${agents[activeAgentIndex].name} processing`}
-            </span>
-            <span className="text-muted-foreground">{progress}%</span>
-          </div>
-          <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-primary via-[#10B981] to-accent transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-
-        {/* ── 3-Column Live Workspace ─────────────────────────────────── */}
-        <div className="grid gap-6 lg:grid-cols-12">
-          {/* Column 1: Organized Sabha Agents Panel */}
-          <section className="card-luxury lg:col-span-3 flex flex-col gap-3.5">
-            <div className="flex items-center justify-between pb-3 border-b border-border">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-sm text-foreground">Sabha Agents</span>
-                <span className="rounded-full bg-primary/10 border border-primary/20 px-2 py-0.5 text-[10px] font-mono font-bold text-primary">
-                  {done ? '5/5 Done' : `${activeAgentIndex + 1}/5 Active`}
-                </span>
+        {/* ── 3-Column Cockpit Grid ───────────────────────────────────── */}
+        <div className="grid gap-4 lg:grid-cols-12 items-start">
+          {/* Column 1: Multi-Agent Quorum (3 cols) */}
+          <section className="card-luxury lg:col-span-3 flex flex-col justify-between">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between pb-3 border-b border-border">
+                <span className="font-bold text-sm text-foreground">{t('sabha.live.quorum_title')}</span>
+                <Users className="size-4 text-primary" />
               </div>
-              <Users className="size-4 text-muted-foreground" />
-            </div>
 
-            {/* Unified Pipeline List */}
-            <div className="rounded-xl border border-border/80 bg-background/60 divide-y divide-border/60 overflow-hidden shadow-2xs">
-              {agents.map((agent, index) => {
-                const isWorking = index === activeAgentIndex && !done
-                const isFinished = index < activeAgentIndex || done
+              <div className="space-y-2">
+                {agents.map((agent, i) => {
+                  const isActive = i === activeAgentIndex && !done
+                  const isFinished = i < activeAgentIndex || done
 
-                return (
-                  <div
-                    key={agent.name}
-                    className={cn(
-                      'px-3 py-2.5 flex items-center justify-between gap-2.5 transition-colors',
-                      isWorking ? 'bg-primary/10' : 'hover:bg-muted/40'
-                    )}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="grid size-5 place-items-center shrink-0">
-                        {isFinished ? (
-                          <Check className="size-3.5 text-emerald-600 dark:text-emerald-400 stroke-[3]" />
-                        ) : isWorking ? (
-                          <span className="relative flex size-2.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                            <span className="relative inline-flex rounded-full size-2.5 bg-primary" />
-                          </span>
-                        ) : (
-                          <span className="font-mono text-[10px] font-medium text-muted-foreground">
-                            {index + 1}
-                          </span>
-                        )}
-                      </span>
-
-                      <div className="min-w-0">
-                        <p className={cn('text-xs leading-tight truncate', isWorking ? 'font-bold text-primary' : 'font-semibold text-foreground')}>
-                          {agent.name}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground truncate leading-tight">
-                          {agent.role}
-                        </p>
-                      </div>
-                    </div>
-
-                    <span
+                  return (
+                    <div
+                      key={agent.name}
                       className={cn(
-                        'rounded px-1.5 py-0.5 text-[9px] font-mono font-bold shrink-0',
-                        isFinished
-                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                          : isWorking
-                          ? 'bg-primary/20 text-primary animate-pulse'
-                          : 'bg-muted text-muted-foreground'
+                        'rounded-xl border p-2.5 transition-all text-xs',
+                        isActive
+                          ? 'border-primary bg-primary/5 shadow-2xs'
+                          : isFinished
+                          ? 'border-border/60 bg-muted/20 opacity-80'
+                          : 'border-border/40 opacity-40'
                       )}
                     >
-                      {isFinished ? 'Ready' : isWorking ? 'Active' : 'Queued'}
-                    </span>
-                  </div>
-                )
-              })}
+                      <div className="flex items-center justify-between font-bold">
+                        <span className="text-foreground">{agent.name}</span>
+                        {isActive && <span className="status-pulse !size-1.5" />}
+                        {isFinished && <Check className="size-3 text-emerald-600 dark:text-emerald-400" />}
+                      </div>
+                      <span className="text-[10px] text-primary font-mono block mt-0.5">{agent.role}</span>
+                      <p className="mt-1 text-[11px] text-muted-foreground leading-snug line-clamp-2">{agent.desc}</p>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
 
-            {/* Bottom Consensus Status Footer */}
-            <div className="rounded-lg bg-card/70 border border-border/70 p-2.5 text-[11px] text-muted-foreground flex items-center justify-between">
-              <span className="flex items-center gap-1.5 font-medium">
-                <span className={cn('size-1.5 rounded-full', done ? 'bg-emerald-500' : 'bg-primary animate-pulse')} />
-                {done ? 'Consensus Validated' : 'Simulating Arbitrage'}
-              </span>
-              <span className="font-mono text-[10px] font-bold text-primary">
+            <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+              <span>{t('sabha.live.consensus_progress')}</span>
+              <span className="font-mono font-bold text-foreground">
                 {done ? '100% Ready' : `${progress}%`}
               </span>
             </div>
@@ -251,10 +201,10 @@ export function SabhaLive({ id }: { id: string }) {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border">
                 <div>
                   <span className="font-bold text-sm text-foreground">
-                    {tab === 'Race' ? 'Race to Maximum Net Profit' : 'Live Highway Corridor Radar'}
+                    {tab === 'Race' ? t('sabha.live.race_title') : t('sabha.live.corridor_title')}
                   </span>
                   <p className="text-[11px] text-muted-foreground">
-                    {tab === 'Race' ? `Revenue minus freight, tolls, and loading from ${originName}` : 'Interactive GIS telemetry & highway route'}
+                    {tab === 'Race' ? t('sabha.live.race_subtitle') : t('sabha.live.corridor_subtitle')}
                   </p>
                 </div>
                 
@@ -268,7 +218,7 @@ export function SabhaLive({ id }: { id: string }) {
                       tab === 'Race' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                     )}
                   >
-                    Profit Race
+                    {t('sabha.live.tab_race')}
                   </button>
                   <button
                     type="button"
@@ -278,7 +228,7 @@ export function SabhaLive({ id }: { id: string }) {
                       tab === 'Routes' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                     )}
                   >
-                    <span>Corridor Radar</span>
+                    <span>{t('sabha.live.tab_corridor')}</span>
                     <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   </button>
                 </div>
@@ -298,7 +248,7 @@ export function SabhaLive({ id }: { id: string }) {
                             >
                               {idx + 1}
                             </span>
-                            {mandi.name} ({mandi.distance})
+                            {tData('mandi', mandi.name)} ({mandi.distance})
                             {mandi.isLocal && (
                               <span className="rounded bg-muted px-1.5 py-0.2 text-[9px] font-mono text-muted-foreground">
                                 Nearest Local
@@ -307,10 +257,10 @@ export function SabhaLive({ id }: { id: string }) {
                           </span>
                           <div className="flex items-center gap-3">
                             <span className="text-muted-foreground font-mono text-[11px]">
-                              {formatINR(mandi.price)}/q
+                              {formatCurrency(mandi.price)}/q
                             </span>
                             <span className="font-mono font-extrabold text-foreground">
-                              {formatINR(mandi.net)}
+                              {formatCurrency(mandi.net)}
                             </span>
                           </div>
                         </div>
@@ -326,16 +276,16 @@ export function SabhaLive({ id }: { id: string }) {
                         </div>
 
                         <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                          <span>Freight: {formatINR(mandi.freight)}</span>
+                          <span>Freight: {formatCurrency(mandi.freight)}</span>
                           {mandi.advantage > 0 ? (
                             <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                              +{formatINR(mandi.advantage)} vs Local
+                              +{formatCurrency(mandi.advantage)} vs Local
                             </span>
                           ) : mandi.isLocal ? (
                             <span className="font-medium text-muted-foreground">Local Baseline</span>
                           ) : (
                             <span className="text-muted-foreground">
-                              {formatINR(mandi.advantage)} vs Local
+                              {formatCurrency(mandi.advantage)} vs Local
                             </span>
                           )}
                         </div>
@@ -349,7 +299,7 @@ export function SabhaLive({ id }: { id: string }) {
                     originLocation={originName} 
                     targetMandi={winner.name} 
                     originCoords={originCoords}
-                    initialHeight="h-[360px]" 
+                    initialHeight="h-[480px] lg:h-[520px]" 
                     className="border-0 shadow-none p-0" 
                   />
                 </div>
@@ -358,7 +308,7 @@ export function SabhaLive({ id }: { id: string }) {
 
             <div className="mt-6 p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-center gap-2.5 text-xs text-muted-foreground">
               <MapPin className="size-4 text-primary shrink-0" />
-              <span>Direct highway routes from {originName} verified clear of transit delays.</span>
+              <span>{`Direct highway routes from ${originName} → ${winner.highway} verified clear of transit delays.`}</span>
             </div>
           </section>
 
@@ -416,7 +366,7 @@ export function SabhaLive({ id }: { id: string }) {
                   href={`/sabha/${id}/result`}
                   className="button-primary !min-h-[44px] w-full text-xs font-bold shadow-lg shadow-primary/25 hover:scale-105"
                 >
-                  <span>Inspect Final Recommendation</span>
+                  <span>{t('sabha.live.decision_title')}</span>
                   <ArrowRight className="size-4" />
                 </Link>
               </div>
@@ -430,14 +380,15 @@ export function SabhaLive({ id }: { id: string }) {
 
 export function ResultPage({ id }: { id: string }) {
   const { user } = useAuth()
+  const { t, tData, formatCurrency } = useLocale()
 
   // Load draft parameters from localStorage or user profile
   const [draft, setDraft] = useState<SabhaDraft | null>(null)
 
   const searchParams = useSearchParams()
   const queryCrop = searchParams?.get('crop')
-  const queryQty = searchParams?.get('qty') ? Number(searchParams.get('qty')) : null
-  const queryLoc = searchParams?.get('loc')
+  const queryQty = searchParams?.get('qty') ? Number(searchParams.get('qty')) : (searchParams?.get('quantity') ? Number(searchParams.get('quantity')) : null)
+  const queryLoc = searchParams?.get('loc') || searchParams?.get('location')
   const queryRadius = searchParams?.get('rad') ? Number(searchParams.get('rad')) : null
   const queryVeh = (searchParams?.get('veh') as 'pickup' | 'truck' | 'heavy') || null
 
@@ -445,7 +396,7 @@ export function ResultPage({ id }: { id: string }) {
     if (typeof window === 'undefined') return
     try {
       const decodedId = decodeURIComponent(id)
-      const stored = localStorage.getItem(`sabha_draft_${decodedId}`) || localStorage.getItem(`sabha_draft_${id}`) || localStorage.getItem('sabha_latest_draft')
+      const stored = localStorage.getItem(`sabha_draft_${decodedId}`) || localStorage.getItem(`sabha_draft_${id}`) || localStorage.getItem('sabha_latest_draft') || localStorage.getItem('latest_sabha')
       if (stored) {
         setDraft(JSON.parse(stored))
       }
@@ -479,12 +430,12 @@ export function ResultPage({ id }: { id: string }) {
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border/80">
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-              <span className="section-kicker !mb-0">CONSENSUS VERDICT</span>
+              <span className="section-kicker !mb-0">{t('sabha.live.kicker')}</span>
               <span>·</span>
               <span className="font-mono">#{id.replace('demo-', '').slice(0, 8)}</span>
             </div>
             <h1 className="page-title">
-              {winner.name} is Your Winning Move.
+              {t('sabha.live.decision_winner', { mandi: tData('mandi', winner.name) }) || `${winner.name} is Your Winning Move.`}
             </h1>
             <p className="page-subtitle">
               Delivers maximum in-hand return with lowest transit degradation risk from {originName}.
@@ -497,14 +448,14 @@ export function ResultPage({ id }: { id: string }) {
               className="button-secondary !min-h-[36px] !px-3 text-xs font-semibold"
             >
               <Printer className="size-3.5" />
-              <span>Print Slip</span>
+              <span>{t('sabha.live.btn_print')}</span>
             </button>
             <Link
               href="/sabha/new"
               className="button-primary !min-h-[36px] !px-4 text-xs font-semibold"
             >
               <RotateCcw className="size-3.5" />
-              <span>New Sabha</span>
+              <span>{t('dashboard.start_new_sabha')}</span>
             </Link>
           </div>
         </header>
@@ -515,29 +466,29 @@ export function ResultPage({ id }: { id: string }) {
           <div className="card-luxury lg:col-span-8 bg-gradient-to-r from-card via-card to-primary/5 p-4 sm:p-5 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between">
-                <span className="section-kicker">Primary Destination</span>
+                <span className="section-kicker">{t('sabha.live.decision_title')}</span>
                 <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                  <CheckCircle2 className="size-3" /> 100% Agent Unanimity
+                  <CheckCircle2 className="size-3" /> {t('sabha.live.status_consensus_valid')}
                 </span>
               </div>
 
               <div className="mt-3 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
                 <div>
                   <h2 className="font-display text-xl sm:text-2xl font-normal text-foreground">
-                    {winner.name}
+                    {tData('mandi', winner.name)}
                   </h2>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {quantity} quintals {cropName} · {formatINR(winner.price)}/q modal rate · {winner.distance} via {winner.highway}
+                    {quantity} {t('common.units.quintals')} {tData('crop', cropName)} · {formatCurrency(winner.price)}/q · {winner.distance} via {winner.highway}
                   </p>
                 </div>
 
                 <div className="text-left sm:text-right">
                   <span className="block text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                    {formatINR(winner.net)}
+                    {formatCurrency(winner.net)}
                   </span>
                   <span className="text-xs font-semibold text-primary">
                     {winner.advantage > 0 
-                      ? `+${formatINR(winner.advantage)} surplus vs ${localBaseline?.name || 'local benchmark'}`
+                      ? `+${formatCurrency(winner.advantage)} surplus vs ${tData('mandi', localBaseline?.name || 'local benchmark')}`
                       : 'Local baseline market yard'}
                   </span>
                 </div>
@@ -547,15 +498,15 @@ export function ResultPage({ id }: { id: string }) {
             <div className="mt-4 pt-3 border-t border-border/70 grid gap-3 sm:grid-cols-3 text-xs">
               <div>
                 <span className="text-muted-foreground block text-[11px]">Gross Revenue</span>
-                <strong className="text-sm font-semibold text-foreground tabular-nums">{formatINR(winner.gross)}</strong>
+                <strong className="text-sm font-semibold text-foreground tabular-nums">{formatCurrency(winner.gross)}</strong>
               </div>
               <div>
                 <span className="text-muted-foreground block text-[11px]">Transport & Tolls</span>
-                <strong className="text-sm font-semibold text-orange-600 tabular-nums">- {formatINR(winner.freight)}</strong>
+                <strong className="text-sm font-semibold text-orange-600 tabular-nums">- {formatCurrency(winner.freight)}</strong>
               </div>
               <div>
                 <span className="text-muted-foreground block text-[11px]">Net In-Hand Payout</span>
-                <strong className="text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{formatINR(winner.net)}</strong>
+                <strong className="text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{formatCurrency(winner.net)}</strong>
               </div>
             </div>
           </div>
@@ -607,14 +558,14 @@ export function ResultPage({ id }: { id: string }) {
               Winning Corridor Radar & Logistics Route
             </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Verified route from {originName} farm hub to {winner.name} via {winner.highway}
+              Verified route from {originName} farm hub to {tData('mandi', winner.name)} via {winner.highway}
             </p>
           </div>
           <LiveRouteMap 
             originLocation={originName} 
             targetMandi={winner.name} 
             originCoords={originCoords}
-            initialHeight="h-[390px]" 
+            initialHeight="h-[480px] lg:h-[540px]" 
           />
         </section>
 
@@ -648,20 +599,20 @@ export function ResultPage({ id }: { id: string }) {
                     <td>
                       <div className="flex items-center gap-2">
                         {idx === 0 && <span className="rounded-md bg-primary px-1.5 py-0.5 text-[10px] text-white uppercase font-mono font-bold">Best</span>}
-                        <span className="text-foreground">{m.name}</span>
+                        <span className="text-foreground">{tData('mandi', m.name)}</span>
                         {m.isLocal && (
                           <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-mono text-muted-foreground">Local</span>
                         )}
                       </div>
                     </td>
-                    <td className="text-xs text-muted-foreground">{m.state} ({m.distance})</td>
-                    <td className="font-mono text-foreground">{formatINR(m.price)}/q</td>
-                    <td className="font-mono text-foreground">{formatINR(m.gross)}</td>
-                    <td className="font-mono text-orange-600">- {formatINR(m.freight)}</td>
-                    <td className="font-mono font-extrabold text-foreground">{formatINR(m.net)}</td>
+                    <td className="text-xs text-muted-foreground">{tData('geo', m.state)} ({m.distance})</td>
+                    <td className="font-mono text-foreground">{formatCurrency(m.price)}/q</td>
+                    <td className="font-mono text-foreground">{formatCurrency(m.gross)}</td>
+                    <td className="font-mono text-orange-600">- {formatCurrency(m.freight)}</td>
+                    <td className="font-mono font-extrabold text-foreground">{formatCurrency(m.net)}</td>
                     <td>
                       <span className={cn('font-mono font-bold', m.advantage > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground')}>
-                        {m.advantage > 0 ? `+${formatINR(m.advantage)}` : m.isLocal ? 'Baseline' : `${formatINR(m.advantage)}`}
+                        {m.advantage > 0 ? `+${formatCurrency(m.advantage)}` : m.isLocal ? 'Baseline' : `${formatCurrency(m.advantage)}`}
                       </span>
                     </td>
                   </tr>

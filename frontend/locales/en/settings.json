@@ -1,0 +1,51 @@
+{
+  "kicker": "PREFERENCES",
+  "title": "Settings.",
+  "saved": "Saved",
+  "profile": {
+    "title": "Profile",
+    "name_label": "Name",
+    "name_placeholder": "Enter your name",
+    "village_label": "Village",
+    "village_placeholder": "Enter village",
+    "state_label": "State",
+    "state_placeholder": "Enter state",
+    "phone_label": "Phone Number",
+    "phone_placeholder": "10-digit mobile number",
+    "save_btn": "Save Information",
+    "saving_btn": "Saving...",
+    "saved_success": "Information saved"
+  },
+  "appearance": {
+    "title": "Language & appearance",
+    "language": "Language",
+    "theme": "Theme",
+    "theme_system": "System default",
+    "theme_light": "Light",
+    "theme_dark": "Dark",
+    "notifications": "Notifications",
+    "on": "On",
+    "off": "Off"
+  },
+  "selling": {
+    "title": "Selling preferences",
+    "default_crops": "Default crops",
+    "transport_cost": "Transport cost",
+    "transport_sub": "This helps us calculate the true net price after transport.",
+    "data_saver": "Data saver"
+  },
+  "account": {
+    "title": "Account",
+    "delete_label": "Delete account",
+    "delete_sub": "Permanently remove your account preferences and session data.",
+    "delete_btn": "Delete account"
+  },
+  "modals": {
+    "crops_title": "Select Default Crops",
+    "crops_done": "Done",
+    "delete_title": "Delete Account Data",
+    "delete_warning": "This will reset your session preferences and sign you out of Mandi Sabha.",
+    "cancel": "Cancel",
+    "confirm_delete": "Confirm Delete"
+  }
+}

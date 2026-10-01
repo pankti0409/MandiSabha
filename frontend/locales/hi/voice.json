@@ -1,0 +1,17 @@
+{
+  "kicker": "एआई वॉइस असिस्टेंट",
+  "badge": "वॉइस एआई सक्रिय",
+  "title": "अपनी फसल का विवरण बोलें",
+  "listening_hint": "हिंदी, गुजराती या अंग्रेज़ी में आवाज़ सुन रहे हैं…",
+  "match_badge": "100% सटीक मिलान",
+  "understood_title": "एआई द्वारा समझी गई जानकारी:",
+  "commodity": "फसल",
+  "volume": "मात्रा",
+  "origin_farm": "खेत का स्थान",
+  "urgency": "प्राथमिकता",
+  "prompt_switcher_label": "अन्य बोलकर उदाहरण आज़माएं:",
+  "apply_cta": "सभा में लागू करें",
+  "urgency_today": "आज",
+  "urgency_soon": "जल्द",
+  "urgency_week": "इस सप्ताह"
+}

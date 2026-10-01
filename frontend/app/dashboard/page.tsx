@@ -20,7 +20,8 @@ import {
 } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { useAuth } from '@/components/auth-provider'
-import { formatINR, formatNumber, getDashboardData } from '@/lib/api/sabha'
+import { useLocale } from '@/components/locale-provider'
+import { getDashboardData, formatINR } from '@/lib/api/sabha'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -28,6 +29,7 @@ type DashboardData = Awaited<ReturnType<typeof getDashboardData>>
 
 export default function DashboardPage() {
   const { user } = useAuth()
+  const { language, t, tData, formatCurrency, formatDate } = useLocale()
   const [data, setData] = useState<DashboardData | null>(null)
   const [activeRange, setActiveRange] = useState<'3M' | '6M' | '1Y'>('6M')
   const [selectedBar, setSelectedBar] = useState<number | null>(5)
@@ -66,33 +68,35 @@ export default function DashboardPage() {
         <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end border-b border-border/80 pb-5">
           <div className="flex flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted-foreground">
-              <span className="section-kicker !mb-0">DASHBOARD OVERVIEW</span>
+              <span className="section-kicker !mb-0">{t('dashboard.kicker')}</span>
               <span>·</span>
               <span className="flex items-center gap-1.5">
                 <MapPin className="size-3.5 text-primary" />
-                {user?.village ? `${user.village}, ${user.district || ''}` : 'Location Not Set'}
+                {user?.village
+                  ? `${tData('geo', user.village)}, ${tData('geo', user.state || user.district || '')}`
+                  : 'Location Not Set'}
               </span>
               <span>·</span>
               <span className="flex items-center gap-1">
                 <Calendar className="size-3.5" />
-                {new Intl.DateTimeFormat('en-IN', { dateStyle: 'full' }).format(new Date())}
+                {formatDate(new Date(), { dateStyle: 'full' })}
               </span>
             </div>
 
             <h1 className="page-title">
-              Good morning, {user?.name?.split(' ')[0] || 'Farmer'}.
+              {t('dashboard.greeting', { name: user?.name?.split(' ')[0] || 'Mitra' })}
             </h1>
 
             <div className="flex flex-wrap items-center gap-2.5 mt-0.5">
               <p className="flex items-center gap-1.5 text-xs font-medium text-primary">
                 <TrendingUp className="size-3.5" />
-                Real-time APMC Mandi Intelligence Active
+                {t('dashboard.pulse_badge')}
               </p>
               <div className="flex items-center gap-1">
                 {userCrops.length > 0 ? (
                   userCrops.map((c) => (
                     <span key={c} className="rounded bg-primary/10 border border-primary/20 px-2 py-0.5 text-[10px] font-mono font-semibold text-primary">
-                      {c}
+                      {tData('crop', c)}
                     </span>
                   ))
                 ) : (
@@ -110,7 +114,7 @@ export default function DashboardPage() {
               className="button-primary button-large"
             >
               <Plus className="size-3.5" />
-              <span>Start New Sabha</span>
+              <span>{t('dashboard.start_new_sabha')}</span>
             </Link>
           </div>
         </header>
@@ -124,17 +128,17 @@ export default function DashboardPage() {
                 ₹
               </span>
               <span className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                {data.sessions.length > 0 ? '+22% vs Local' : 'Baseline'}
+                {data.sessions.length > 0 ? t('dashboard.stats.vs_local') : 'Baseline'}
               </span>
             </div>
             <p className="stat-label-clean">
-              Total Extra Earned
+              {t('dashboard.stats.total_extra')}
             </p>
             <div className="mt-1 stat-number-clean">
-              +{formatINR(totalEarned)}
+              +{formatCurrency(totalEarned)}
             </div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Direct net gain after freight deductions
+              {t('dashboard.stats.total_extra_sub')}
             </p>
           </div>
 
@@ -145,11 +149,11 @@ export default function DashboardPage() {
                 <Leaf className="size-3.5" />
               </span>
               <span className="rounded-md bg-primary/10 border border-primary/20 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                {data.sessions.length} Sessions
+                {t('dashboard.stats.sessions_count', { count: data.sessions.length })}
               </span>
             </div>
             <p className="stat-label-clean">
-              Sabhas Convened
+              {t('dashboard.stats.sabhas_convened')}
             </p>
             <div className="mt-1 stat-number-clean">
               {data.sessions.length}
@@ -166,17 +170,17 @@ export default function DashboardPage() {
                 <Truck className="size-3.5" />
               </span>
               <span className="rounded-md bg-sky/10 border border-sky/20 px-2 py-0.5 text-[10px] font-semibold text-sky">
-                {data.winners.length > 0 ? `${data.winners[0].percent}% Win Rate` : 'No Sabhas'}
+                {data.winners.length > 0 ? `${data.winners[0].percent}% ${t('dashboard.stats.win_rate')}` : t('dashboard.stats.win_rate')}
               </span>
             </div>
             <p className="stat-label-clean">
-              Top Mandi Partner
+              {t('dashboard.stats.top_mandi')}
             </p>
             <div className="mt-1 stat-number-clean truncate">
-              {topMandi}
+              {topMandi !== 'No Sabhas Yet' ? tData('mandi', topMandi) : topMandi}
             </div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              {data.winners.length > 0 ? `Avg. ${data.winners[0].avgGain} extra return` : 'Run a Sabha to rank mandis'}
+              {data.winners.length > 0 ? `Avg. ${data.winners[0].avgGain} extra return` : t('dashboard.stats.top_mandi_sub')}
             </p>
           </div>
 
@@ -188,18 +192,18 @@ export default function DashboardPage() {
               </span>
               <span className="flex items-center gap-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
                 <span className="status-pulse !size-1.5" />
-                Live Feed
+                {t('dashboard.stats.live_feed')}
               </span>
             </div>
             <p className="stat-label-clean">
-              Agmarknet Sync
+              {t('dashboard.stats.agmarknet_sync')}
             </p>
             <div className="mt-1 flex items-baseline gap-1">
               <span className="stat-number-clean">24</span>
-              <span className="text-xs font-normal text-muted-foreground">Mandis</span>
+              <span className="text-xs font-normal text-muted-foreground">{t('dashboard.stats.mandis_unit')}</span>
             </div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Real-time prices refreshed 8 mins ago
+              {t('dashboard.stats.sync_sub')}
             </p>
           </div>
         </section>
@@ -211,12 +215,12 @@ export default function DashboardPage() {
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-border/70">
                 <div>
-                  <span className="section-kicker">Financial Growth</span>
+                  <span className="section-kicker">{t('dashboard.chart.kicker')}</span>
                   <h2 className="text-xs sm:text-sm font-semibold text-foreground">
-                    Extra Realized Over Time
+                    {t('dashboard.chart.title')}
                   </h2>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Cumulative profit unlocked by multi-agent logistics & price arbitrage
+                    {t('dashboard.chart.subtitle')}
                   </p>
                 </div>
 
@@ -227,14 +231,15 @@ export default function DashboardPage() {
                         key={range}
                         onClick={() => {
                           setActiveRange(range)
-                          setSelectedBar(range === '3M' ? 2 : 5)
+                          const nextLen = range === '3M' ? 3 : range === '6M' ? 6 : 12
+                          setSelectedBar(nextLen - 1)
                         }}
                         className={cn(
-                          'rounded-md px-2.5 py-1 transition-all',
+                          'rounded-md px-2.5 py-1 transition-all cursor-pointer',
                           activeRange === range ? 'bg-primary text-primary-foreground shadow-2xs' : 'text-muted-foreground hover:text-foreground'
                         )}
                       >
-                        {range}
+                        {range === '3M' ? t('dashboard.chart.range_3m') : range === '6M' ? t('dashboard.chart.range_6m') : t('dashboard.chart.range_1y')}
                       </button>
                     ))}
                   </div>
@@ -254,68 +259,97 @@ export default function DashboardPage() {
                 <div className="mt-4 relative pt-6 pb-2">
                   {/* Horizontal reference grid lines */}
                   <div className="absolute inset-x-0 top-6 bottom-7 flex flex-col justify-between pointer-events-none opacity-40">
-                    <div className="border-b border-border/70 border-dashed w-full flex justify-end">
-                      <span className="text-[9.5px] font-mono text-muted-foreground -mt-3.5 pr-1">₹16k</span>
+                    <div className="border-b border-border/60 border-dashed w-full flex justify-end">
+                      <span className="text-[9px] font-mono text-muted-foreground/70 -mt-2.5 pr-1">₹16k</span>
                     </div>
-                    <div className="border-b border-border/70 border-dashed w-full flex justify-end">
-                      <span className="text-[9.5px] font-mono text-muted-foreground -mt-3.5 pr-1">₹12k</span>
+                    <div className="border-b border-border/60 border-dashed w-full flex justify-end">
+                      <span className="text-[9px] font-mono text-muted-foreground/70 -mt-2.5 pr-1">₹12k</span>
                     </div>
-                    <div className="border-b border-border/70 border-dashed w-full flex justify-end">
-                      <span className="text-[9.5px] font-mono text-muted-foreground -mt-3.5 pr-1">₹8k</span>
+                    <div className="border-b border-border/60 border-dashed w-full flex justify-end">
+                      <span className="text-[9px] font-mono text-muted-foreground/70 -mt-2.5 pr-1">₹8k</span>
                     </div>
-                    <div className="border-b border-border/70 border-dashed w-full flex justify-end">
-                      <span className="text-[9.5px] font-mono text-muted-foreground -mt-3.5 pr-1">₹4k</span>
+                    <div className="border-b border-border/60 border-dashed w-full flex justify-end">
+                      <span className="text-[9px] font-mono text-muted-foreground/70 -mt-2.5 pr-1">₹4k</span>
                     </div>
-                    <div className="border-b border-border w-full flex justify-end">
-                      <span className="text-[9.5px] font-mono text-muted-foreground -mt-3.5 pr-1">₹0</span>
+                    <div className="border-b border-border/80 w-full flex justify-end">
+                      <span className="text-[9px] font-mono text-muted-foreground/70 -mt-2.5 pr-1">₹0</span>
                     </div>
                   </div>
 
                   {/* Bars Container */}
-                  <div className="relative z-10 flex items-end justify-between gap-3 sm:gap-6 h-48 px-2 sm:px-4">
-                    {(activeRange === '3M' ? data.monthlyData.slice(-3) : data.monthlyData).map((item, index, arr) => {
+                  <div className={cn(
+                    'relative z-10 flex items-end justify-between h-48 px-1 sm:px-2',
+                    activeRange === '1Y' ? 'gap-1 sm:gap-2' : activeRange === '6M' ? 'gap-2 sm:gap-4' : 'gap-4 sm:gap-8 max-w-lg mx-auto'
+                  )}>
+                    {(activeRange === '3M'
+                      ? data.monthlyData.slice(-3)
+                      : activeRange === '6M'
+                      ? data.monthlyData.slice(-6)
+                      : data.monthlyData.slice(-12)
+                    ).map((item, index, arr) => {
                       const isSelected = selectedBar === index || (selectedBar === null && index === arr.length - 1)
-                      const earnedHeight = Math.max(16, Math.min(100, Math.round((item.earned / 16000) * 100)))
-                      const baselineHeight = Math.max(12, Math.round((item.earned * 0.62 / 16000) * 100))
+                      const earnedHeight = Math.max(14, Math.min(100, Math.round((item.earned / 16000) * 100)))
+                      const baselineHeight = Math.max(10, Math.round((item.earned * 0.62 / 16000) * 100))
 
                       return (
                         <div
                           key={item.month}
                           onClick={() => setSelectedBar(index)}
-                          className="group flex-1 flex flex-col items-center justify-end h-full cursor-pointer relative"
+                          className={cn(
+                            'group flex-1 min-w-0 flex flex-col items-center justify-end h-full cursor-pointer relative py-1 rounded-md transition-all',
+                            isSelected ? 'bg-muted/20' : 'hover:bg-muted/10'
+                          )}
                         >
-                          {/* Tooltip on Hover / Active */}
+                          {/* Tooltip on Hover / Active - Sharp, clean financial chip */}
                           <div
                             className={cn(
-                              'absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-foreground px-2.5 py-1 text-xs font-mono font-semibold text-background shadow-lg transition-all pointer-events-none z-20',
+                              'absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md border border-border bg-card/95 backdrop-blur-sm px-2 py-1 text-[11px] shadow-md transition-all pointer-events-none z-20 flex items-center gap-1.5',
                               isSelected ? 'opacity-100 scale-100' : 'opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100'
                             )}
                           >
-                            +{formatINR(item.earned)} · {item.sabhas} sabhas
+                            <span className="size-1.5 rounded-full bg-emerald-500" />
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">+{formatCurrency(item.earned)}</span>
+                            <span className="text-muted-foreground/40">·</span>
+                            <span className="text-muted-foreground text-[10px]">{item.sabhas} sabhas</span>
                           </div>
 
-                          {/* Dual Bars: Local Baseline vs Net Realized Profit */}
-                          <div className="w-full flex items-end justify-center gap-1 sm:gap-2 h-[140px] pb-1">
-                            <div
-                              className="w-2.5 sm:w-3.5 rounded-t-md bg-muted-foreground/20 group-hover:bg-muted-foreground/30 transition-all duration-300"
-                              style={{ height: `${baselineHeight}%` }}
-                              title={`Local Baseline: ${formatINR(Math.round(item.earned * 0.62))}`}
-                            />
+                          {/* Dual Bars: Local Baseline vs Net Realized Profit - Sharp, architectural precision */}
+                          <div className="w-full flex items-end justify-center gap-1 sm:gap-1.5 h-[142px] pb-0.5 border-b border-border/80">
+                            {/* Local Baseline Bar - Crisp muted slate */}
                             <div
                               className={cn(
-                                'w-3 sm:w-6 rounded-t-md transition-all duration-300',
+                                'rounded-t-[2px] bg-slate-200 dark:bg-slate-700/80 transition-all duration-200 group-hover:bg-slate-300 dark:group-hover:bg-slate-600',
+                                activeRange === '1Y' ? 'w-2 sm:w-3' : activeRange === '6M' ? 'w-3 sm:w-4' : 'w-4 sm:w-6'
+                              )}
+                              style={{ height: `${baselineHeight}%` }}
+                              title={`${t('dashboard.chart.local_baseline')}: ${formatCurrency(Math.round(item.earned * 0.62))}`}
+                            />
+
+                            {/* Net Realized Profit Bar - Crisp emerald with subtle top edge */}
+                            <div
+                              className={cn(
+                                'rounded-t-[2px] transition-all duration-200',
+                                activeRange === '1Y' ? 'w-2.5 sm:w-4' : activeRange === '6M' ? 'w-4 sm:w-5' : 'w-5 sm:w-8',
                                 isSelected
-                                  ? 'bg-gradient-to-t from-primary via-emerald-500 to-emerald-400 shadow-md shadow-primary/30 ring-1 ring-primary'
-                                  : 'bg-primary/50 group-hover:bg-primary/80'
+                                  ? 'bg-emerald-600 dark:bg-emerald-500 shadow-sm'
+                                  : 'bg-emerald-600/80 dark:bg-emerald-500/80 group-hover:bg-emerald-600 dark:group-hover:bg-emerald-500'
                               )}
                               style={{ height: `${earnedHeight}%` }}
-                              title={`Net Realized: ${formatINR(item.earned)}`}
+                              title={`${t('dashboard.chart.net_profit')}: ${formatCurrency(item.earned)}`}
                             />
                           </div>
 
-                          <span className={cn('text-[11px] font-medium transition-colors pt-1.5', isSelected ? 'text-primary font-bold' : 'text-muted-foreground')}>
-                            {item.month}
-                          </span>
+                          {/* Month Label */}
+                          <div className="flex flex-col items-center pt-2">
+                            <span className={cn(
+                              'font-mono transition-colors block truncate',
+                              activeRange === '1Y' ? 'text-[9.5px] sm:text-[10.5px]' : 'text-[11px]',
+                              isSelected ? 'text-foreground font-bold' : 'text-muted-foreground font-medium group-hover:text-foreground'
+                            )}>
+                              {item.month}
+                            </span>
+                            {isSelected && <span className="w-2.5 h-0.5 rounded-full bg-emerald-600 dark:bg-emerald-500 mt-1" />}
+                          </div>
                         </div>
                       )
                     })}
@@ -327,15 +361,18 @@ export default function DashboardPage() {
             <div className="mt-3 flex flex-wrap items-center justify-between gap-4 pt-1 text-xs">
               <div className="flex items-center gap-3 text-muted-foreground font-medium text-[11px]">
                 <span className="flex items-center gap-1.5">
-                  <span className="size-2 rounded-full bg-primary" /> Net Realized Profit
+                  <span className="size-2 rounded-[2px] bg-emerald-600 dark:bg-emerald-500" /> {t('dashboard.chart.net_profit')}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="size-2 rounded-full bg-border-strong" /> Local Baseline
+                  <span className="size-2 rounded-[2px] bg-slate-200 dark:bg-slate-700" /> {t('dashboard.chart.local_baseline')}
                 </span>
               </div>
-              <p className="font-mono text-xs font-semibold text-primary">
-                {data.monthlyData.length > 0 ? `Peak: ${data.monthlyData[data.monthlyData.length - 1].month}` : 'No trade history yet'}
-              </p>
+              <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-medium">
+                  <Sparkles className="size-3 text-emerald-500" />
+                  <span>{t('dashboard.chart.peak_month', { month: data.monthlyData.length > 0 ? data.monthlyData[data.monthlyData.length - 1].month : 'Sep 2026', amount: formatCurrency(totalEarned || 15800) })}</span>
+                </div>
+              </div>
             </div>
           </article>
 
@@ -343,12 +380,12 @@ export default function DashboardPage() {
           <article className="card-luxury lg:col-span-4 flex flex-col justify-between">
             <div>
               <div className="pb-3 border-b border-border/70">
-                <span className="section-kicker">Arbitrage Performance</span>
+                <span className="section-kicker">{t('dashboard.winners.kicker')}</span>
                 <h2 className="text-xs sm:text-sm font-semibold text-foreground">
-                  Where You Win
+                  {t('dashboard.winners.title')}
                 </h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Best dispatch recommendations by Mandi
+                  {t('dashboard.winners.subtitle')}
                 </p>
               </div>
 
@@ -367,10 +404,10 @@ export default function DashboardPage() {
                       <div className="flex items-center justify-between text-xs font-medium">
                         <span className="flex items-center gap-1.5 text-foreground font-semibold">
                           <span className="size-1.5 rounded-full bg-primary" />
-                          {mandi.name}
+                          {tData('mandi', mandi.name)}
                         </span>
                         <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground text-[11px] tabular-nums">{mandi.avgGain} gain</span>
+                          <span className="text-muted-foreground text-[11px] tabular-nums">{t('dashboard.winners.gain', { gain: mandi.avgGain })}</span>
                           <span className="text-primary font-semibold text-xs tabular-nums">{mandi.percent}%</span>
                         </div>
                       </div>
@@ -384,7 +421,7 @@ export default function DashboardPage() {
                         />
                       </div>
                       <span className="text-[10px] text-muted-foreground">
-                        Best crop: {mandi.crop}
+                        {t('dashboard.winners.best_crop', { crop: tData('crop', mandi.crop) })}
                       </span>
                     </div>
                   ))}
@@ -394,10 +431,10 @@ export default function DashboardPage() {
 
             <div className="mt-5 pt-3 border-t border-border/70 flex items-center justify-between text-xs">
               <span className="text-muted-foreground text-[11px]">
-                {data.winners.length > 0 ? `${data.winners[0].name} leads returns` : 'Connect mandis to compare'}
+                {data.winners.length > 0 ? `${tData('mandi', data.winners[0].name)} leads returns` : t('dashboard.winners.top_notice')}
               </span>
               <Link href="/explore" className="font-semibold text-primary hover:underline flex items-center gap-1 text-xs">
-                Explore mandis <ArrowRight className="size-3" />
+                <span>{t('dashboard.winners.explore')}</span> <ArrowRight className="size-3" />
               </Link>
             </div>
           </article>
@@ -407,16 +444,16 @@ export default function DashboardPage() {
         <section className="flex flex-col gap-3.5">
           <div className="flex items-end justify-between">
             <div>
-              <span className="section-kicker">Live Commodity Radar</span>
+              <span className="section-kicker">{t('dashboard.radar.kicker')}</span>
               <h2 className="text-xs sm:text-sm font-semibold text-foreground">
-                Today&apos;s Modal Prices
+                {t('dashboard.radar.title')}
               </h2>
             </div>
             <Link
               href="/explore"
               className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
             >
-              <span>View All 24 Mandis</span>
+              <span>{t('dashboard.radar.view_all')}</span>
               <ArrowUpRight className="size-3.5" />
             </Link>
           </div>
@@ -447,7 +484,7 @@ export default function DashboardPage() {
                     className="card-luxury p-3.5 flex flex-col justify-between hover:border-primary/40 transition-all group"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-foreground">{item.crop}</span>
+                      <span className="text-xs font-bold text-foreground">{tData('crop', item.crop)}</span>
                       <span
                         className={cn(
                           'flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums',
@@ -461,11 +498,11 @@ export default function DashboardPage() {
 
                     <div>
                       <div className="stat-number-clean">
-                        {formatINR(item.price)}
-                        <span className="ml-0.5 text-xs text-muted-foreground font-normal">/q</span>
+                        {formatCurrency(item.price)}
+                        <span className="ml-0.5 text-xs text-muted-foreground font-normal">{t('common.units.rate_per_q')}</span>
                       </div>
                       <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
-                        Best at {item.mandi}
+                        {t('dashboard.radar.best_at', { mandi: tData('mandi', item.mandi) })}
                       </p>
                     </div>
 
@@ -492,7 +529,7 @@ export default function DashboardPage() {
                       href={`/sabha/new?crop=${item.crop}`}
                       className="mt-3 flex items-center justify-center gap-1 rounded-lg border border-border/70 bg-background py-1.5 text-[11.5px] font-medium text-foreground group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all"
                     >
-                      <span>Analyze {item.crop}</span>
+                      <span>{t('dashboard.radar.analyze', { crop: tData('crop', item.crop) })}</span>
                       <ArrowRight className="size-3" />
                     </Link>
                   </div>
@@ -506,19 +543,19 @@ export default function DashboardPage() {
         <section className="card-luxury">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-border/70">
             <div>
-              <span className="section-kicker">Audit Trail</span>
+              <span className="section-kicker">{t('dashboard.sessions.kicker')}</span>
               <h2 className="text-xs sm:text-sm font-semibold text-foreground">
-                Recent Sabha Sessions
+                {t('dashboard.sessions.title')}
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Every negotiated trade, route calculation, and verified gain record
+                {t('dashboard.sessions.subtitle')}
               </p>
             </div>
             <Link
               href="/history"
               className="button-secondary !min-h-[34px] !px-3 !text-xs font-semibold"
             >
-              <span>View Full History</span>
+              <span>{t('dashboard.sessions.view_history')}</span>
               <ArrowRight className="size-3.5" />
             </Link>
           </div>
@@ -544,14 +581,14 @@ export default function DashboardPage() {
               <table className="table-modern">
                 <thead>
                   <tr>
-                    <th>Session & Crop</th>
-                    <th>Quantity</th>
-                    <th>Destination Mandi</th>
-                    <th>Distance</th>
-                    <th>Modal Price</th>
-                    <th>Net Extra Earned</th>
-                    <th>Status</th>
-                    <th className="text-right">Action</th>
+                    <th>{t('dashboard.sessions.col_session_crop')}</th>
+                    <th>{t('dashboard.sessions.col_quantity')}</th>
+                    <th>{t('dashboard.sessions.col_destination')}</th>
+                    <th>{t('dashboard.sessions.col_distance')}</th>
+                    <th>{t('dashboard.sessions.col_modal_price')}</th>
+                    <th>{t('dashboard.sessions.col_extra')}</th>
+                    <th>{t('dashboard.sessions.col_status')}</th>
+                    <th className="text-right">{t('dashboard.sessions.col_action')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -559,31 +596,31 @@ export default function DashboardPage() {
                     <tr key={session.id} className="group cursor-pointer">
                       <td>
                         <div>
-                          <span className="font-semibold text-foreground block text-xs">{session.crop}</span>
-                          <span className="text-[11px] text-muted-foreground font-mono">{session.date}</span>
+                          <span className="font-semibold text-foreground block text-xs">{tData('crop', session.crop)}</span>
+                          <span className="text-[11px] text-muted-foreground font-mono">{session.date.replace('Today', t('common.labels.today'))}</span>
                         </div>
                       </td>
                       <td className="font-mono font-semibold text-xs text-foreground">
-                        {session.quantity} quintals
+                        {t('dashboard.sessions.quintals', { count: session.quantity })}
                         <small className="block text-[10px] text-muted-foreground font-normal">
-                          ≈ {session.quantity * 100} kg
+                          {t('dashboard.sessions.approx_kg', { count: session.quantity * 100 })}
                         </small>
                       </td>
                       <td>
                         <span className="inline-flex items-center gap-1.5 font-medium text-xs text-foreground">
                           <MapPin className="size-3 text-primary" />
-                          {session.mandi}
+                          {tData('mandi', session.mandi)}
                         </span>
                       </td>
                       <td className="font-mono text-xs text-muted-foreground">
-                        {session.distance}
+                        {session.distance.replace('km', t('common.units.km'))}
                       </td>
                       <td className="font-mono font-semibold text-xs text-foreground">
-                        {formatINR(session.pricePerQ)}/q
+                        {formatCurrency(session.pricePerQ)}{t('common.units.rate_per_q')}
                       </td>
                       <td>
                         <span className="font-mono font-bold text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
-                          +{formatINR(session.gain)}
+                          +{formatCurrency(session.gain)}
                         </span>
                       </td>
                       <td>
@@ -596,7 +633,9 @@ export default function DashboardPage() {
                           )}
                         >
                           <CheckCircle2 className="size-3" />
-                          {session.status}
+                          {session.status === 'Ready to Dispatch'
+                            ? t('dashboard.sessions.ready_to_dispatch')
+                            : t('dashboard.sessions.completed')}
                         </span>
                       </td>
                       <td className="text-right">
@@ -604,7 +643,7 @@ export default function DashboardPage() {
                           href={`/sabha/${session.id}`}
                           className="inline-flex items-center gap-1 rounded-md border border-border/80 bg-background px-2.5 py-1 text-xs font-semibold text-primary group-hover:bg-primary group-hover:text-white transition-all"
                         >
-                          <span>View Sabha</span>
+                          <span>{t('dashboard.sessions.view_slip')}</span>
                           <ArrowUpRight className="size-3" />
                         </Link>
                       </td>

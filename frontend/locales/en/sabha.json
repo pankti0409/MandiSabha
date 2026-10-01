@@ -1,0 +1,98 @@
+{
+  "wizard": {
+    "kicker": "NEW MULTI-AGENT SESSION",
+    "title": "Convene Your Mandi Sabha.",
+    "subtitle": "5 AI agents negotiate price, freight, weather risk & cash settlement across Western corridors.",
+    "voice_btn": "Speak via Voice AI",
+    "step_crop": "1. Select Harvest Crop",
+    "step_quantity": "2. Total Harvest Volume",
+    "step_origin": "3. Farm Gate Origin",
+    "step_origin_placeholder": "Village, District",
+    "gps_locate": "GPS Detect",
+    "step_timing": "4. Target Dispatch Date",
+    "preset_today": "Today, Immediate",
+    "preset_tomorrow": "Tomorrow",
+    "preset_soon": "Within 3 Days",
+    "preset_week": "This Week",
+    "preset_custom": "Custom Calendar Date",
+    "step_quality": "5. Crop Quality Grade",
+    "grade_a_title": "Grade A (Premium)",
+    "grade_a_desc": "Export & clean quality, uniform size, lowest moisture",
+    "grade_b_title": "Grade B (Standard)",
+    "grade_b_desc": "Fair Average Quality (FAQ), standard mandi grade",
+    "grade_c_title": "Grade C (Processing)",
+    "grade_c_desc": "Small / mixed size, local consumption",
+    "step_vehicle": "6. Transport Vehicle",
+    "vehicle_pickup": "Pickup / Bolero",
+    "vehicle_pickup_desc": "Up to 25 quintals · Fast rural transit",
+    "vehicle_truck": "Truck (6-Tyre)",
+    "vehicle_truck_desc": "Up to 90 quintals · Optimal freight rate",
+    "vehicle_heavy": "Heavy Multi-Axle",
+    "vehicle_heavy_desc": "Bulk cooperative haulage",
+    "step_radius": "7. Search Radius ({{radius}} km)",
+    "target_mandi_preview": "Targeting {{mandi}} (Est. {{distance}} km)",
+    "submit_convene": "Convene Multi-Agent Sabha",
+    "submitting": "Deploying 5 AI Agents...",
+    "effective_rate": "Effective rate: {{rate}}",
+    "payoff_title": "Live Payoff Calculator",
+    "gross_value": "Gross Value ({{qty}}q @ {{rate}})",
+    "est_freight": "Estimated Freight ({{distance}} km)",
+    "local_baseline": "Local Mandi Baseline",
+    "est_net": "Estimated Net In-Hand",
+    "arbitrage_surplus": "Pure Arbitrage Surplus:"
+  },
+  "live": {
+    "kicker": "Live Multi-Agent Sabha",
+    "title": "Finding Your Best Mandi Deal.",
+    "subtitle": "Analyzing {{qty}} quintals of {{crop}} from {{origin}} · {{progress}}% computed",
+    "agents_active_badge": "5 Agents Active",
+    "pause": "Pause",
+    "resume": "Resume",
+    "progress_header": "Agent {{index}} of 5: {{name}} processing",
+    "consensus_reached": "Consensus Reached!",
+    "agents_panel_title": "Sabha Agents",
+    "agents_done_badge": "{{done}}/5 Done",
+    "agents_active_badge_sm": "{{active}}/5 Active",
+    "tab_race": "Profit Race",
+    "tab_corridor": "Corridor Radar",
+    "race_title": "Race to Maximum Net Profit",
+    "race_subtitle": "Revenue minus freight, tolls, and loading",
+    "corridor_title": "Live Highway Corridor Radar",
+    "corridor_subtitle": "Interactive GIS telemetry & FASTag route",
+    "status_consensus_valid": "Consensus Validated",
+    "status_simulating": "Simulating Arbitrage",
+    "decision_title": "Sabha Recommendation",
+    "decision_winner": "Best Net Realization: {{mandi}}",
+    "decision_advantage": "+{{amount}} extra profit vs local mandi",
+    "btn_commit": "Commit Dispatch to {{mandi}}",
+    "btn_print": "Print Loading Pass",
+    "btn_share": "Share with Driver"
+  },
+  "agents": {
+    "price_scout": {
+      "name": "Price Scout",
+      "role": "Mandi Arbitrage",
+      "desc": "Comparing Surat, Pune, Ahmedabad live books"
+    },
+    "route_planner": {
+      "name": "Route Planner",
+      "role": "Logistics & Fuel",
+      "desc": "Calculating NH48 tolls, diesel & driver freight"
+    },
+    "weather_watch": {
+      "name": "Weather Watch",
+      "role": "Risk & Moisture",
+      "desc": "Monitoring humidity & rainfall across transport corridor"
+    },
+    "buyer_network": {
+      "name": "Buyer Network",
+      "role": "APMC Clearing",
+      "desc": "Verifying verified commission agent cash settlements"
+    },
+    "advisor_chair": {
+      "name": "Advisor Chair",
+      "role": "Consensus Engine",
+      "desc": "Synthesizing net payoff vs transit risks"
+    }
+  }
+}
