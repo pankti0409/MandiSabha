@@ -1,0 +1,22 @@
+id,name,aliases,state,district,lat,lon,coords_source,verified
+lasalgaon-mh,Lasalgaon APMC,Lasalgaon|Lasalgaon Market|Lasalgaon Onion Mandi,Maharashtra,Nashik,20.1472,74.2268,curated,true
+pimpalgaon-mh,Pimpalgaon APMC,Pimpalgaon Baswant|Pimpalgaon Market|Pimpalgaon Mandi,Maharashtra,Nashik,20.1706,73.9856,curated,true
+nashik-mh,Nashik APMC,Nashik Market|Nashik Mandi,Maharashtra,Nashik,20.0063,73.7912,curated,true
+pune-mh,Pune Market Yard,Pune APMC|Pune Mandi|Gultekdi Market Yard,Maharashtra,Pune,18.4890,73.8654,curated,true
+vashi-mh,Mumbai APMC Vashi,Vashi Market|Mumbai Mandi|Navi Mumbai APMC|Vashi APMC,Maharashtra,Thane,19.0771,73.0036,curated,true
+surat-gj,Surat APMC,Surat Market|Surat Mandi,Gujarat,Surat,21.1926,72.8541,curated,true
+ahmedabad-gj,Ahmedabad APMC,Amdavad APMC|Ahmedabad Market|Vasna APMC,Gujarat,Ahmedabad,23.0076,72.5645,curated,true
+rajkot-gj,Rajkot Market Yard,Rajkot Mandi|Bedi Market Yard,Gujarat,Rajkot,22.3328,70.8142,curated,true
+indore-mp,Indore Mandi,Indore Market|Indore APMC|Choithram Mandi,Madhya Pradesh,Indore,22.7533,75.8458,curated,true
+ujjain-mp,Ujjain Mandi,Ujjain Market|Ujjain APMC,Madhya Pradesh,Ujjain,23.1828,75.7772,curated,true
+mandsaur-mp,Mandsaur Mandi,Mandsaur Market|Mandsaur APMC,Madhya Pradesh,Mandsaur,24.0722,75.0689,curated,true
+kota-rj,Kota Mandi,Kota Market|Bhamashah Mandi|Kota APMC,Rajasthan,Kota,25.1388,75.8714,curated,true
+jaipur-rj,Jaipur Mandi,Jaipur APMC|Muhana Mandi,Rajasthan,Jaipur,26.8048,75.7612,curated,true
+nagpur-mh,Nagpur APMC,Nagpur Market|Kalamna Market,Maharashtra,Nagpur,21.1712,79.1322,curated,true
+kolhapur-mh,Kolhapur APMC,Kolhapur Market|Shahu Market Yard,Maharashtra,Kolhapur,16.7054,74.2433,curated,true
+jalgaon-mh,Jalgaon APMC,Jalgaon Market|Jalgaon Mandi,Maharashtra,Jalgaon,21.0077,75.5626,curated,true
+solapur-mh,Solapur APMC,Solapur Market|Solapur Mandi,Maharashtra,Solapur,17.6599,75.9064,curated,true
+baramati-mh,Baramati APMC,Baramati Market|Baramati Mandi,Maharashtra,Pune,18.1517,74.5772,curated,true
+gondal-gj,Gondal APMC,Gondal Market Yard|Gondal Mandi,Gujarat,Rajkot,21.9620,70.7960,curated,true
+morbi-gj,Morbi APMC,Morbi Market Yard|Morbi Mandi,Gujarat,Morbi,22.8120,70.8378,curated,true
+jamnagar-gj,Jamnagar APMC,Jamnagar Market Yard|Jamnagar Mandi,Gujarat,Jamnagar,22.4707,70.0577,curated,true

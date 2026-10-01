@@ -1,0 +1,32 @@
+{
+  "Wheat": {
+    "mspPerQuintal": 2425,
+    "season": "Rabi 2025-26",
+    "sourceUrl": "https://pib.gov.in/PressReleasePage.aspx?PRID=2065363",
+    "asOf": "2024-10-16"
+  },
+  "Soybean": {
+    "mspPerQuintal": 4892,
+    "season": "Kharif 2024-25",
+    "sourceUrl": "https://pib.gov.in/PressReleasePage.aspx?PRID=2026880",
+    "asOf": "2024-06-19"
+  },
+  "Cotton": {
+    "mspPerQuintal": 7121,
+    "season": "Kharif 2024-25",
+    "sourceUrl": "https://pib.gov.in/PressReleasePage.aspx?PRID=2026880",
+    "asOf": "2024-06-19"
+  },
+  "Mustard": {
+    "mspPerQuintal": 5950,
+    "season": "Rabi 2025-26",
+    "sourceUrl": "https://pib.gov.in/PressReleasePage.aspx?PRID=2065363",
+    "asOf": "2024-10-16"
+  },
+  "Maize": {
+    "mspPerQuintal": 2225,
+    "season": "Kharif 2024-25",
+    "sourceUrl": "https://pib.gov.in/PressReleasePage.aspx?PRID=2026880",
+    "asOf": "2024-06-19"
+  }
+}

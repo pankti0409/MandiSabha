@@ -94,17 +94,17 @@ export default function SettingsPage() {
   const { language, setLanguage } = useLocale()
 
   // Profile fields
-  const [name, setName] = useState(user?.name || 'Pankti')
+  const [name, setName] = useState(user?.name || '')
   const [village, setVillage] = useState(
     user?.village && user.village.includes(',')
       ? user.village.split(',')[0].trim()
-      : user?.village || 'Surat'
+      : user?.village || ''
   )
   const [stateName, setStateName] = useState(
     user?.state ||
     (user?.village && user.village.includes(',')
       ? user.village.split(',')[1].trim()
-      : user?.district || 'Gujarat')
+      : user?.district || '')
   )
   const [saving, setSaving] = useState(false)
   const [profileSaved, setProfileSaved] = useState(false)
@@ -112,8 +112,10 @@ export default function SettingsPage() {
   // Appearance & preferences
   const [theme, setTheme] = useState<'system' | 'light' | 'dark'>('system')
   const [notifications, setNotifications] = useState<'on' | 'off'>('on')
-  const [selectedCrops, setSelectedCrops] = useState<Crop[]>(['Cotton', 'Wheat'])
-  const [transportRate, setTransportRate] = useState('4.20')
+  const [selectedCrops, setSelectedCrops] = useState<Crop[]>(
+    user?.crops ? (user.crops.filter((c): c is Crop => AVAILABLE_CROPS.includes(c as Crop))) : []
+  )
+  const [transportRate, setTransportRate] = useState(user?.transportCostPerKm ? user.transportCostPerKm.toFixed(2) : '14.00')
   const [dataSaver, setDataSaver] = useState<'off' | 'on'>('off')
 
   // Modals
@@ -212,7 +214,7 @@ export default function SettingsPage() {
     triggerSave()
   }
 
-  const cropsLabel = selectedCrops.join(', ') || 'Cotton, Wheat'
+  const cropsLabel = selectedCrops.length > 0 ? selectedCrops.join(', ') : 'None selected'
 
   return (
     <AppShell>

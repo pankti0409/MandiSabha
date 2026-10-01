@@ -3,9 +3,10 @@
 import { FormEvent, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Check, ChevronLeft, ShieldCheck, Sparkles, UserCheck, Leaf } from 'lucide-react'
+import { ArrowRight, Check, ChevronLeft, ShieldCheck, Sparkles, UserCheck, Leaf, LocateFixed, Loader2, MapPin, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/components/auth-provider'
 import { GoogleSignInButton } from '@/components/google-sign-in-button'
+import { detectUserLocation } from '@/lib/geolocation'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -15,19 +16,44 @@ export default function SignupPage() {
   const [name, setName] = useState('')
   const [mobile, setMobile] = useState('')
   const [village, setVillage] = useState('')
-  const [district, setDistrict] = useState('Nashik')
-  const [state, setState] = useState('Maharashtra')
+  const [district, setDistrict] = useState('')
+  const [state, setState] = useState('')
   const [language, setLanguage] = useState<'en' | 'hi' | 'gu'>('en')
-  const [crops, setCrops] = useState<string[]>(['Onion', 'Wheat'])
+  const [crops, setCrops] = useState<string[]>([])
   const [otp, setOtp] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [isLocating, setIsLocating] = useState(false)
+  const [locFeedback, setLocFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+
+  async function handleDetectLocation() {
+    setIsLocating(true)
+    setLocFeedback(null)
+    try {
+      const res = await detectUserLocation()
+      if (res.ok) {
+        if (res.village) setVillage(res.village)
+        if (res.district) setDistrict(res.district)
+        if (res.state) setState(res.state)
+        const display = res.village && res.district ? `${res.village}, ${res.district}` : res.formatted
+        setLocFeedback({ type: 'success', message: `Found: ${display}` })
+        setTimeout(() => setLocFeedback(null), 4500)
+      } else {
+        setLocFeedback({ type: 'error', message: res.error })
+        setTimeout(() => setLocFeedback(null), 5000)
+      }
+    } catch {
+      setLocFeedback({ type: 'error', message: 'Could not fetch GPS location.' })
+      setTimeout(() => setLocFeedback(null), 5000)
+    } finally {
+      setIsLocating(false)
+    }
+  }
 
   const availableCrops = ['Onion', 'Wheat', 'Soybean', 'Cotton', 'Tomato', 'Garlic', 'Mustard', 'Maize']
 
   function toggleCrop(crop: string) {
     if (crops.includes(crop)) {
-      if (crops.length <= 1) return
       setCrops(crops.filter((c) => c !== crop))
     } else {
       setCrops([...crops, crop])
@@ -69,7 +95,7 @@ export default function SignupPage() {
       })
       router.push('/dashboard')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'That code does not match. Try 123456.')
+      setError(err instanceof Error ? err.message : 'Invalid verification code. Please check and try again.')
     } finally {
       setBusy(false)
     }
@@ -154,31 +180,70 @@ export default function SignupPage() {
               </div>
 
               {/* Location Fields */}
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="village-input" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Village / Tehsil
-                  </label>
-                  <input
-                    id="village-input"
-                    value={village}
-                    onChange={(e) => setVillage(e.target.value)}
-                    placeholder="e.g. Pimpalgaon"
-                    className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm font-semibold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  />
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <MapPin className="size-3.5 text-primary" />
+                    Farm Location
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleDetectLocation}
+                    disabled={isLocating}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/90 transition-all bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg disabled:opacity-50 active:scale-95"
+                    title="Detect location automatically via device GPS"
+                  >
+                    {isLocating ? (
+                      <>
+                        <Loader2 className="size-3.5 animate-spin" />
+                        <span>Detecting GPS...</span>
+                      </>
+                    ) : (
+                      <>
+                        <LocateFixed className="size-3.5" />
+                        <span>Detect My Location</span>
+                      </>
+                    )}
+                  </button>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="district-input" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    District
-                  </label>
-                  <input
-                    id="district-input"
-                    value={district}
-                    onChange={(e) => setDistrict(e.target.value)}
-                    placeholder="e.g. Nashik"
-                    className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm font-semibold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  />
+                {locFeedback && (
+                  <p
+                    className={`text-xs font-medium flex items-center gap-1.5 transition-opacity ${
+                      locFeedback.type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
+                    }`}
+                  >
+                    {locFeedback.type === 'success' ? <Check className="size-3.5" /> : <AlertCircle className="size-3.5" />}
+                    {locFeedback.message}
+                  </p>
+                )}
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="village-input" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      Village / Tehsil
+                    </label>
+                    <input
+                      id="village-input"
+                      value={village}
+                      onChange={(e) => setVillage(e.target.value)}
+                      placeholder="e.g. Pimpalgaon"
+                      className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm font-semibold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="district-input" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      District
+                    </label>
+                    <input
+                      id="district-input"
+                      value={district}
+                      onChange={(e) => setDistrict(e.target.value)}
+                      placeholder="e.g. Nashik"
+                      className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm font-semibold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -234,18 +299,9 @@ export default function SignupPage() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between">
-                  <label htmlFor="signup-otp" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Verification Code
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setOtp('123456')}
-                    className="text-[11px] font-mono font-bold text-primary hover:underline cursor-pointer"
-                  >
-                    Use Demo Code (123456)
-                  </button>
-                </div>
+                <label htmlFor="signup-otp" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Verification Code
+                </label>
                 <input
                   id="signup-otp"
                   autoFocus
@@ -253,7 +309,7 @@ export default function SignupPage() {
                   maxLength={6}
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="123456"
+                  placeholder="••••••"
                   className="h-14 w-full rounded-xl border border-border bg-background px-4 text-center font-mono text-2xl tracking-[0.35em] font-bold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>

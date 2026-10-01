@@ -1,68 +1,104 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   Search, 
-  SlidersHorizontal, 
   TrendingUp, 
   TrendingDown, 
   MapPin, 
-  Sparkles, 
   ArrowRight, 
-  ArrowUpRight,
-  Filter,
-  CheckCircle2,
   RefreshCw,
-  Layers,
-  Truck,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Loader2,
+  Store
 } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
-import { allCrops, formatINR } from '@/lib/api/sabha'
+import { formatINR } from '@/lib/api/sabha'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
 interface MandiRow {
+  mandi_id?: number | null
   mandi: string
   district: string
-  state: 'Gujarat' | 'Maharashtra' | 'Madhya Pradesh' | 'Rajasthan'
+  state: string
   crop: string
-  modal: number
-  min: number
-  max: number
-  change: number
-  volumeMT: number
-  distanceKm: number
-  freightEst: number
+  variety?: string
+  modal_price: number | null
+  min_price: number | null
+  max_price: number | null
+  change_pct: number | null
+  arrivals_qty: number | null
+  distance_km: number | null
+  freight_est_per_quintal: number | null
+  price_date?: string | null
 }
 
-const mandiDatabase: MandiRow[] = [
-  { mandi: 'Surat APMC', district: 'Surat', state: 'Gujarat', crop: 'Onion', modal: 2140, min: 1980, max: 2280, change: 4.2, volumeMT: 480, distanceKm: 142, freightEst: 110 },
-  { mandi: 'Pune Market Yard', district: 'Pune', state: 'Maharashtra', crop: 'Onion', modal: 1850, min: 1720, max: 1990, change: 2.8, volumeMT: 620, distanceKm: 188, freightEst: 145 },
-  { mandi: 'Ahmedabad APMC', district: 'Ahmedabad', state: 'Gujarat', crop: 'Onion', modal: 1980, min: 1820, max: 2070, change: 1.4, volumeMT: 390, distanceKm: 260, freightEst: 195 },
-  { mandi: 'Lasalgaon APMC', district: 'Nashik', state: 'Maharashtra', crop: 'Onion', modal: 1620, min: 1500, max: 1710, change: -1.2, volumeMT: 950, distanceKm: 35, freightEst: 30 },
-  { mandi: 'Indore Mandi', district: 'Indore', state: 'Madhya Pradesh', crop: 'Wheat', modal: 2740, min: 2600, max: 2820, change: 3.5, volumeMT: 540, distanceKm: 310, freightEst: 230 },
-  { mandi: 'Rajkot Market Yard', district: 'Rajkot', state: 'Gujarat', crop: 'Wheat', modal: 2680, min: 2550, max: 2750, change: 1.8, volumeMT: 420, distanceKm: 380, freightEst: 280 },
-  { mandi: 'Nagpur APMC', district: 'Nagpur', state: 'Maharashtra', crop: 'Soybean', modal: 4890, min: 4700, max: 5050, change: 3.9, volumeMT: 310, distanceKm: 420, freightEst: 310 },
-  { mandi: 'Kota Mandi', district: 'Kota', state: 'Rajasthan', crop: 'Soybean', modal: 4760, min: 4600, max: 4900, change: 2.1, volumeMT: 280, distanceKm: 490, freightEst: 360 },
-  { mandi: 'Kolhapur APMC', district: 'Kolhapur', state: 'Maharashtra', crop: 'Tomato', modal: 2620, min: 2450, max: 2750, change: 4.8, volumeMT: 210, distanceKm: 340, freightEst: 250 },
-  { mandi: 'Mandsaur Mandi', district: 'Mandsaur', state: 'Madhya Pradesh', crop: 'Garlic', modal: 9100, min: 8600, max: 9400, change: 5.6, volumeMT: 120, distanceKm: 390, freightEst: 290 },
-]
-
 export default function ExplorePage() {
+  const [rows, setRows] = useState<MandiRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
   const [search, setSearch] = useState('')
   const [selectedCrop, setSelectedCrop] = useState<string>('Onion')
-  const [selectedState, setSelectedState] = useState<string>('All')
+  const [selectedState, setSelectedState] = useState<string>('Maharashtra')
   const [sortBy, setSortBy] = useState<'modal' | 'change' | 'volume'>('modal')
 
   // Head-to-Head Comparison State
-  const [compareA, setCompareA] = useState('Surat APMC')
-  const [compareB, setCompareB] = useState('Lasalgaon APMC')
+  const [compareA, setCompareA] = useState<string>('')
+  const [compareB, setCompareB] = useState<string>('')
   const [compareQty, setCompareQty] = useState(20)
 
-  const filtered = mandiDatabase.filter((row) => {
+  useEffect(() => {
+    let isCancelled = false
+
+    async function loadPrices() {
+      setLoading(true)
+      setError(null)
+      try {
+        const params = new URLSearchParams()
+        params.set('crop', selectedCrop === 'All' ? 'Onion' : selectedCrop)
+        if (selectedState && selectedState !== 'All') {
+          params.set('state', selectedState)
+        }
+
+        const res = await fetch(`/api/markets/prices?${params.toString()}`)
+        if (!res.ok) {
+          throw new Error(`Failed to fetch mandi prices (${res.status})`)
+        }
+        const data = await res.json()
+        if (!isCancelled) {
+          const fetchedRows: MandiRow[] = data.rows || []
+          setRows(fetchedRows)
+          if (fetchedRows.length > 0) {
+            setCompareA(fetchedRows[0].mandi)
+            setCompareB(fetchedRows[1]?.mandi || fetchedRows[0].mandi)
+          } else {
+            setCompareA('')
+            setCompareB('')
+          }
+        }
+      } catch (err: any) {
+        if (!isCancelled) {
+          setError(err.message || 'Unable to connect to market prices.')
+          setRows([])
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    loadPrices()
+    return () => {
+      isCancelled = true
+    }
+  }, [selectedCrop, selectedState])
+
+  const filtered = rows.filter((row) => {
     const matchesCrop = selectedCrop === 'All' || row.crop.toLowerCase() === selectedCrop.toLowerCase()
-    const matchesState = selectedState === 'All' || row.state === selectedState
+    const matchesState = selectedState === 'All' || row.state.toLowerCase() === selectedState.toLowerCase()
     const matchesSearch =
       row.mandi.toLowerCase().includes(search.toLowerCase()) ||
       row.district.toLowerCase().includes(search.toLowerCase()) ||
@@ -72,21 +108,30 @@ export default function ExplorePage() {
 
   // Sort
   const sorted = [...filtered].sort((a, b) => {
-    if (sortBy === 'modal') return b.modal - a.modal
-    if (sortBy === 'change') return b.change - a.change
-    if (sortBy === 'volume') return b.volumeMT - a.volumeMT
+    if (sortBy === 'modal') return (b.modal_price || 0) - (a.modal_price || 0)
+    if (sortBy === 'change') return (b.change_pct || 0) - (a.change_pct || 0)
+    if (sortBy === 'volume') return (b.arrivals_qty || 0) - (a.arrivals_qty || 0)
     return 0
   })
 
-  const highestModal = sorted.length > 0 ? Math.max(...sorted.map((r) => r.modal)) : 2140
-  const avgModal = sorted.length > 0 ? Math.round(sorted.reduce((acc, r) => acc + r.modal, 0) / sorted.length) : 1890
+  const highestRow = sorted.length > 0 ? sorted[0] : null
+  const lowestRow = sorted.length > 1 ? sorted[sorted.length - 1] : null
+  const avgModal = sorted.length > 0
+    ? Math.round(sorted.reduce((acc, r) => acc + (r.modal_price || 0), 0) / sorted.length)
+    : 0
 
   // Comparison Calculations
-  const mandiAData = mandiDatabase.find((m) => m.mandi === compareA) || mandiDatabase[0]
-  const mandiBData = mandiDatabase.find((m) => m.mandi === compareB) || mandiDatabase[3]
+  const mandiAData = rows.find((m) => m.mandi === compareA) || rows[0]
+  const mandiBData = rows.find((m) => m.mandi === compareB) || rows[1] || rows[0]
 
-  const netRealizedA = mandiAData.modal * compareQty - mandiAData.freightEst * compareQty
-  const netRealizedB = mandiBData.modal * compareQty - mandiBData.freightEst * compareQty
+  const modalA = mandiAData?.modal_price || 0
+  const freightA = mandiAData?.freight_est_per_quintal || 0
+  const netRealizedA = modalA * compareQty - freightA * compareQty
+
+  const modalB = mandiBData?.modal_price || 0
+  const freightB = mandiBData?.freight_est_per_quintal || 0
+  const netRealizedB = modalB * compareQty - freightB * compareQty
+
   const arbitrageSpread = netRealizedA - netRealizedB
 
   return (
@@ -100,7 +145,7 @@ export default function ExplorePage() {
               Mandi Price Explorer.
             </h1>
             <p className="page-subtitle">
-              Real-time modal prices, freight-deducted net spreads, and inter-mandi arbitrage windows.
+              Live modal prices from Agmarknet & local APMCs, freight-deducted spreads, and arbitrage windows.
             </p>
           </div>
 
@@ -123,15 +168,15 @@ export default function ExplorePage() {
                 Highest Modal Rate
               </span>
               <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                Surat APMC
+                {highestRow ? highestRow.mandi : '—'}
               </span>
             </div>
             <div className="mt-1 flex items-baseline gap-1 stat-number-clean">
-              {formatINR(highestModal)}
+              {highestRow?.modal_price ? formatINR(highestRow.modal_price) : '—'}
               <span className="text-xs font-normal text-muted-foreground">/quintal</span>
             </div>
             <p className="mt-0.5 text-[11px] text-primary font-medium">
-              +4.2% daily surge (Agmarknet verified)
+              {highestRow?.change_pct ? `${highestRow.change_pct > 0 ? '+' : ''}${highestRow.change_pct}% 24h movement` : 'Live market rate'}
             </p>
           </div>
 
@@ -145,11 +190,11 @@ export default function ExplorePage() {
               </span>
             </div>
             <div className="mt-1 flex items-baseline gap-1 stat-number-clean">
-              {formatINR(avgModal)}
+              {avgModal > 0 ? formatINR(avgModal) : '—'}
               <span className="text-xs font-normal text-muted-foreground">/quintal</span>
             </div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Weighted across Western corridor
+              Across active APMC arrivals
             </p>
           </div>
 
@@ -159,113 +204,121 @@ export default function ExplorePage() {
                 Peak Arbitrage Spread
               </span>
               <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-accent">
-                Surat vs Lasalgaon
+                {highestRow && lowestRow ? `${highestRow.mandi} vs ${lowestRow.mandi}` : 'Corridor Spread'}
               </span>
             </div>
             <div className="mt-1 flex items-baseline gap-1 stat-number-clean text-emerald-600 dark:text-emerald-400">
-              +₹520
+              {highestRow && lowestRow && highestRow.modal_price && lowestRow.modal_price
+                ? `+₹${Math.round(highestRow.modal_price - lowestRow.modal_price)}`
+                : '—'}
               <span className="text-xs font-normal text-muted-foreground">/q spread</span>
             </div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Net +₹410/q after ₹110/q freight deduction
+              Gross spread before freight deduction
             </p>
           </div>
         </section>
 
         {/* ── Interactive Head-to-Head Mandi Comparison Tool ───────────── */}
-        <section className="card-luxury bg-gradient-to-r from-card via-card to-primary/5 flex flex-col gap-4 p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border/70">
-            <div>
-              <span className="section-kicker">Arbitrage Comparison</span>
-              <h2 className="text-xs sm:text-sm font-semibold text-foreground">
-                Interactive Mandi Arbitrage Duel
-              </h2>
-            </div>
-            <div className="flex items-center gap-2 text-xs font-medium">
-              <span className="text-muted-foreground">Volume:</span>
-              <span className="text-primary font-bold">{compareQty} quintals</span>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12 items-center">
-            {/* Mandi A Selection */}
-            <div className="lg:col-span-5 rounded-xl border border-primary/30 bg-primary/5 p-3.5 flex flex-col gap-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10.5px] font-semibold uppercase tracking-wider text-primary">Destination A</span>
-                <select
-                  value={compareA}
-                  onChange={(e) => setCompareA(e.target.value)}
-                  className="rounded-lg border border-border bg-card px-2 py-1 text-xs font-semibold text-foreground outline-none cursor-pointer"
-                >
-                  {mandiDatabase.map((m) => (
-                    <option key={m.mandi} value={m.mandi}>{m.mandi} ({m.state})</option>
-                  ))}
-                </select>
-              </div>
-
+        {rows.length > 0 && (
+          <section className="card-luxury bg-gradient-to-r from-card via-card to-primary/5 flex flex-col gap-4 p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border/70">
               <div>
-                <div className="text-base font-bold text-foreground tabular-nums block">
-                  {formatINR(mandiAData.modal)}/q
+                <span className="section-kicker">Arbitrage Comparison</span>
+                <h2 className="text-xs sm:text-sm font-semibold text-foreground">
+                  Interactive Mandi Arbitrage Duel
+                </h2>
+              </div>
+              <div className="flex items-center gap-2 text-xs font-medium">
+                <span className="text-muted-foreground">Volume:</span>
+                <span className="text-primary font-bold">{compareQty} quintals</span>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12 items-center">
+              {/* Mandi A Selection */}
+              <div className="lg:col-span-5 rounded-xl border border-primary/30 bg-primary/5 p-3.5 flex flex-col gap-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10.5px] font-semibold uppercase tracking-wider text-primary">Destination A</span>
+                  <select
+                    value={compareA}
+                    onChange={(e) => setCompareA(e.target.value)}
+                    className="rounded-lg border border-border bg-card px-2 py-1 text-xs font-semibold text-foreground outline-none cursor-pointer"
+                  >
+                    {rows.map((m) => (
+                      <option key={`${m.mandi}-${m.district}-A`} value={m.mandi}>
+                        {m.mandi} ({m.state})
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Distance: {mandiAData.distanceKm} km · Freight: -₹{mandiAData.freightEst}/q
-                </p>
+
+                <div>
+                  <div className="text-base font-bold text-foreground tabular-nums block">
+                    {mandiAData?.modal_price ? `${formatINR(mandiAData.modal_price)}/q` : '—'}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Distance: {mandiAData?.distance_km ?? '—'} km · Freight: {mandiAData?.freight_est_per_quintal ? `-₹${mandiAData.freight_est_per_quintal}/q` : 'At location'}
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-border/70 flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Net Payoff ({compareQty}q):</span>
+                  <span className="font-bold text-primary text-sm tabular-nums">
+                    {formatINR(netRealizedA)}
+                  </span>
+                </div>
               </div>
 
-              <div className="pt-2 border-t border-border/70 flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Net Payoff ({compareQty}q):</span>
-                <span className="font-bold text-primary text-sm tabular-nums">
-                  {formatINR(netRealizedA)}
+              {/* VS Badge */}
+              <div className="lg:col-span-2 flex flex-col items-center justify-center gap-1 text-center">
+                <div className="grid size-8 place-items-center rounded-full bg-accent/15 text-accent font-semibold text-xs">
+                  <ArrowRightLeft className="size-3.5" />
+                </div>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Net Spread
+                </span>
+                <span className={cn('text-xs font-bold tabular-nums', arbitrageSpread >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-orange-600')}>
+                  {arbitrageSpread >= 0 ? `+${formatINR(arbitrageSpread)}` : `-${formatINR(Math.abs(arbitrageSpread))}`}
                 </span>
               </div>
-            </div>
 
-            {/* VS Badge */}
-            <div className="lg:col-span-2 flex flex-col items-center justify-center gap-1 text-center">
-              <div className="grid size-8 place-items-center rounded-full bg-accent/15 text-accent font-semibold text-xs">
-                <ArrowRightLeft className="size-3.5" />
-              </div>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Net Spread
-              </span>
-              <span className={cn('text-xs font-bold tabular-nums', arbitrageSpread >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-orange-600')}>
-                {arbitrageSpread >= 0 ? `+${formatINR(arbitrageSpread)}` : `-${formatINR(Math.abs(arbitrageSpread))}`}
-              </span>
-            </div>
-
-            {/* Mandi B Selection */}
-            <div className="lg:col-span-5 rounded-xl border border-border bg-card p-3.5 flex flex-col gap-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">Destination B</span>
-                <select
-                  value={compareB}
-                  onChange={(e) => setCompareB(e.target.value)}
-                  className="rounded-lg border border-border bg-background px-2 py-1 text-xs font-semibold text-foreground outline-none cursor-pointer"
-                >
-                  {mandiDatabase.map((m) => (
-                    <option key={m.mandi} value={m.mandi}>{m.mandi} ({m.state})</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <div className="text-base font-bold text-foreground tabular-nums block">
-                  {formatINR(mandiBData.modal)}/q
+              {/* Mandi B Selection */}
+              <div className="lg:col-span-5 rounded-xl border border-border bg-card p-3.5 flex flex-col gap-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">Destination B</span>
+                  <select
+                    value={compareB}
+                    onChange={(e) => setCompareB(e.target.value)}
+                    className="rounded-lg border border-border bg-background px-2 py-1 text-xs font-semibold text-foreground outline-none cursor-pointer"
+                  >
+                    {rows.map((m) => (
+                      <option key={`${m.mandi}-${m.district}-B`} value={m.mandi}>
+                        {m.mandi} ({m.state})
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Distance: {mandiBData.distanceKm} km · Freight: -₹{mandiBData.freightEst}/q
-                </p>
-              </div>
 
-              <div className="pt-2 border-t border-border/70 flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Net Payoff ({compareQty}q):</span>
-                <span className="font-bold text-foreground text-sm tabular-nums">
-                  {formatINR(netRealizedB)}
-                </span>
+                <div>
+                  <div className="text-base font-bold text-foreground tabular-nums block">
+                    {mandiBData?.modal_price ? `${formatINR(mandiBData.modal_price)}/q` : '—'}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Distance: {mandiBData?.distance_km ?? '—'} km · Freight: {mandiBData?.freight_est_per_quintal ? `-₹${mandiBData.freight_est_per_quintal}/q` : 'At location'}
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-border/70 flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Net Payoff ({compareQty}q):</span>
+                  <span className="font-bold text-foreground text-sm tabular-nums">
+                    {formatINR(netRealizedB)}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* ── Filters & Search Control Bar ─────────────────────────────── */}
         <section className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 p-3 rounded-xl border border-border/80 bg-card shadow-2xs">
@@ -282,7 +335,7 @@ export default function ExplorePage() {
 
           {/* Crop Selector Chips */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
-            {['All', 'Onion', 'Wheat', 'Soybean', 'Tomato', 'Garlic'].map((crop) => (
+            {['Onion', 'Wheat', 'Soybean', 'Tomato', 'Garlic'].map((crop) => (
               <button
                 key={crop}
                 onClick={() => setSelectedCrop(crop)}
@@ -305,11 +358,11 @@ export default function ExplorePage() {
               onChange={(e) => setSelectedState(e.target.value)}
               className="h-9 rounded-lg border border-border bg-background px-2.5 text-xs font-semibold text-foreground outline-none cursor-pointer"
             >
-              <option value="All">All States (India)</option>
-              <option value="Gujarat">Gujarat</option>
               <option value="Maharashtra">Maharashtra</option>
+              <option value="Gujarat">Gujarat</option>
               <option value="Madhya Pradesh">Madhya Pradesh</option>
               <option value="Rajasthan">Rajasthan</option>
+              <option value="All">All Regions</option>
             </select>
           </div>
         </section>
@@ -347,91 +400,124 @@ export default function ExplorePage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto mt-4">
-            <table className="table-modern">
-              <thead>
-                <tr>
-                  <th>Mandi & Location</th>
-                  <th>Commodity</th>
-                  <th>Modal Price</th>
-                  <th>Day Range (Min–Max)</th>
-                  <th>24h Movement</th>
-                  <th>Arrival Volume</th>
-                  <th>Distance & Freight</th>
-                  <th className="text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sorted.map((row) => {
-                  const isPositive = row.change > 0
-                  return (
-                    <tr key={row.mandi} className="group hover:bg-muted/40 transition-colors">
-                      <td>
-                        <div className="flex items-center gap-2.5">
-                          <span className="grid size-8 place-items-center rounded-xl bg-primary/10 text-primary shrink-0">
-                            <MapPin className="size-4" />
-                          </span>
-                          <div>
-                            <span className="font-bold text-foreground block">{row.mandi}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {row.district}, {row.state}
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-3">
+              <Loader2 className="size-6 animate-spin text-primary" />
+              <p className="text-xs font-medium">Fetching real-time prices from APMCs...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <p className="text-xs text-destructive font-medium mb-3">{error}</p>
+              <button
+                onClick={() => setSelectedCrop(selectedCrop)}
+                className="button-outline text-xs px-3 py-1.5"
+              >
+                <RefreshCw className="size-3 mr-1" /> Retry Query
+              </button>
+            </div>
+          ) : sorted.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="grid size-12 place-items-center rounded-2xl bg-muted/60 text-muted-foreground mb-3">
+                <Store className="size-6 stroke-[1.5]" />
+              </div>
+              <h3 className="text-sm font-semibold text-foreground">No mandi records found</h3>
+              <p className="text-xs text-muted-foreground max-w-sm mt-1">
+                No active arrivals reported for {selectedCrop} in {selectedState}. Try selecting a different crop or state filter.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto mt-2">
+              <table className="table-modern">
+                <thead>
+                  <tr>
+                    <th>Mandi & Location</th>
+                    <th>Commodity</th>
+                    <th>Modal Price</th>
+                    <th>Day Range (Min–Max)</th>
+                    <th>24h Movement</th>
+                    <th>Arrival Volume</th>
+                    <th>Distance & Freight</th>
+                    <th className="text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sorted.map((row) => {
+                    const isPositive = (row.change_pct || 0) > 0
+                    return (
+                      <tr key={`${row.mandi}-${row.district}`} className="group hover:bg-muted/40 transition-colors">
+                        <td>
+                          <div className="flex items-center gap-2.5">
+                            <span className="grid size-8 place-items-center rounded-xl bg-primary/10 text-primary shrink-0">
+                              <MapPin className="size-4" />
                             </span>
+                            <div>
+                              <span className="font-bold text-foreground block">{row.mandi}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {row.district}, {row.state}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span className="rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-bold text-foreground">
-                          {row.crop}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="font-bold text-sm text-foreground tabular-nums">
-                          {formatINR(row.modal)}
-                          <span className="ml-0.5 text-xs text-muted-foreground font-normal">/q</span>
-                        </span>
-                      </td>
-                      <td>
-                        <span className="text-xs text-muted-foreground tabular-nums">
-                          {formatINR(row.min)} – {formatINR(row.max)}
-                        </span>
-                      </td>
-                      <td>
-                        <span
-                          className={cn(
-                            'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums',
-                            isPositive ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-orange-500/10 text-orange-600'
-                          )}
-                        >
-                          {isPositive ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
-                          {isPositive ? '+' : ''}{row.change}%
-                        </span>
-                      </td>
-                      <td className="text-xs font-medium text-foreground tabular-nums">
-                        {row.volumeMT} MT
-                      </td>
-                      <td>
-                        <div className="text-xs text-muted-foreground">
-                          <span>{row.distanceKm} km</span>
-                          <span className="block text-[10.5px] text-muted-foreground">
-                            -₹{row.freightEst}/q freight
+                        </td>
+                        <td>
+                          <span className="rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-bold text-foreground">
+                            {row.crop} {row.variety ? `(${row.variety})` : ''}
                           </span>
-                        </div>
-                      </td>
-                      <td className="text-right">
-                        <Link
-                          href={`/sabha/new?crop=${row.crop}&targetMandi=${row.mandi}`}
-                          className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1 text-xs font-semibold text-white shadow-2xs hover:bg-primary-hover transition-all"
-                        >
-                          <span>Start Sabha</span>
-                          <ArrowRight className="size-3" />
-                        </Link>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                        </td>
+                        <td>
+                          <span className="font-bold text-sm text-foreground tabular-nums">
+                            {row.modal_price ? formatINR(row.modal_price) : '—'}
+                            <span className="ml-0.5 text-xs text-muted-foreground font-normal">/q</span>
+                          </span>
+                        </td>
+                        <td>
+                          <span className="text-xs text-muted-foreground tabular-nums">
+                            {row.min_price && row.max_price ? `${formatINR(row.min_price)} – ${formatINR(row.max_price)}` : '—'}
+                          </span>
+                        </td>
+                        <td>
+                          {row.change_pct !== null ? (
+                            <span
+                              className={cn(
+                                'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums',
+                                isPositive ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-orange-500/10 text-orange-600'
+                              )}
+                            >
+                              {isPositive ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+                              {isPositive ? '+' : ''}{row.change_pct}%
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        <td className="text-xs font-medium text-foreground tabular-nums">
+                          {row.arrivals_qty ? `${row.arrivals_qty} MT` : '—'}
+                        </td>
+                        <td>
+                          <div className="text-xs text-muted-foreground">
+                            <span>{row.distance_km ? `${row.distance_km} km` : 'Local APMC'}</span>
+                            {row.freight_est_per_quintal ? (
+                              <span className="block text-[10.5px] text-muted-foreground">
+                                -₹{row.freight_est_per_quintal}/q freight
+                              </span>
+                            ) : null}
+                          </div>
+                        </td>
+                        <td className="text-right">
+                          <Link
+                            href={`/sabha/new?crop=${row.crop}&targetMandi=${encodeURIComponent(row.mandi)}`}
+                            className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1 text-xs font-semibold text-white shadow-2xs hover:bg-primary-hover transition-all"
+                          >
+                            <span>Start Sabha</span>
+                            <ArrowRight className="size-3" />
+                          </Link>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
       </div>
     </AppShell>

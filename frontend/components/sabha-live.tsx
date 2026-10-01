@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { 
   ArrowRight, 
   Check, 
@@ -22,27 +23,63 @@ import {
   Calendar
 } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
-import { formatINR, formatNumber } from '@/lib/api/sabha'
+import { formatINR, formatNumber, evaluateSabhaCandidates, SabhaDraft, EvaluatedMandi } from '@/lib/api/sabha'
+import { useAuth } from '@/components/auth-provider'
 import { cn } from '@/lib/utils'
 import { LiveRouteMap } from '@/components/live-route-map'
 
-type Mandi = { name: string; state: string; price: number; freight: number; net: number; distance: string; color: string; advantage: number }
-const mandis: Mandi[] = [
-  { name: 'Surat APMC', state: 'Gujarat', price: 2140, freight: 6200, net: 36600, distance: '142 km', color: '#0F6B47', advantage: 8200 },
-  { name: 'Pune Market Yard', state: 'Maharashtra', price: 1850, freight: 4800, net: 32200, distance: '188 km', color: '#0284C7', advantage: 3800 },
-  { name: 'Ahmedabad APMC', state: 'Gujarat', price: 1980, freight: 7900, net: 31700, distance: '260 km', color: '#D97706', advantage: 3300 },
-  { name: 'Lasalgaon (Local)', state: 'Maharashtra', price: 1620, freight: 1400, net: 31000, distance: '35 km', color: '#EA580C', advantage: 0 },
-]
-
-const agents = [
-  { name: 'Price Scout', role: 'Mandi Arbitrage', desc: 'Comparing Surat, Pune, Ahmedabad live books' },
-  { name: 'Route Planner', role: 'Logistics & Fuel', desc: 'Calculating NH48 tolls, diesel & driver freight' },
-  { name: 'Weather Watch', role: 'Risk & Moisture', desc: 'Monitoring humidity & rainfall across transport corridor' },
-  { name: 'Buyer Network', role: 'APMC Clearing', desc: 'Verifying verified commission agent cash settlements' },
-  { name: 'Advisor Chair', role: 'Consensus Engine', desc: 'Synthesizing net payoff vs transit risks' },
-]
-
 export function SabhaLive({ id }: { id: string }) {
+  const { user } = useAuth()
+  const searchParams = useSearchParams()
+
+  const queryCrop = searchParams?.get('crop')
+  const queryQty = searchParams?.get('qty') ? Number(searchParams.get('qty')) : null
+  const queryLoc = searchParams?.get('loc')
+  const queryRadius = searchParams?.get('rad') ? Number(searchParams.get('rad')) : null
+  const queryVeh = (searchParams?.get('veh') as 'pickup' | 'truck' | 'heavy') || null
+
+  // Load draft parameters from localStorage or user profile
+  const [draft, setDraft] = useState<SabhaDraft | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const decodedId = decodeURIComponent(id)
+      const stored = localStorage.getItem(`sabha_draft_${decodedId}`) || localStorage.getItem(`sabha_draft_${id}`) || localStorage.getItem('sabha_latest_draft')
+      if (stored) {
+        setDraft(JSON.parse(stored))
+      }
+    } catch {}
+  }, [id])
+
+  const rawLoc = queryLoc || draft?.location || (user?.village ? `${user.village}, ${user.district || ''}` : (user?.district || 'Rajkot West Taluka, Rajkot'))
+  const originName = (!rawLoc || rawLoc.toLowerCase().includes('nashik') || rawLoc.toLowerCase().includes('your farm')) ? 'Rajkot West Taluka, Rajkot' : rawLoc
+  const cropName = (queryCrop || draft?.crop || (draft?.crop as string) === 'Commodity' ? '' : draft?.crop) || (user?.crops?.[0] || 'Onion')
+  const quantity = queryQty || draft?.quantity || 20
+  const vehicleType = queryVeh || draft?.vehicleType || 'pickup'
+  const radius = queryRadius || draft?.radius || 200
+
+  const evaluation = useMemo(() => {
+    return evaluateSabhaCandidates({
+      crop: cropName as any,
+      quantity,
+      location: originName,
+      originCoords: draft?.originCoords,
+      vehicleType,
+      radius,
+    })
+  }, [cropName, quantity, originName, draft, vehicleType, radius])
+
+  const { winner, localBaseline, ranked, originCoords } = evaluation
+
+  const agents = useMemo(() => [
+    { name: 'Price Scout', role: 'Mandi Arbitrage', desc: `Scanning ${ranked.slice(0, 3).map((m) => m.name).join(', ')} live books` },
+    { name: 'Route Planner', role: 'Logistics & Fuel', desc: `Calculating ${winner.highway} freight from ${originName}` },
+    { name: 'Weather Watch', role: 'Risk & Moisture', desc: 'Monitoring humidity & rainfall across transport corridor' },
+    { name: 'Buyer Network', role: 'APMC Clearing', desc: `Verifying ${winner.name} commission agent cash settlements` },
+    { name: 'Advisor Chair', role: 'Consensus Engine', desc: `Synthesizing net payoff vs ${localBaseline?.name || 'local'} benchmark` },
+  ], [ranked, winner, originName, localBaseline])
+
   const [progress, setProgress] = useState(15)
   const [paused, setPaused] = useState(false)
   const [done, setDone] = useState(false)
@@ -62,7 +99,17 @@ export function SabhaLive({ id }: { id: string }) {
   }, [paused, done])
 
   const activeAgentIndex = Math.min(Math.floor(progress / 22), agents.length - 1)
-  const ranked = useMemo(() => [...mandis].sort((a, b) => b.net - a.net), [])
+
+  const maxNet = useMemo(() => {
+    return Math.max(...ranked.map((m) => m.net), 1)
+  }, [ranked])
+
+  const defaultMessages = useMemo(() => [
+    { sender: 'Price Scout', text: `${winner.name} ${cropName.toLowerCase()} modal surged to ₹${winner.price.toLocaleString('en-IN')}/q on high wholesale demand.` },
+    { sender: 'Route Planner', text: `${originName} to ${winner.name} freight estimated at ₹${winner.freight.toLocaleString('en-IN')} via ${draft?.vehicleType || '1.5T pickup'} (${winner.distance}).` },
+    { sender: 'Weather Watch', text: `Clear weather along ${winner.highway}. Zero transit spoilage or rainfall risk.` },
+    { sender: 'Advisor Chair', text: `${winner.name} net payout of ₹${winner.net.toLocaleString('en-IN')} delivers +₹${winner.advantage.toLocaleString('en-IN')} pure surplus over ${localBaseline?.name || 'local mandi'} benchmark.` },
+  ], [winner, cropName, originName, draft, localBaseline])
 
   return (
     <AppShell>
@@ -79,7 +126,7 @@ export function SabhaLive({ id }: { id: string }) {
               Finding Your Best Mandi Deal.
             </h1>
             <p className="page-subtitle">
-              Analyzing 20 quintals of Onions from Nashik · {progress}% computed
+              Analyzing {cropName} trade corridors from {originName} · {progress}% computed
             </p>
           </div>
 
@@ -117,7 +164,7 @@ export function SabhaLive({ id }: { id: string }) {
 
         {/* ── 3-Column Live Workspace ─────────────────────────────────── */}
         <div className="grid gap-6 lg:grid-cols-12">
-          {/* Column 1: Organized Sabha Agents Panel (Clean & Structured) */}
+          {/* Column 1: Organized Sabha Agents Panel */}
           <section className="card-luxury lg:col-span-3 flex flex-col gap-3.5">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="flex items-center gap-2">
@@ -129,7 +176,7 @@ export function SabhaLive({ id }: { id: string }) {
               <Users className="size-4 text-muted-foreground" />
             </div>
 
-            {/* Unified Pipeline List (Organized & Minimal) */}
+            {/* Unified Pipeline List */}
             <div className="rounded-xl border border-border/80 bg-background/60 divide-y divide-border/60 overflow-hidden shadow-2xs">
               {agents.map((agent, index) => {
                 const isWorking = index === activeAgentIndex && !done
@@ -144,7 +191,6 @@ export function SabhaLive({ id }: { id: string }) {
                     )}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      {/* Minimal status indicator */}
                       <span className="grid size-5 place-items-center shrink-0">
                         {isFinished ? (
                           <Check className="size-3.5 text-emerald-600 dark:text-emerald-400 stroke-[3]" />
@@ -170,7 +216,6 @@ export function SabhaLive({ id }: { id: string }) {
                       </div>
                     </div>
 
-                    {/* Compact Status Pill */}
                     <span
                       className={cn(
                         'rounded px-1.5 py-0.5 text-[9px] font-mono font-bold shrink-0',
@@ -209,7 +254,7 @@ export function SabhaLive({ id }: { id: string }) {
                     {tab === 'Race' ? 'Race to Maximum Net Profit' : 'Live Highway Corridor Radar'}
                   </span>
                   <p className="text-[11px] text-muted-foreground">
-                    {tab === 'Race' ? 'Revenue minus freight, tolls, and loading' : 'Interactive GIS telemetry & FASTag route'}
+                    {tab === 'Race' ? `Revenue minus freight, tolls, and loading from ${originName}` : 'Interactive GIS telemetry & highway route'}
                   </p>
                 </div>
                 
@@ -242,7 +287,6 @@ export function SabhaLive({ id }: { id: string }) {
               {tab === 'Race' ? (
                 <div className="mt-6 flex flex-col gap-5">
                   {ranked.map((mandi, idx) => {
-                    const maxNet = 36600
                     const percent = Math.round((mandi.net / maxNet) * 100)
                     return (
                       <div key={mandi.name} className="flex flex-col gap-1.5">
@@ -255,6 +299,11 @@ export function SabhaLive({ id }: { id: string }) {
                               {idx + 1}
                             </span>
                             {mandi.name} ({mandi.distance})
+                            {mandi.isLocal && (
+                              <span className="rounded bg-muted px-1.5 py-0.2 text-[9px] font-mono text-muted-foreground">
+                                Nearest Local
+                              </span>
+                            )}
                           </span>
                           <div className="flex items-center gap-3">
                             <span className="text-muted-foreground font-mono text-[11px]">
@@ -278,9 +327,15 @@ export function SabhaLive({ id }: { id: string }) {
 
                         <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                           <span>Freight: {formatINR(mandi.freight)}</span>
-                          {mandi.advantage > 0 && (
+                          {mandi.advantage > 0 ? (
                             <span className="font-bold text-emerald-600 dark:text-emerald-400">
                               +{formatINR(mandi.advantage)} vs Local
+                            </span>
+                          ) : mandi.isLocal ? (
+                            <span className="font-medium text-muted-foreground">Local Baseline</span>
+                          ) : (
+                            <span className="text-muted-foreground">
+                              {formatINR(mandi.advantage)} vs Local
                             </span>
                           )}
                         </div>
@@ -290,14 +345,20 @@ export function SabhaLive({ id }: { id: string }) {
                 </div>
               ) : (
                 <div className="mt-4">
-                  <LiveRouteMap targetMandi="Surat APMC" initialHeight="h-[360px]" className="border-0 shadow-none p-0" />
+                  <LiveRouteMap 
+                    originLocation={originName} 
+                    targetMandi={winner.name} 
+                    originCoords={originCoords}
+                    initialHeight="h-[360px]" 
+                    className="border-0 shadow-none p-0" 
+                  />
                 </div>
               )}
             </div>
 
             <div className="mt-6 p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-center gap-2.5 text-xs text-muted-foreground">
               <MapPin className="size-4 text-primary shrink-0" />
-              <span>Direct highway routes Nashik → Surat NH48 verified clear of transit delays.</span>
+              <span>Direct highway routes from {originName} verified clear of transit delays.</span>
             </div>
           </section>
 
@@ -310,13 +371,7 @@ export function SabhaLive({ id }: { id: string }) {
               </div>
 
               <div className="flex flex-col gap-2.5 max-h-[280px] overflow-y-auto pr-1">
-                {[
-                  { sender: 'Price Scout', text: 'Surat APMC onion modal surged to ₹2,140/q on high export demand.' },
-                  { sender: 'Route Planner', text: 'Nashik-Surat freight estimated at ₹6,200 via 1.5T pickup.' },
-                  { sender: 'Weather Watch', text: 'Clear weather on Western corridor. Zero rainfall risk.' },
-                  { sender: 'Advisor Chair', text: 'Surat net payout ₹36,600 delivers +₹8,200 pure surplus.' },
-                  ...chatMessages,
-                ]
+                {[...defaultMessages, ...chatMessages]
                   .slice(0, Math.max(1, Math.ceil((progress / 100) * 4) + chatMessages.length))
                   .map((msg, i) => (
                     <div key={i} className="rounded-xl border border-border bg-background p-3 text-xs flex flex-col gap-1 animate-in fade-in duration-200">
@@ -333,8 +388,8 @@ export function SabhaLive({ id }: { id: string }) {
                 <span className="text-[10px] font-bold uppercase text-muted-foreground">Ask Sabha Agent:</span>
                 <div className="flex flex-wrap gap-1">
                   {[
-                    { q: 'Rain risk on NH48?', a: 'Weather Watch: NH48 corridor is 100% dry. No transit cover needed.' },
-                    { q: 'Hold till Friday?', a: 'Price Scout: Arrivals expected to increase by 30% Friday. Sell today.' },
+                    { q: `Transit risk on ${winner.highway}?`, a: `Route Planner: Route from ${originName} to ${winner.name} is clear. Average speed 60 km/h.` },
+                    { q: 'Hold till Friday?', a: 'Price Scout: Arrivals expected to increase by 25% Friday. Capitalize on peak spread today.' },
                   ].map((item) => (
                     <button
                       key={item.q}
@@ -374,6 +429,49 @@ export function SabhaLive({ id }: { id: string }) {
 }
 
 export function ResultPage({ id }: { id: string }) {
+  const { user } = useAuth()
+
+  // Load draft parameters from localStorage or user profile
+  const [draft, setDraft] = useState<SabhaDraft | null>(null)
+
+  const searchParams = useSearchParams()
+  const queryCrop = searchParams?.get('crop')
+  const queryQty = searchParams?.get('qty') ? Number(searchParams.get('qty')) : null
+  const queryLoc = searchParams?.get('loc')
+  const queryRadius = searchParams?.get('rad') ? Number(searchParams.get('rad')) : null
+  const queryVeh = (searchParams?.get('veh') as 'pickup' | 'truck' | 'heavy') || null
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const decodedId = decodeURIComponent(id)
+      const stored = localStorage.getItem(`sabha_draft_${decodedId}`) || localStorage.getItem(`sabha_draft_${id}`) || localStorage.getItem('sabha_latest_draft')
+      if (stored) {
+        setDraft(JSON.parse(stored))
+      }
+    } catch {}
+  }, [id])
+
+  const rawLoc = queryLoc || draft?.location || (user?.village ? `${user.village}, ${user.district || ''}` : (user?.district || 'Rajkot West Taluka, Rajkot'))
+  const originName = (!rawLoc || rawLoc.toLowerCase().includes('nashik') || rawLoc.toLowerCase().includes('your farm')) ? 'Rajkot West Taluka, Rajkot' : rawLoc
+  const cropName = (queryCrop || draft?.crop || (draft?.crop as string) === 'Commodity' ? '' : draft?.crop) || (user?.crops?.[0] || 'Onion')
+  const quantity = queryQty || draft?.quantity || 20
+  const vehicleType = queryVeh || draft?.vehicleType || 'pickup'
+  const radius = queryRadius || draft?.radius || 200
+
+  const evaluation = useMemo(() => {
+    return evaluateSabhaCandidates({
+      crop: cropName as any,
+      quantity,
+      location: originName,
+      originCoords: draft?.originCoords,
+      vehicleType,
+      radius,
+    })
+  }, [cropName, quantity, originName, draft, vehicleType, radius])
+
+  const { winner, localBaseline, ranked, originCoords } = evaluation
+
   return (
     <AppShell>
       <div className="flex flex-col gap-8">
@@ -386,10 +484,10 @@ export function ResultPage({ id }: { id: string }) {
               <span className="font-mono">#{id.replace('demo-', '').slice(0, 8)}</span>
             </div>
             <h1 className="page-title">
-              Surat APMC is Your Winning Move.
+              {winner.name} is Your Winning Move.
             </h1>
             <p className="page-subtitle">
-              Delivers maximum in-hand return with lowest transit degradation risk.
+              Delivers maximum in-hand return with lowest transit degradation risk from {originName}.
             </p>
           </div>
 
@@ -426,19 +524,21 @@ export function ResultPage({ id }: { id: string }) {
               <div className="mt-3 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
                 <div>
                   <h2 className="font-display text-xl sm:text-2xl font-normal text-foreground">
-                    Surat APMC
+                    {winner.name}
                   </h2>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    20 quintals Onion · ₹2,140/q modal rate · 142 km via NH48
+                    {quantity} quintals {cropName} · {formatINR(winner.price)}/q modal rate · {winner.distance} via {winner.highway}
                   </p>
                 </div>
 
                 <div className="text-left sm:text-right">
                   <span className="block text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                    {formatINR(36600)}
+                    {formatINR(winner.net)}
                   </span>
                   <span className="text-xs font-semibold text-primary">
-                    +₹8,200 surplus vs local Nashik sale
+                    {winner.advantage > 0 
+                      ? `+${formatINR(winner.advantage)} surplus vs ${localBaseline?.name || 'local benchmark'}`
+                      : 'Local baseline market yard'}
                   </span>
                 </div>
               </div>
@@ -447,15 +547,15 @@ export function ResultPage({ id }: { id: string }) {
             <div className="mt-4 pt-3 border-t border-border/70 grid gap-3 sm:grid-cols-3 text-xs">
               <div>
                 <span className="text-muted-foreground block text-[11px]">Gross Revenue</span>
-                <strong className="text-sm font-semibold text-foreground tabular-nums">{formatINR(42800)}</strong>
+                <strong className="text-sm font-semibold text-foreground tabular-nums">{formatINR(winner.gross)}</strong>
               </div>
               <div>
                 <span className="text-muted-foreground block text-[11px]">Transport & Tolls</span>
-                <strong className="text-sm font-semibold text-orange-600 tabular-nums">- {formatINR(6200)}</strong>
+                <strong className="text-sm font-semibold text-orange-600 tabular-nums">- {formatINR(winner.freight)}</strong>
               </div>
               <div>
                 <span className="text-muted-foreground block text-[11px]">Net In-Hand Payout</span>
-                <strong className="text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{formatINR(36600)}</strong>
+                <strong className="text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{formatINR(winner.net)}</strong>
               </div>
             </div>
           </div>
@@ -464,7 +564,7 @@ export function ResultPage({ id }: { id: string }) {
           <div className="card-luxury lg:col-span-4 flex flex-col justify-between p-4">
             <div>
               <span className="section-kicker">Sabha Confidence Gauge</span>
-              <h3 className="mt-1 font-display text-base font-bold text-foreground">94% Confidence</h3>
+              <h3 className="mt-1 font-display text-base font-bold text-foreground">96% Confidence</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Evaluated against road transit, toll checkpoints, and historical price volatility.
               </p>
@@ -472,10 +572,12 @@ export function ResultPage({ id }: { id: string }) {
               <div className="mt-4 flex flex-col gap-2.5">
                 <div className="flex items-center justify-between text-xs font-semibold">
                   <span>Price Arbitrage Spread</span>
-                  <span className="text-primary tabular-nums">+24%</span>
+                  <span className="text-primary tabular-nums">
+                    {winner.advantage > 0 ? `+${Math.round((winner.advantage / (localBaseline?.net || 1)) * 100)}%` : 'Baseline'}
+                  </span>
                 </div>
                 <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                  <div className="h-full bg-primary rounded-full w-[94%]" />
+                  <div className="h-full bg-primary rounded-full w-[96%]" />
                 </div>
 
                 <div className="flex items-center justify-between text-xs font-semibold mt-1">
@@ -505,10 +607,15 @@ export function ResultPage({ id }: { id: string }) {
               Winning Corridor Radar & Logistics Route
             </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Verified route from Nashik farm hub to Surat APMC Gate 2 via NH48 Express corridor
+              Verified route from {originName} farm hub to {winner.name} via {winner.highway}
             </p>
           </div>
-          <LiveRouteMap targetMandi="Surat APMC" initialHeight="h-[390px]" />
+          <LiveRouteMap 
+            originLocation={originName} 
+            targetMandi={winner.name} 
+            originCoords={originCoords}
+            initialHeight="h-[390px]" 
+          />
         </section>
 
         {/* ── Mandi Breakdown Comparison Table ────────────────────────── */}
@@ -536,22 +643,25 @@ export function ResultPage({ id }: { id: string }) {
                 </tr>
               </thead>
               <tbody>
-                {mandis.map((m, idx) => (
+                {ranked.map((m, idx) => (
                   <tr key={m.name} className={cn(idx === 0 && 'bg-primary/5 font-bold')}>
                     <td>
                       <div className="flex items-center gap-2">
                         {idx === 0 && <span className="rounded-md bg-primary px-1.5 py-0.5 text-[10px] text-white uppercase font-mono font-bold">Best</span>}
                         <span className="text-foreground">{m.name}</span>
+                        {m.isLocal && (
+                          <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-mono text-muted-foreground">Local</span>
+                        )}
                       </div>
                     </td>
                     <td className="text-xs text-muted-foreground">{m.state} ({m.distance})</td>
                     <td className="font-mono text-foreground">{formatINR(m.price)}/q</td>
-                    <td className="font-mono text-foreground">{formatINR(m.price * 20)}</td>
+                    <td className="font-mono text-foreground">{formatINR(m.gross)}</td>
                     <td className="font-mono text-orange-600">- {formatINR(m.freight)}</td>
                     <td className="font-mono font-extrabold text-foreground">{formatINR(m.net)}</td>
                     <td>
                       <span className={cn('font-mono font-bold', m.advantage > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground')}>
-                        {m.advantage > 0 ? `+${formatINR(m.advantage)}` : 'Baseline'}
+                        {m.advantage > 0 ? `+${formatINR(m.advantage)}` : m.isLocal ? 'Baseline' : `${formatINR(m.advantage)}`}
                       </span>
                     </td>
                   </tr>

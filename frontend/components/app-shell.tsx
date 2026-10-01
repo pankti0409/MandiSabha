@@ -123,11 +123,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     router.push('/')
   }
 
-  const navItems = [
+  type NavItem = {
+    href: string
+    label: string
+    icon: any
+    badge?: string
+    count?: string
+  }
+
+  const navItems: NavItem[] = [
     { href: '/dashboard', label: t.nav.dashboard || 'Home Dashboard', icon: Home },
-    { href: '/sabha/demo-001', label: 'Live Sabha', icon: Sparkles, badge: 'Live' },
+    { href: '/sabha/new', label: 'Start Sabha', icon: Sparkles },
     { href: '/explore', label: t.nav.explore || 'Mandi Explorer', icon: Compass },
-    { href: '/history', label: t.nav.history || 'Sabha History', icon: History, count: '4' },
+    { href: '/history', label: t.nav.history || 'Sabha History', icon: History },
     { href: '/settings', label: t.nav.settings || 'Farm & Crop Settings', icon: Settings },
   ]
 
@@ -318,20 +326,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               title="Go to Farmer Profile & Settings"
             >
               <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 border border-primary/20 text-primary font-bold font-display text-xs group-hover:border-primary transition-colors shadow-2xs">
-                {(user?.name || 'Pankti').charAt(0)}
+                {(user?.name || 'Farmer').charAt(0)}
               </div>
               <div className="hidden sm:block text-left min-w-0">
                 <p className="text-[13px] font-bold text-foreground leading-tight truncate group-hover:text-primary transition-colors">
-                  {user?.name || 'Pankti'}
+                  {user?.name || 'Farmer'}
                 </p>
                 <p className="text-[10px] text-muted-foreground leading-tight truncate">
-                  {user?.village || 'Nashik'}, {user?.district || 'Nashik'}
+                  {user?.village || user?.district ? `${user.village ? `${user.village}, ` : ''}${user.district || user.state || ''}` : 'Location Not Set'}
                 </p>
               </div>
             </Link>
 
-            {/* Quick Action Buttons (Image 3: Moon/Sun & Logout) */}
+            {/* Quick Action Buttons (Voice AI, Moon/Sun & Logout) */}
             <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setVoiceOpen(true)}
+                className="flex items-center gap-1.5 px-2.5 h-8.5 rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/20 text-primary transition-all shadow-2xs font-bold text-xs cursor-pointer"
+                title="Speak to Voice Assistant (बोलकर भरें)"
+              >
+                <Mic className="size-4 animate-pulse" />
+                <span className="hidden sm:inline">Voice AI</span>
+              </button>
               <button
                 onClick={toggleTheme}
                 className="grid size-8.5 place-items-center rounded-xl border border-border/80 bg-background/90 hover:bg-muted text-foreground transition-colors shadow-2xs"

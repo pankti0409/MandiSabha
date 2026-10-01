@@ -55,7 +55,9 @@ export default function DashboardPage() {
     )
   }
 
-  const userCrops = user?.crops && user.crops.length > 0 ? user.crops : ['Onion', 'Wheat', 'Soybean']
+  const userCrops = user?.crops && user.crops.length > 0 ? user.crops : []
+  const totalEarned = data.sessions.reduce((acc, s) => acc + (s.gain || 0), 0)
+  const topMandi = data.winners.length > 0 ? data.winners[0].name : (data.sessions.length > 0 ? data.sessions[0].mandi : 'No Sabhas Yet')
 
   return (
     <AppShell>
@@ -68,7 +70,7 @@ export default function DashboardPage() {
               <span>·</span>
               <span className="flex items-center gap-1.5">
                 <MapPin className="size-3.5 text-primary" />
-                {user?.village || 'Nashik'}, {user?.district || 'Maharashtra'}
+                {user?.village ? `${user.village}, ${user.district || ''}` : 'Location Not Set'}
               </span>
               <span>·</span>
               <span className="flex items-center gap-1">
@@ -78,20 +80,26 @@ export default function DashboardPage() {
             </div>
 
             <h1 className="page-title">
-              Good morning, {user?.name?.split(' ')[0] || 'Ramesh'}.
+              Good morning, {user?.name?.split(' ')[0] || 'Farmer'}.
             </h1>
 
             <div className="flex flex-wrap items-center gap-2.5 mt-0.5">
               <p className="flex items-center gap-1.5 text-xs font-medium text-primary">
                 <TrendingUp className="size-3.5" />
-                Surat mandi onion up +4.2% · Best dispatch window open
+                Real-time APMC Mandi Intelligence Active
               </p>
               <div className="flex items-center gap-1">
-                {userCrops.map((c) => (
-                  <span key={c} className="rounded bg-primary/10 border border-primary/20 px-2 py-0.5 text-[10px] font-mono font-semibold text-primary">
-                    {c}
-                  </span>
-                ))}
+                {userCrops.length > 0 ? (
+                  userCrops.map((c) => (
+                    <span key={c} className="rounded bg-primary/10 border border-primary/20 px-2 py-0.5 text-[10px] font-mono font-semibold text-primary">
+                      {c}
+                    </span>
+                  ))
+                ) : (
+                  <Link href="/settings" className="text-[11px] text-muted-foreground hover:text-primary underline">
+                    + Set crops in settings
+                  </Link>
+                )}
               </div>
             </div>
           </div>
@@ -116,14 +124,14 @@ export default function DashboardPage() {
                 ₹
               </span>
               <span className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                +22% vs Local
+                {data.sessions.length > 0 ? '+22% vs Local' : 'Baseline'}
               </span>
             </div>
             <p className="stat-label-clean">
               Total Extra Earned
             </p>
             <div className="mt-1 stat-number-clean">
-              {formatINR(15800)}
+              +{formatINR(totalEarned)}
             </div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
               Direct net gain after freight deductions
@@ -137,7 +145,7 @@ export default function DashboardPage() {
                 <Leaf className="size-3.5" />
               </span>
               <span className="rounded-md bg-primary/10 border border-primary/20 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                4 Sessions
+                {data.sessions.length} Sessions
               </span>
             </div>
             <p className="stat-label-clean">
@@ -147,7 +155,7 @@ export default function DashboardPage() {
               {data.sessions.length}
             </div>
             <p className="mt-0.5 text-[11px] text-primary font-medium">
-              +2 sessions this harvest cycle
+              {data.sessions.length > 0 ? `${data.sessions.length} sessions completed` : 'Start your first Sabha'}
             </p>
           </div>
 
@@ -158,17 +166,17 @@ export default function DashboardPage() {
                 <Truck className="size-3.5" />
               </span>
               <span className="rounded-md bg-sky/10 border border-sky/20 px-2 py-0.5 text-[10px] font-semibold text-sky">
-                50% Win Rate
+                {data.winners.length > 0 ? `${data.winners[0].percent}% Win Rate` : 'No Sabhas'}
               </span>
             </div>
             <p className="stat-label-clean">
               Top Mandi Partner
             </p>
             <div className="mt-1 stat-number-clean truncate">
-              Surat APMC
+              {topMandi}
             </div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Avg. +₹410/q higher than Nashik local
+              {data.winners.length > 0 ? `Avg. ${data.winners[0].avgGain} extra return` : 'Run a Sabha to rank mandis'}
             </p>
           </div>
 
@@ -234,80 +242,86 @@ export default function DashboardPage() {
               </div>
 
               {/* Interactive Bar Visualization with Guidelines and Comparison Bars */}
-              <div className="mt-4 relative pt-6 pb-2">
-                {/* Horizontal reference grid lines */}
-                <div className="absolute inset-x-0 top-6 bottom-7 flex flex-col justify-between pointer-events-none opacity-40">
-                  <div className="border-b border-border/70 border-dashed w-full flex justify-end">
-                    <span className="text-[9.5px] font-mono text-muted-foreground -mt-3.5 pr-1">₹16k</span>
-                  </div>
-                  <div className="border-b border-border/70 border-dashed w-full flex justify-end">
-                    <span className="text-[9.5px] font-mono text-muted-foreground -mt-3.5 pr-1">₹12k</span>
-                  </div>
-                  <div className="border-b border-border/70 border-dashed w-full flex justify-end">
-                    <span className="text-[9.5px] font-mono text-muted-foreground -mt-3.5 pr-1">₹8k</span>
-                  </div>
-                  <div className="border-b border-border/70 border-dashed w-full flex justify-end">
-                    <span className="text-[9.5px] font-mono text-muted-foreground -mt-3.5 pr-1">₹4k</span>
-                  </div>
-                  <div className="border-b border-border w-full flex justify-end">
-                    <span className="text-[9.5px] font-mono text-muted-foreground -mt-3.5 pr-1">₹0</span>
-                  </div>
+              {data.monthlyData.length === 0 ? (
+                <div className="py-16 flex flex-col items-center justify-center text-center gap-2">
+                  <BarChart3 className="size-8 text-muted-foreground/40" />
+                  <p className="text-xs font-semibold text-foreground">No Completed Trades Yet</p>
+                  <p className="text-[11px] text-muted-foreground max-w-xs">
+                    Your cumulative surplus and monthly arbitrage performance will be charted here after running your first Sabha.
+                  </p>
                 </div>
+              ) : (
+                <div className="mt-4 relative pt-6 pb-2">
+                  {/* Horizontal reference grid lines */}
+                  <div className="absolute inset-x-0 top-6 bottom-7 flex flex-col justify-between pointer-events-none opacity-40">
+                    <div className="border-b border-border/70 border-dashed w-full flex justify-end">
+                      <span className="text-[9.5px] font-mono text-muted-foreground -mt-3.5 pr-1">₹16k</span>
+                    </div>
+                    <div className="border-b border-border/70 border-dashed w-full flex justify-end">
+                      <span className="text-[9.5px] font-mono text-muted-foreground -mt-3.5 pr-1">₹12k</span>
+                    </div>
+                    <div className="border-b border-border/70 border-dashed w-full flex justify-end">
+                      <span className="text-[9.5px] font-mono text-muted-foreground -mt-3.5 pr-1">₹8k</span>
+                    </div>
+                    <div className="border-b border-border/70 border-dashed w-full flex justify-end">
+                      <span className="text-[9.5px] font-mono text-muted-foreground -mt-3.5 pr-1">₹4k</span>
+                    </div>
+                    <div className="border-b border-border w-full flex justify-end">
+                      <span className="text-[9.5px] font-mono text-muted-foreground -mt-3.5 pr-1">₹0</span>
+                    </div>
+                  </div>
 
-                {/* Bars Container */}
-                <div className="relative z-10 flex items-end justify-between gap-3 sm:gap-6 h-48 px-2 sm:px-4">
-                  {(activeRange === '3M' ? data.monthlyData.slice(-3) : data.monthlyData).map((item, index, arr) => {
-                    const isSelected = selectedBar === index || (selectedBar === null && index === arr.length - 1)
-                    const earnedHeight = Math.max(16, Math.min(100, Math.round((item.earned / 16000) * 100)))
-                    const baselineHeight = Math.max(12, Math.round((item.earned * 0.62 / 16000) * 100))
+                  {/* Bars Container */}
+                  <div className="relative z-10 flex items-end justify-between gap-3 sm:gap-6 h-48 px-2 sm:px-4">
+                    {(activeRange === '3M' ? data.monthlyData.slice(-3) : data.monthlyData).map((item, index, arr) => {
+                      const isSelected = selectedBar === index || (selectedBar === null && index === arr.length - 1)
+                      const earnedHeight = Math.max(16, Math.min(100, Math.round((item.earned / 16000) * 100)))
+                      const baselineHeight = Math.max(12, Math.round((item.earned * 0.62 / 16000) * 100))
 
-                    return (
-                      <div
-                        key={item.month}
-                        onClick={() => setSelectedBar(index)}
-                        className="group flex-1 flex flex-col items-center justify-end h-full cursor-pointer relative"
-                      >
-                        {/* Tooltip on Hover / Active */}
+                      return (
                         <div
-                          className={cn(
-                            'absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-foreground px-2.5 py-1 text-xs font-mono font-semibold text-background shadow-lg transition-all pointer-events-none z-20',
-                            isSelected ? 'opacity-100 scale-100' : 'opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100'
-                          )}
+                          key={item.month}
+                          onClick={() => setSelectedBar(index)}
+                          className="group flex-1 flex flex-col items-center justify-end h-full cursor-pointer relative"
                         >
-                          +{formatINR(item.earned)} · {item.sabhas} sabhas
-                        </div>
-
-                        {/* Dual Bars: Local Baseline vs Net Realized Profit */}
-                        <div className="w-full flex items-end justify-center gap-1 sm:gap-2 h-[140px] pb-1">
-                          {/* Local Baseline Bar (grey/slate) */}
-                          <div
-                            className="w-2.5 sm:w-3.5 rounded-t-md bg-muted-foreground/20 group-hover:bg-muted-foreground/30 transition-all duration-300"
-                            style={{ height: `${baselineHeight}%` }}
-                            title={`Local Baseline: ${formatINR(Math.round(item.earned * 0.62))}`}
-                          />
-
-                          {/* Net Realized Profit Bar (primary emerald gradient) */}
+                          {/* Tooltip on Hover / Active */}
                           <div
                             className={cn(
-                              'w-3 sm:w-6 rounded-t-md transition-all duration-300',
-                              isSelected
-                                ? 'bg-gradient-to-t from-primary via-emerald-500 to-emerald-400 shadow-md shadow-primary/30 ring-1 ring-primary'
-                                : 'bg-primary/50 group-hover:bg-primary/80'
+                              'absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-foreground px-2.5 py-1 text-xs font-mono font-semibold text-background shadow-lg transition-all pointer-events-none z-20',
+                              isSelected ? 'opacity-100 scale-100' : 'opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100'
                             )}
-                            style={{ height: `${earnedHeight}%` }}
-                            title={`Net Realized: ${formatINR(item.earned)}`}
-                          />
-                        </div>
+                          >
+                            +{formatINR(item.earned)} · {item.sabhas} sabhas
+                          </div>
 
-                        {/* Month Label */}
-                        <span className={cn('text-[11px] font-medium transition-colors pt-1.5', isSelected ? 'text-primary font-bold' : 'text-muted-foreground')}>
-                          {item.month}
-                        </span>
-                      </div>
-                    )
-                  })}
+                          {/* Dual Bars: Local Baseline vs Net Realized Profit */}
+                          <div className="w-full flex items-end justify-center gap-1 sm:gap-2 h-[140px] pb-1">
+                            <div
+                              className="w-2.5 sm:w-3.5 rounded-t-md bg-muted-foreground/20 group-hover:bg-muted-foreground/30 transition-all duration-300"
+                              style={{ height: `${baselineHeight}%` }}
+                              title={`Local Baseline: ${formatINR(Math.round(item.earned * 0.62))}`}
+                            />
+                            <div
+                              className={cn(
+                                'w-3 sm:w-6 rounded-t-md transition-all duration-300',
+                                isSelected
+                                  ? 'bg-gradient-to-t from-primary via-emerald-500 to-emerald-400 shadow-md shadow-primary/30 ring-1 ring-primary'
+                                  : 'bg-primary/50 group-hover:bg-primary/80'
+                              )}
+                              style={{ height: `${earnedHeight}%` }}
+                              title={`Net Realized: ${formatINR(item.earned)}`}
+                            />
+                          </div>
+
+                          <span className={cn('text-[11px] font-medium transition-colors pt-1.5', isSelected ? 'text-primary font-bold' : 'text-muted-foreground')}>
+                            {item.month}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-4 pt-1 text-xs">
@@ -320,7 +334,7 @@ export default function DashboardPage() {
                 </span>
               </div>
               <p className="font-mono text-xs font-semibold text-primary">
-                Peak month: Sep 2026 (+₹15,800)
+                {data.monthlyData.length > 0 ? `Peak: ${data.monthlyData[data.monthlyData.length - 1].month}` : 'No trade history yet'}
               </p>
             </div>
           </article>
@@ -338,38 +352,50 @@ export default function DashboardPage() {
                 </p>
               </div>
 
-              <div className="mt-5 flex flex-col gap-4">
-                {data.winners.map((mandi, idx) => (
-                  <div key={mandi.name} className="flex flex-col gap-1">
-                    <div className="flex items-center justify-between text-xs font-medium">
-                      <span className="flex items-center gap-1.5 text-foreground font-semibold">
-                        <span className="size-1.5 rounded-full bg-primary" />
-                        {mandi.name}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground text-[11px] tabular-nums">{mandi.avgGain} gain</span>
-                        <span className="text-primary font-semibold text-xs tabular-nums">{mandi.percent}%</span>
+              {data.winners.length === 0 ? (
+                <div className="py-14 flex flex-col items-center justify-center text-center gap-2">
+                  <Truck className="size-7 text-muted-foreground/40" />
+                  <p className="text-xs font-semibold text-foreground">No Top Mandis Recorded</p>
+                  <p className="text-[11px] text-muted-foreground max-w-xs">
+                    Discover which regional APMCs offer the highest net payouts after transportation.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-5 flex flex-col gap-4">
+                  {data.winners.map((mandi, idx) => (
+                    <div key={mandi.name} className="flex flex-col gap-1">
+                      <div className="flex items-center justify-between text-xs font-medium">
+                        <span className="flex items-center gap-1.5 text-foreground font-semibold">
+                          <span className="size-1.5 rounded-full bg-primary" />
+                          {mandi.name}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground text-[11px] tabular-nums">{mandi.avgGain} gain</span>
+                          <span className="text-primary font-semibold text-xs tabular-nums">{mandi.percent}%</span>
+                        </div>
                       </div>
+                      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                        <div
+                          className={cn(
+                            'h-full rounded-full transition-all duration-500',
+                            idx === 0 ? 'bg-primary' : idx === 1 ? 'bg-accent' : idx === 2 ? 'bg-sky' : 'bg-muted-foreground'
+                          )}
+                          style={{ width: `${mandi.percent}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">
+                        Best crop: {mandi.crop}
+                      </span>
                     </div>
-                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                      <div
-                        className={cn(
-                          'h-full rounded-full transition-all duration-500',
-                          idx === 0 ? 'bg-primary' : idx === 1 ? 'bg-accent' : idx === 2 ? 'bg-sky' : 'bg-muted-foreground'
-                        )}
-                        style={{ width: `${mandi.percent}%` }}
-                      />
-                    </div>
-                    <span className="text-[10px] text-muted-foreground">
-                      Best crop: {mandi.crop}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="mt-5 pt-3 border-t border-border/70 flex items-center justify-between text-xs">
-              <span className="text-muted-foreground text-[11px]">Surat remains #1 highest return</span>
+              <span className="text-muted-foreground text-[11px]">
+                {data.winners.length > 0 ? `${data.winners[0].name} leads returns` : 'Connect mandis to compare'}
+              </span>
               <Link href="/explore" className="font-semibold text-primary hover:underline flex items-center gap-1 text-xs">
                 Explore mandis <ArrowRight className="size-3" />
               </Link>
@@ -395,67 +421,85 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            {data.pulse.map((item) => {
-              const isPositive = item.change > 0
-              return (
-                <div
-                  key={item.crop}
-                  className="card-luxury p-3.5 flex flex-col justify-between hover:border-primary/40 transition-all group"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-foreground">{item.crop}</span>
-                    <span
-                      className={cn(
-                        'flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums',
-                        isPositive ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-orange-500/10 text-orange-600'
-                      )}
-                    >
-                      {isPositive ? <TrendingUp className="size-2.5" /> : <TrendingDown className="size-2.5" />}
-                      {isPositive ? '+' : ''}{item.change}%
-                    </span>
-                  </div>
-
-                  <div>
-                    <div className="stat-number-clean">
-                      {formatINR(item.price)}
-                      <span className="ml-0.5 text-xs text-muted-foreground font-normal">/q</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
-                      Best at {item.mandi}
-                    </p>
-                  </div>
-
-                  {/* Sparkline Visual */}
-                  <div className="mt-3 flex items-end gap-1 h-7 border-b border-border/40 pb-0.5">
-                    {item.trend.map((val, i) => {
-                      const minVal = Math.min(...item.trend)
-                      const maxVal = Math.max(...item.trend)
-                      const height = maxVal === minVal ? 50 : ((val - minVal) / (maxVal - minVal)) * 80 + 20
-                      return (
-                        <div
-                          key={i}
-                          className={cn(
-                            'flex-1 rounded-t-xs transition-all',
-                            isPositive ? 'bg-primary/35 group-hover:bg-primary' : 'bg-orange-400/35 group-hover:bg-orange-500'
-                          )}
-                          style={{ height: `${height}%` }}
-                        />
-                      )
-                    })}
-                  </div>
-
-                  <Link
-                    href={`/sabha/new?crop=${item.crop}`}
-                    className="mt-3 flex items-center justify-center gap-1 rounded-lg border border-border/70 bg-background py-1.5 text-[11.5px] font-medium text-foreground group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all"
-                  >
-                    <span>Analyze {item.crop}</span>
-                    <ArrowRight className="size-3" />
-                  </Link>
+          {data.pulse.length === 0 ? (
+            <div className="card-luxury p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="grid size-9 place-items-center rounded-xl bg-primary/10 text-primary shrink-0">
+                  <Sparkles className="size-4" />
+                </span>
+                <div>
+                  <p className="text-xs font-bold text-foreground">Live APMC Price Intelligence</p>
+                  <p className="text-[11px] text-muted-foreground">Compare real-time modal prices and arrivals across regional mandis.</p>
                 </div>
-              )
-            })}
-          </div>
+              </div>
+              <Link href="/explore" className="button-secondary !min-h-[34px] px-3.5 text-xs font-semibold shrink-0">
+                <span>Explore Mandis</span>
+                <ArrowRight className="size-3" />
+              </Link>
+            </div>
+          ) : (
+            <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+              {data.pulse.map((item) => {
+                const isPositive = item.change > 0
+                return (
+                  <div
+                    key={item.crop}
+                    className="card-luxury p-3.5 flex flex-col justify-between hover:border-primary/40 transition-all group"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-foreground">{item.crop}</span>
+                      <span
+                        className={cn(
+                          'flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums',
+                          isPositive ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-orange-500/10 text-orange-600'
+                        )}
+                      >
+                        {isPositive ? <TrendingUp className="size-2.5" /> : <TrendingDown className="size-2.5" />}
+                        {isPositive ? '+' : ''}{item.change}%
+                      </span>
+                    </div>
+
+                    <div>
+                      <div className="stat-number-clean">
+                        {formatINR(item.price)}
+                        <span className="ml-0.5 text-xs text-muted-foreground font-normal">/q</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                        Best at {item.mandi}
+                      </p>
+                    </div>
+
+                    {/* Sparkline Visual */}
+                    <div className="mt-3 flex items-end gap-1 h-7 border-b border-border/40 pb-0.5">
+                      {item.trend.map((val, i) => {
+                        const minVal = Math.min(...item.trend)
+                        const maxVal = Math.max(...item.trend)
+                        const height = maxVal === minVal ? 50 : ((val - minVal) / (maxVal - minVal)) * 80 + 20
+                        return (
+                          <div
+                            key={i}
+                            className={cn(
+                              'flex-1 rounded-t-xs transition-all',
+                              isPositive ? 'bg-primary/35 group-hover:bg-primary' : 'bg-orange-400/35 group-hover:bg-orange-500'
+                            )}
+                            style={{ height: `${height}%` }}
+                          />
+                        )
+                      })}
+                    </div>
+
+                    <Link
+                      href={`/sabha/new?crop=${item.crop}`}
+                      className="mt-3 flex items-center justify-center gap-1 rounded-lg border border-border/70 bg-background py-1.5 text-[11.5px] font-medium text-foreground group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all"
+                    >
+                      <span>Analyze {item.crop}</span>
+                      <ArrowRight className="size-3" />
+                    </Link>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </section>
 
         {/* ── Recent Sabha Sessions & Activity Table ──────────────────── */}
@@ -479,79 +523,97 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          <div className="overflow-x-auto mt-3">
-            <table className="table-modern">
-              <thead>
-                <tr>
-                  <th>Session & Crop</th>
-                  <th>Quantity</th>
-                  <th>Destination Mandi</th>
-                  <th>Distance</th>
-                  <th>Modal Price</th>
-                  <th>Net Extra Earned</th>
-                  <th>Status</th>
-                  <th className="text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.sessions.map((session) => (
-                  <tr key={session.id} className="group cursor-pointer">
-                    <td>
-                      <div>
-                        <span className="font-semibold text-foreground block text-xs">{session.crop}</span>
-                        <span className="text-[11px] text-muted-foreground font-mono">{session.date}</span>
-                      </div>
-                    </td>
-                    <td className="font-mono font-semibold text-xs text-foreground">
-                      {session.quantity} quintals
-                      <small className="block text-[10px] text-muted-foreground font-normal">
-                        ≈ {session.quantity * 100} kg
-                      </small>
-                    </td>
-                    <td>
-                      <span className="inline-flex items-center gap-1.5 font-medium text-xs text-foreground">
-                        <MapPin className="size-3 text-primary" />
-                        {session.mandi}
-                      </span>
-                    </td>
-                    <td className="font-mono text-xs text-muted-foreground">
-                      {session.distance}
-                    </td>
-                    <td className="font-mono font-semibold text-xs text-foreground">
-                      {formatINR(session.pricePerQ)}/q
-                    </td>
-                    <td>
-                      <span className="font-mono font-bold text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
-                        +{formatINR(session.gain)}
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        className={cn(
-                          'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium',
-                          session.status === 'Ready to Dispatch'
-                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                        )}
-                      >
-                        <CheckCircle2 className="size-3" />
-                        {session.status}
-                      </span>
-                    </td>
-                    <td className="text-right">
-                      <Link
-                        href="/sabha/demo-result"
-                        className="inline-flex items-center gap-1 rounded-md border border-border/80 bg-background px-2.5 py-1 text-xs font-semibold text-primary group-hover:bg-primary group-hover:text-white transition-all"
-                      >
-                        <span>View Slip</span>
-                        <ArrowUpRight className="size-3" />
-                      </Link>
-                    </td>
+          {data.sessions.length === 0 ? (
+            <div className="py-12 flex flex-col items-center justify-center text-center gap-3">
+              <div className="size-10 rounded-xl bg-muted/60 grid place-items-center text-muted-foreground">
+                <Layers className="size-5" />
+              </div>
+              <div className="max-w-sm">
+                <p className="text-sm font-semibold text-foreground">No Sabha Sessions Yet</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Hold your first Mandi Sabha session to calculate multi-mandi arbitrage, transport costs, and net gains.
+                </p>
+              </div>
+              <Link href="/sabha/new" className="button-primary !min-h-[34px] px-4 text-xs font-bold mt-1">
+                <Plus className="size-3.5" />
+                <span>Start New Sabha</span>
+              </Link>
+            </div>
+          ) : (
+            <div className="overflow-x-auto mt-3">
+              <table className="table-modern">
+                <thead>
+                  <tr>
+                    <th>Session & Crop</th>
+                    <th>Quantity</th>
+                    <th>Destination Mandi</th>
+                    <th>Distance</th>
+                    <th>Modal Price</th>
+                    <th>Net Extra Earned</th>
+                    <th>Status</th>
+                    <th className="text-right">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {data.sessions.map((session) => (
+                    <tr key={session.id} className="group cursor-pointer">
+                      <td>
+                        <div>
+                          <span className="font-semibold text-foreground block text-xs">{session.crop}</span>
+                          <span className="text-[11px] text-muted-foreground font-mono">{session.date}</span>
+                        </div>
+                      </td>
+                      <td className="font-mono font-semibold text-xs text-foreground">
+                        {session.quantity} quintals
+                        <small className="block text-[10px] text-muted-foreground font-normal">
+                          ≈ {session.quantity * 100} kg
+                        </small>
+                      </td>
+                      <td>
+                        <span className="inline-flex items-center gap-1.5 font-medium text-xs text-foreground">
+                          <MapPin className="size-3 text-primary" />
+                          {session.mandi}
+                        </span>
+                      </td>
+                      <td className="font-mono text-xs text-muted-foreground">
+                        {session.distance}
+                      </td>
+                      <td className="font-mono font-semibold text-xs text-foreground">
+                        {formatINR(session.pricePerQ)}/q
+                      </td>
+                      <td>
+                        <span className="font-mono font-bold text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                          +{formatINR(session.gain)}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={cn(
+                            'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium',
+                            session.status === 'Ready to Dispatch'
+                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                              : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                          )}
+                        >
+                          <CheckCircle2 className="size-3" />
+                          {session.status}
+                        </span>
+                      </td>
+                      <td className="text-right">
+                        <Link
+                          href={`/sabha/${session.id}`}
+                          className="inline-flex items-center gap-1 rounded-md border border-border/80 bg-background px-2.5 py-1 text-xs font-semibold text-primary group-hover:bg-primary group-hover:text-white transition-all"
+                        >
+                          <span>View Sabha</span>
+                          <ArrowUpRight className="size-3" />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
       </div>
     </AppShell>

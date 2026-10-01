@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   ArrowRight, 
   Check, 
@@ -19,11 +19,14 @@ import {
   CloudRain,
   Sliders,
   DollarSign,
-  Calendar
+  Calendar,
+  Loader2,
+  Mic
 } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { useAuth } from '@/components/auth-provider'
 import { allCrops, createSabha, formatINR, type Crop } from '@/lib/api/sabha'
+import { detectUserLocation } from '@/lib/geolocation'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { VoiceAssistantModal } from '@/components/voice-assistant-modal'
@@ -36,7 +39,13 @@ export default function NewSabhaPage() {
 
   const [crop, setCrop] = useState<Crop>('Onion')
   const [quantity, setQuantity] = useState(20)
-  const [location, setLocation] = useState(user?.village ? `${user.village}, ${user.district || 'Maharashtra'}` : 'Nashik, Maharashtra')
+  const [location, setLocation] = useState(
+    user?.village
+      ? `${user.village}, ${user.district || user.state || ''}`
+      : user?.district
+      ? `${user.district}, ${user.state || ''}`
+      : ''
+  )
   const [urgency, setUrgency] = useState<'today' | 'soon' | 'week'>('today')
   const getTodayISO = () => new Date().toISOString().split('T')[0]
   const [targetDate, setTargetDate] = useState<string>(getTodayISO())
@@ -92,10 +101,63 @@ export default function NewSabhaPage() {
   const [radius, setRadius] = useState(200)
   const [vehicle, setVehicle] = useState<'pickup' | 'truck' | 'heavy'>('pickup')
   const [qualityGrade, setQualityGrade] = useState<'A' | 'B' | 'C'>('A')
-  const [selectedMandiTarget, setSelectedMandiTarget] = useState('Surat APMC')
+  const [selectedMandiTarget, setSelectedMandiTarget] = useState('Gondal APMC')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
   const [voiceOpen, setVoiceOpen] = useState(false)
+  const [isLocating, setIsLocating] = useState(false)
+  const [locFeedback, setLocFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [originCoords, setOriginCoords] = useState<[number, number] | null>([22.3039, 70.8022])
+  const [routeDistanceKm, setRouteDistanceKm] = useState<number>(36)
+
+  // Geocode location input whenever user types a new farm location
+  useEffect(() => {
+    if (!location || !location.trim()) return
+    let isCancelled = false
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/geocode?q=${encodeURIComponent(location)}`)
+        if (res.ok) {
+          const data = await res.json()
+          if (!isCancelled && data.lat && data.lon) {
+            setOriginCoords([data.lat, data.lon])
+            if (location.toLowerCase().includes('rajkot') || (Math.abs(data.lat - 22.3) < 0.5 && Math.abs(data.lon - 70.8) < 0.5)) {
+              setSelectedMandiTarget('Gondal APMC')
+              setRouteDistanceKm(36)
+            }
+          }
+        }
+      } catch {}
+    }, 400)
+    return () => {
+      isCancelled = true
+      clearTimeout(timer)
+    }
+  }, [location])
+
+  async function handleAutoDetectLocation() {
+    setIsLocating(true)
+    setLocFeedback(null)
+    try {
+      const res = await detectUserLocation()
+      if (res.ok) {
+        setLocation(res.formatted)
+        if (res.lat && res.lon) {
+          setOriginCoords([res.lat, res.lon])
+        }
+        setLocFeedback({ type: 'success', message: `Detected: ${res.formatted}` })
+        setTimeout(() => setLocFeedback(null), 4500)
+      } else {
+        setLocFeedback({ type: 'error', message: res.error })
+        setTimeout(() => setLocFeedback(null), 5000)
+      }
+    } catch {
+      setLocFeedback({ type: 'error', message: 'Could not fetch GPS location.' })
+      setTimeout(() => setLocFeedback(null), 5000)
+    } finally {
+      setIsLocating(false)
+    }
+  }
 
   const selectedCropObj = allCrops.find((item) => item.name === crop) || allCrops[0]
   const visibleCrops = allCrops.filter((item) => `${item.name} ${item.local}`.toLowerCase().includes(search.toLowerCase()))
@@ -106,7 +168,7 @@ export default function NewSabhaPage() {
 
   const totalKg = quantity * 100
   const grossEstimated = baseRate * quantity
-  const distanceKm = selectedMandiTarget === 'Surat APMC' ? 142 : selectedMandiTarget === 'Pune Market Yard' ? 188 : 260
+  const distanceKm = routeDistanceKm || (selectedMandiTarget === 'Gondal APMC' ? 36 : selectedMandiTarget === 'Rajkot Market Yard' ? 6 : selectedMandiTarget === 'Morbi APMC' ? 68 : 36)
   const estimatedFreight = Math.round(distanceKm * (vehicle === 'pickup' ? 7 : vehicle === 'truck' ? 12 : 18) * 1.6)
   const netEstimated = Math.max(0, grossEstimated - estimatedFreight)
   const localBenchmark = Math.round(selectedCropObj.price * 0.81 * quantity)
@@ -114,17 +176,27 @@ export default function NewSabhaPage() {
 
   async function submit() {
     setLoading(true)
+    const effectiveLocation = location || 'Rajkot West Taluka, Rajkot'
     try {
       const sabha = await createSabha({
         crop,
         quantity,
-        location,
+        location: effectiveLocation,
         urgency,
         targetDate,
         radius,
         vehicleType: vehicle,
+        originCoords: originCoords || [22.3039, 70.8022],
+        targetMandi: selectedMandiTarget || 'Gondal APMC',
       })
-      router.push(`/sabha/${sabha.id}`)
+      const query = new URLSearchParams({
+        crop,
+        qty: String(quantity),
+        loc: effectiveLocation,
+        rad: String(radius),
+        veh: vehicle,
+      }).toString()
+      router.push(`/sabha/${sabha.id}?${query}`)
     } catch (e) {
       console.error(e)
       setLoading(false)
@@ -140,6 +212,13 @@ export default function NewSabhaPage() {
     setUrgency(data.urgency)
     const offset = data.urgency === 'today' ? 0 : data.urgency === 'soon' ? 3 : 7
     handlePresetSelect(data.urgency, offset)
+
+    const loc = (data.location || '').toLowerCase()
+    if (loc.includes('rajkot') || loc.includes('gondal') || loc.includes('morbi')) {
+      setSelectedMandiTarget('Gondal APMC')
+      setRouteDistanceKm(36)
+      setOriginCoords([22.3039, 70.8022])
+    }
   }
 
   return (
@@ -162,6 +241,18 @@ export default function NewSabhaPage() {
             <p className="page-subtitle">
               Provide your crop specifications. 5 AI agents will simultaneously analyze price spreads, weather risks, and transport logistics.
             </p>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setVoiceOpen(true)}
+              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-primary/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              title="Voice Assistant (बोलकर भरें / બોલીને ભરો)"
+            >
+              <Mic className="size-4 animate-pulse" />
+              <span>Voice Assistant (बोलकर भरें)</span>
+            </button>
           </div>
         </header>
 
@@ -335,18 +426,47 @@ export default function NewSabhaPage() {
                     <span className="grid size-6 place-items-center rounded-full bg-primary text-white text-xs">4</span>
                     Farm Origin
                   </label>
-                  <div className="flex items-center gap-2 rounded-2xl border border-border bg-background px-3 h-11">
+                  <div className="flex items-center gap-2 rounded-2xl border border-border bg-background px-3 h-11 transition-all focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary">
                     <MapPin className="size-4 text-primary shrink-0" />
                     <input
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      className="w-full bg-transparent text-sm outline-none font-medium"
+                      className="w-full bg-transparent text-sm outline-none font-medium placeholder:text-muted-foreground/60"
                       placeholder="e.g. Niphad, Nashik"
                     />
-                    <button type="button" className="text-primary hover:scale-110 transition-transform" title="GPS Auto-detect">
-                      <LocateFixed className="size-4" />
+                    <button
+                      type="button"
+                      onClick={handleAutoDetectLocation}
+                      disabled={isLocating}
+                      className="text-primary hover:scale-110 active:scale-95 transition-all p-1.5 rounded-lg hover:bg-primary/10 disabled:opacity-50"
+                      title="Detect My Location (GPS)"
+                    >
+                      {isLocating ? (
+                        <Loader2 className="size-4 animate-spin text-primary" />
+                      ) : (
+                        <LocateFixed className="size-4" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVoiceOpen(true)}
+                      className="text-primary hover:scale-110 active:scale-95 transition-all p-1.5 rounded-lg hover:bg-primary/10"
+                      title="Voice Assistant (बोलकर भरें)"
+                    >
+                      <Mic className="size-4 animate-pulse" />
                     </button>
                   </div>
+                  {locFeedback && (
+                    <p
+                      className={cn(
+                        'text-xs font-medium flex items-center gap-1.5 transition-opacity',
+                        locFeedback.type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
+                      )}
+                    >
+                      {locFeedback.type === 'success' ? <Check className="size-3.5" /> : <AlertCircle className="size-3.5" />}
+                      {locFeedback.message}
+                    </p>
+                  )}
                 </div>
 
                 {/* Step 5: Sale Timing & Target Dispatch Date */}
@@ -437,8 +557,10 @@ export default function NewSabhaPage() {
             {/* Sophisticated Highway Route & Corridor Radar Map */}
             <LiveRouteMap
               originLocation={location}
+              originCoords={originCoords || undefined}
               targetMandi={selectedMandiTarget}
               onSelectMandi={setSelectedMandiTarget}
+              onDistanceChange={setRouteDistanceKm}
             />
 
             {/* Live Financial Breakdown Card */}

@@ -62,9 +62,6 @@ function LoginForm() {
     }
   }
 
-  function handleFillDemo() {
-    setOtp('123456')
-  }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
@@ -143,18 +140,9 @@ function LoginForm() {
         ) : (
             <form onSubmit={verify} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between">
-                  <label htmlFor="login-otp" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    6-Digit One-Time Code
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handleFillDemo}
-                    className="text-[11px] font-mono font-bold text-primary hover:underline cursor-pointer"
-                  >
-                    Use Demo Code (123456)
-                  </button>
-                </div>
+                <label htmlFor="login-otp" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  6-Digit One-Time Code
+                </label>
                 <input
                   id="login-otp"
                   autoFocus
@@ -163,7 +151,7 @@ function LoginForm() {
                   autoComplete="one-time-code"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="123456"
+                  placeholder="••••••"
                   className="h-14 w-full rounded-xl border border-border bg-background px-4 text-center font-mono text-2xl tracking-[0.35em] font-bold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>

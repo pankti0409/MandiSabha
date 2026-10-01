@@ -1,36 +1,30 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { 
   Navigation, 
   Truck, 
   MapPin, 
   ShieldCheck, 
   CloudSun, 
-  Radio, 
-  Compass, 
-  CheckCircle2, 
-  Layers, 
   Maximize2, 
-  Minimize2,
   RotateCcw,
-  Sparkles,
-  Info,
-  TrendingUp,
   X
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-interface LiveRouteMapProps {
+export interface LiveRouteMapProps {
   originLocation?: string
+  originCoords?: [number, number]
   targetMandi?: string
   onSelectMandi?: (mandi: string) => void
+  onDistanceChange?: (distanceKm: number) => void
   className?: string
   initialHeight?: string
   compact?: boolean
 }
 
-interface CorridorData {
+export interface CorridorData {
   name: string
   shortName: string
   highway: string
@@ -56,220 +50,204 @@ interface CorridorData {
   routePath: [number, number][]
 }
 
-const corridorData: Record<string, CorridorData> = {
+interface MandiDef {
+  name: string
+  shortName: string
+  highway: string
+  targetCoords: [number, number]
+  tollPlaza: string
+  weatherStatus: string
+  speedLimit: string
+  surplus: string
+  modalRate: string
+  color: string
+}
+
+const MANDI_DEFINITIONS: Record<string, MandiDef> = {
+  'Gondal APMC': {
+    name: 'Gondal APMC',
+    shortName: 'Gondal',
+    highway: 'NH27 / Gondal Highway',
+    targetCoords: [21.9620, 70.7960],
+    tollPlaza: 'Bhojpara Toll Plaza',
+    weatherStatus: 'Clear 31°C · Dry Road',
+    speedLimit: '80 km/h Limit',
+    surplus: '+₹7,925',
+    modalRate: '₹2,520/q',
+    color: '#0F6B47',
+  },
+  'Rajkot Market Yard': {
+    name: 'Rajkot Market Yard',
+    shortName: 'Rajkot',
+    highway: 'NH27 Saurashtra Corridor',
+    targetCoords: [22.3039, 70.8022],
+    tollPlaza: 'Bedi Toll Plaza',
+    weatherStatus: 'Clear 32°C · Dry Road',
+    speedLimit: '80 km/h Limit',
+    surplus: 'Baseline',
+    modalRate: '₹2,120/q',
+    color: '#8B5CF6',
+  },
+  'Morbi APMC': {
+    name: 'Morbi APMC',
+    shortName: 'Morbi',
+    highway: 'NH8A Morbi Highway',
+    targetCoords: [22.8120, 70.8378],
+    tollPlaza: 'Wankaner Toll Plaza',
+    weatherStatus: 'Sunny 33°C · Dry Road',
+    speedLimit: '75 km/h Limit',
+    surplus: '+₹800',
+    modalRate: '₹2,180/q',
+    color: '#0284C7',
+  },
+  'Jamnagar APMC': {
+    name: 'Jamnagar APMC',
+    shortName: 'Jamnagar',
+    highway: 'SH26 / Jamnagar Highway',
+    targetCoords: [22.4707, 70.0577],
+    tollPlaza: 'Theba Toll Plaza',
+    weatherStatus: 'Clear 30°C · Dry Road',
+    speedLimit: '80 km/h Limit',
+    surplus: '+₹450',
+    modalRate: '₹2,140/q',
+    color: '#D97706',
+  },
   'Surat APMC': {
     name: 'Surat APMC',
     shortName: 'Surat',
     highway: 'NH48 Freight Expressway',
-    distanceKm: 142,
-    transitHours: '3.5 hrs',
-    toll: 240,
-    tollPlaza: 'Manor Toll Plaza',
+    targetCoords: [21.1702, 72.8311],
+    tollPlaza: 'Surat National Toll Plaza',
     weatherStatus: 'Clear 31°C · 0% Rain Risk',
     speedLimit: '80 km/h Limit',
-    surplus: '+₹8,200',
-    modalRate: '₹2,140/q',
-    originCoords: [19.9975, 73.7898],
-    targetCoords: [21.1702, 72.8311],
-    bounds: [[19.80, 72.60], [21.35, 74.00]],
-    routePath: [
-      [19.9975, 73.7898], // Nashik
-      [20.0800, 73.6500],
-      [20.2100, 73.4000],
-      [20.3500, 73.1200],
-      [20.4400, 72.9500], // Manor Toll
-      [20.6100, 72.9300], // Vapi
-      [20.8500, 72.9300], // Navsari
-      [21.0500, 72.8700],
-      [21.1702, 72.8311], // Surat APMC
-    ],
-    waypoints: [
-      {
-        id: 'origin',
-        title: 'Nashik Farm Origin Hub',
-        type: 'origin',
-        coords: [19.9975, 73.7898],
-        badge: 'Dispatch Point',
-        detail: 'Farm Gate Loading Bay · Certified Electronic Weighbridge',
-      },
-      {
-        id: 'toll-1',
-        title: 'Manor Toll Plaza (NH48)',
-        type: 'toll',
-        coords: [20.4400, 72.9500],
-        badge: 'FASTag ₹240',
-        detail: 'Commercial Lane 4 Clear · Avg 45s clearance',
-      },
-      {
-        id: 'weather-1',
-        title: 'Navsari Weather Radar',
-        type: 'weather',
-        coords: [20.8500, 72.9300],
-        badge: 'Dry 31°C · 0% Rain',
-        detail: 'IMD Station Telemetry · 0% moisture risk on transit load',
-      },
-      {
-        id: 'truck-1',
-        title: 'Fleet Pilot #402 (Active Dispatch)',
-        type: 'truck',
-        coords: [20.6100, 72.9300],
-        badge: 'Transit · 64 km/h',
-        detail: '1.5T Bolero Pickup · ETA 1 hr 45 min to Surat Gate 2',
-      },
-      {
-        id: 'target',
-        title: 'Surat APMC Market Yard',
-        type: 'target',
-        coords: [21.1702, 72.8311],
-        badge: '₹2,140/q (+₹8,200)',
-        detail: 'Gate 2 Auction Floor · High Export Demand · Instant APMC Settlement',
-      },
-    ],
+    surplus: '+₹5,900',
+    modalRate: '₹2,600/q',
+    color: '#10B981',
   },
   'Pune Market Yard': {
     name: 'Pune Market Yard',
     shortName: 'Pune',
-    highway: 'NH60 Industrial Corridor',
-    distanceKm: 188,
-    transitHours: '4.2 hrs',
-    toll: 290,
-    tollPlaza: 'Sangamner Toll Gate',
+    highway: 'NH60 / Expressway',
+    targetCoords: [18.4967, 73.8643],
+    tollPlaza: 'Khed Shivapur Toll Plaza',
     weatherStatus: 'Partly Cloudy 28°C · Dry Surface',
     speedLimit: '75 km/h Limit',
     surplus: '+₹3,800',
-    modalRate: '₹1,850/q',
-    originCoords: [19.9975, 73.7898],
-    targetCoords: [18.4967, 73.8643],
-    bounds: [[18.30, 73.50], [20.15, 74.45]],
-    routePath: [
-      [19.9975, 73.7898], // Nashik
-      [19.8200, 73.9500], // Sinnar
-      [19.5772, 74.2081], // Sangamner
-      [19.3200, 74.1500], // Alephata
-      [19.0800, 73.9800], // Narayangaon
-      [18.7800, 73.8800], // Chakan
-      [18.6200, 73.8400], // Bhosari
-      [18.4967, 73.8643], // Pune Market Yard
-    ],
-    waypoints: [
-      {
-        id: 'origin',
-        title: 'Nashik Farm Origin Hub',
-        type: 'origin',
-        coords: [19.9975, 73.7898],
-        badge: 'Dispatch Point',
-        detail: 'Farm Gate Loading Bay',
-      },
-      {
-        id: 'toll-1',
-        title: 'Sangamner Toll Plaza',
-        type: 'toll',
-        coords: [19.5772, 74.2081],
-        badge: 'FASTag ₹160',
-        detail: 'Smooth transit · No freight queues',
-      },
-      {
-        id: 'toll-2',
-        title: 'Narayangaon Checkpost',
-        type: 'toll',
-        coords: [19.0800, 73.9800],
-        badge: 'FASTag ₹130',
-        detail: 'Agri corridor clearance verified',
-      },
-      {
-        id: 'truck-1',
-        title: 'Fleet Pilot #118',
-        type: 'truck',
-        coords: [19.3200, 74.1500],
-        badge: 'Transit · 58 km/h',
-        detail: '5T Eicher Pro · Approaching Alephata',
-      },
-      {
-        id: 'target',
-        title: 'Pune Market Yard (Gultekdi)',
-        type: 'target',
-        coords: [18.4967, 73.8643],
-        badge: '₹1,850/q (+₹3,800)',
-        detail: 'Terminal Gate · Rapid direct-to-buyer settlement',
-      },
-    ],
+    modalRate: '₹2,200/q',
+    color: '#0284C7',
   },
   'Ahmedabad APMC': {
     name: 'Ahmedabad APMC',
     shortName: 'Ahmedabad',
-    highway: 'NH48 & NE1 Expressway',
-    distanceKm: 260,
-    transitHours: '5.5 hrs',
-    toll: 410,
-    tollPlaza: 'Vadodara Expressway Toll',
-    weatherStatus: 'Sunny & Hot 34°C · Dry Road',
-    speedLimit: '90 km/h Limit',
-    surplus: '+₹3,300',
-    modalRate: '₹1,980/q',
-    originCoords: [19.9975, 73.7898],
+    highway: 'NH47 & NE1 Expressway',
     targetCoords: [23.0225, 72.5714],
-    bounds: [[19.70, 72.30], [23.30, 73.60]],
-    routePath: [
-      [19.9975, 73.7898], // Nashik
-      [20.4400, 72.9500],
-      [21.1702, 72.8311], // Surat
-      [21.7000, 73.0100], // Bharuch
-      [22.3072, 73.1812], // Vadodara NE1
-      [22.6800, 72.8500], // Nadiad
-      [23.0225, 72.5714], // Ahmedabad APMC
-    ],
-    waypoints: [
-      {
-        id: 'origin',
-        title: 'Nashik Farm Origin Hub',
-        type: 'origin',
-        coords: [19.9975, 73.7898],
-        badge: 'Dispatch Point',
-        detail: 'Farm Gate Loading Bay',
-      },
-      {
-        id: 'toll-1',
-        title: 'Surat Bypass Toll',
-        type: 'toll',
-        coords: [21.1702, 72.8311],
-        badge: 'FASTag ₹180',
-        detail: 'Flyover bypass operational',
-      },
-      {
-        id: 'toll-2',
-        title: 'Vadodara NE1 Express Toll',
-        type: 'toll',
-        coords: [22.3072, 73.1812],
-        badge: 'FASTag ₹230',
-        detail: 'Automated high-speed FASTag lane',
-      },
-      {
-        id: 'truck-1',
-        title: 'Fleet Pilot #709',
-        type: 'truck',
-        coords: [21.7000, 73.0100],
-        badge: 'Transit · 72 km/h',
-        detail: '10T Multi-axle on NE1 Expressway',
-      },
-      {
-        id: 'target',
-        title: 'Ahmedabad APMC (Jamalpur)',
-        type: 'target',
-        coords: [23.0225, 72.5714],
-        badge: '₹1,980/q (+₹3,300)',
-        detail: 'Largest volume Northern terminal',
-      },
-    ],
+    tollPlaza: 'Ahmedabad Ring Toll',
+    weatherStatus: 'Sunny 34°C · Dry Road',
+    speedLimit: '90 km/h Limit',
+    surplus: '+₹2,550',
+    modalRate: '₹2,380/q',
+    color: '#EAB308',
   },
+  'Indore Mandi': {
+    name: 'Indore Mandi',
+    shortName: 'Indore',
+    highway: 'NH52 Malwa Expressway',
+    targetCoords: [22.7196, 75.8577],
+    tollPlaza: 'Dhamnod Toll Plaza',
+    weatherStatus: 'Sunny 30°C · 0% Rain',
+    speedLimit: '80 km/h Limit',
+    surplus: '+₹4,100',
+    modalRate: '₹2,280/q',
+    color: '#10B981',
+  },
+  'Lasalgaon APMC': {
+    name: 'Lasalgaon APMC',
+    shortName: 'Lasalgaon',
+    highway: 'NH848 Agri Expressway',
+    targetCoords: [20.1472, 74.2268],
+    tollPlaza: 'Pimpalgaon Toll Gate',
+    weatherStatus: 'Clear 29°C · Clear Sky',
+    speedLimit: '70 km/h Limit',
+    surplus: '+₹1,400',
+    modalRate: '₹1,850/q',
+    color: '#EA580C',
+  },
+}
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLon = ((lon2 - lon1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
+
+function generateCorridorPath(origin: [number, number], target: [number, number]): [number, number][] {
+  const [lat1, lon1] = origin
+  const [lat2, lon2] = target
+
+  // Check if crossing Gulf of Khambhat (Saurashtra <-> South Gujarat/Maharashtra)
+  const isSaurashtraOrigin = lon1 < 71.9 && lat1 > 20.8 && lat1 < 23.5
+  const isSouthGujaratOrMHTarget = lon2 > 72.6 && lat2 < 21.8
+  const isSaurashtraTarget = lon2 < 71.9 && lat2 > 20.8 && lat2 < 23.5
+  const isSouthGujaratOrMHOrigin = lon1 > 72.6 && lat1 < 21.8
+
+  if (isSaurashtraOrigin && isSouthGujaratOrMHTarget) {
+    return [
+      [lat1, lon1],
+      [22.4500, Math.min(lon1 + 0.5, 71.5000)],
+      [22.5600, 71.8000], // Limbdi
+      [22.4500, 72.1500], // Bagodara
+      [22.3100, 73.1800], // Vadodara
+      [21.7100, 72.9900], // Bharuch
+      [lat2, lon2],
+    ]
+  }
+
+  if (isSouthGujaratOrMHOrigin && isSaurashtraTarget) {
+    return [
+      [lat1, lon1],
+      [21.7100, 72.9900], // Bharuch
+      [22.3100, 73.1800], // Vadodara
+      [22.4500, 72.1500], // Bagodara
+      [22.5600, 71.8000], // Limbdi
+      [lat2, lon2],
+    ]
+  }
+
+  // Smooth realistic interpolator for other corridors
+  const steps = 8
+  const path: [number, number][] = []
+  const dLat = lat2 - lat1
+  const dLon = lon2 - lon1
+  const dist = Math.sqrt(dLat * dLat + dLon * dLon)
+  const perpLat = -dLon / (dist || 1)
+  const perpLon = dLat / (dist || 1)
+
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps
+    const curve = Math.sin(t * Math.PI) * (dist * 0.05)
+    const pLat = lat1 + dLat * t + perpLat * curve
+    const pLon = lon1 + dLon * t + perpLon * curve
+    path.push([Number(pLat.toFixed(4)), Number(pLon.toFixed(4))])
+  }
+  return path
 }
 
 export function LiveRouteMap({
   originLocation = 'Nashik, Maharashtra',
+  originCoords,
   targetMandi = 'Surat APMC',
   onSelectMandi,
+  onDistanceChange,
   className,
   initialHeight = 'h-[380px]',
-  compact = false,
 }: LiveRouteMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
@@ -277,18 +255,187 @@ export function LiveRouteMap({
   const tileLayerRef = useRef<any>(null)
 
   const [activeMandi, setActiveMandi] = useState<string>(targetMandi)
+  useEffect(() => {
+    if (targetMandi) {
+      setActiveMandi(targetMandi)
+    }
+  }, [targetMandi])
   const [mapStyle, setMapStyle] = useState<'voyager' | 'dark' | 'satellite'>('voyager')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isMapReady, setIsMapReady] = useState(false)
 
-  // Sync with prop
+  // Dynamic origin coordinates resolved from prop or geocoding
+  const [resolvedCoords, setResolvedCoords] = useState<[number, number]>(() => {
+    if (originCoords) return originCoords
+    const lower = originLocation.toLowerCase()
+    if (lower.includes('rajkot')) return [22.2967, 70.7582]
+    if (lower.includes('surat')) return [21.1702, 72.8311]
+    if (lower.includes('ahmedabad')) return [23.0225, 72.5714]
+    if (lower.includes('pune')) return [18.5204, 73.8567]
+    if (lower.includes('indore')) return [22.7196, 75.8577]
+    return [19.9975, 73.7898] // Nashik default
+  })
+
+  // Keep resolvedCoords in sync with originCoords prop
   useEffect(() => {
-    if (targetMandi && corridorData[targetMandi]) {
+    if (originCoords) {
+      setResolvedCoords(originCoords)
+    }
+  }, [originCoords])
+
+  // Geocode location whenever originLocation text changes and no direct originCoords
+  useEffect(() => {
+    if (originCoords) return
+    if (!originLocation || !originLocation.trim()) return
+
+    let cancelled = false
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/geocode?q=${encodeURIComponent(originLocation)}`)
+        if (res.ok) {
+          const data = await res.json()
+          if (!cancelled && data.lat && data.lon) {
+            setResolvedCoords([data.lat, data.lon])
+          }
+        }
+      } catch {
+        // Fallback remains active
+      }
+    }, 300)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [originLocation, originCoords])
+
+  // Synchronize targetMandi prop
+  useEffect(() => {
+    if (targetMandi) {
       setActiveMandi(targetMandi)
     }
   }, [targetMandi])
 
-  const corridor = corridorData[activeMandi] || corridorData['Surat APMC']
+  // Dynamically compute corridors based on current resolvedCoords
+  const corridors = useMemo<Record<string, CorridorData>>(() => {
+    const result: Record<string, CorridorData> = {}
+
+    // Ensure targetMandi is included even if not among defaults
+    const mandiList = { ...MANDI_DEFINITIONS }
+    if (targetMandi && !mandiList[targetMandi]) {
+      mandiList[targetMandi] = {
+        name: targetMandi,
+        shortName: targetMandi.replace(' APMC', '').replace(' Market Yard', '').replace(' Mandi', ''),
+        highway: 'National Freight Corridor',
+        targetCoords: [21.1702, 72.8311],
+        tollPlaza: 'Agri Corridor Toll Plaza',
+        weatherStatus: 'Clear 30°C · 0% Rain',
+        speedLimit: '80 km/h Limit',
+        surplus: '+₹3,200',
+        modalRate: '₹2,100/q',
+        color: '#10B981',
+      }
+    }
+
+    for (const [key, def] of Object.entries(mandiList)) {
+      const straight = haversineKm(
+        resolvedCoords[0],
+        resolvedCoords[1],
+        def.targetCoords[0],
+        def.targetCoords[1]
+      )
+
+      // Road distance is roughly 1.25x straight-line, or ~1.35x around Gulf of Khambhat
+      const isSaurashtraToSouth =
+        resolvedCoords[1] < 71.9 && def.targetCoords[1] > 72.6 && def.targetCoords[0] < 21.8
+      const multiplier = isSaurashtraToSouth ? 1.4 : 1.25
+      const distanceKm = Math.max(15, Math.round(straight * multiplier))
+      const hours = (distanceKm / 50).toFixed(1)
+      const toll = Math.max(80, Math.round((distanceKm * 1.55) / 10) * 10)
+      const routePath = generateCorridorPath(resolvedCoords, def.targetCoords)
+
+      const minLat = Math.min(...routePath.map((p) => p[0])) - 0.25
+      const maxLat = Math.max(...routePath.map((p) => p[0])) + 0.25
+      const minLon = Math.min(...routePath.map((p) => p[1])) - 0.25
+      const maxLon = Math.max(...routePath.map((p) => p[1])) + 0.25
+
+      const waypoints = [
+        {
+          id: 'origin',
+          title: `${originLocation || 'Farm'} Origin Hub`,
+          type: 'origin' as const,
+          coords: resolvedCoords,
+          badge: 'Dispatch Point',
+          detail: 'Farm Gate Loading Bay · Certified Electronic Weighbridge',
+        },
+        {
+          id: 'truck-1',
+          title: 'Fleet Pilot #402 (Active Dispatch)',
+          type: 'truck' as const,
+          coords: routePath[Math.max(1, Math.floor(routePath.length * 0.3))],
+          badge: 'Transit · 62 km/h',
+          detail: `1.5T Pickup · ETA ${hours} hrs to Gate 2`,
+        },
+        {
+          id: 'toll-1',
+          title: def.tollPlaza,
+          type: 'toll' as const,
+          coords: routePath[Math.floor(routePath.length * 0.45)],
+          badge: `FASTag ₹${toll}`,
+          detail: 'Commercial Lane Clear · Avg 45s clearance',
+        },
+        {
+          id: 'weather-1',
+          title: `${def.shortName} Weather Radar`,
+          type: 'weather' as const,
+          coords: routePath[Math.floor(routePath.length * 0.7)],
+          badge: def.weatherStatus.split(' · ')[0],
+          detail: 'IMD Station Telemetry · Zero moisture risk on transit cargo',
+        },
+        {
+          id: 'target',
+          title: `${def.name} Market Yard`,
+          type: 'target' as const,
+          coords: def.targetCoords,
+          badge: `${def.modalRate} (${def.surplus})`,
+          detail: 'Auction Floor Terminal · Electronic Weighbridge · Spot Cash Clearing',
+        },
+      ]
+
+      result[key] = {
+        name: def.name,
+        shortName: def.shortName,
+        highway: def.highway,
+        distanceKm,
+        transitHours: `${hours} hrs`,
+        toll,
+        tollPlaza: def.tollPlaza,
+        weatherStatus: def.weatherStatus,
+        speedLimit: def.speedLimit,
+        surplus: def.surplus,
+        modalRate: def.modalRate,
+        originCoords: resolvedCoords,
+        targetCoords: def.targetCoords,
+        bounds: [
+          [minLat, minLon],
+          [maxLat, maxLon],
+        ],
+        waypoints,
+        routePath,
+      }
+    }
+
+    return result
+  }, [resolvedCoords, originLocation, targetMandi])
+
+  const corridor = corridors[activeMandi] || (targetMandi && corridors[targetMandi]) || Object.values(corridors)[0]
+
+  // Notify parent of distance change
+  useEffect(() => {
+    if (corridor && onDistanceChange) {
+      onDistanceChange(corridor.distanceKm)
+    }
+  }, [corridor, onDistanceChange])
 
   // Initialize Leaflet Map on Client
   useEffect(() => {
@@ -305,7 +452,7 @@ export function LiveRouteMap({
       }
 
       const map = L.map(mapContainerRef.current, {
-        center: [20.60, 73.30],
+        center: resolvedCoords,
         zoom: 8,
         zoomControl: false,
         attributionControl: false,
@@ -331,14 +478,12 @@ export function LiveRouteMap({
         setIsMapReady(true)
       }
 
-      // Ensure proper sizing after DOM layout
       setTimeout(() => map.invalidateSize(), 100)
       setTimeout(() => map.invalidateSize(), 300)
     }
 
     initMap()
 
-    // Resize observer to auto-adapt to any container layout shifts
     const container = mapContainerRef.current
     let resizeObserver: ResizeObserver | null = null
     if (container && typeof ResizeObserver !== 'undefined') {
@@ -379,9 +524,9 @@ export function LiveRouteMap({
     })
   }, [mapStyle])
 
-  // Update Route Polyline and Markers when corridor changes
+  // Update Route Polyline and Markers when corridor or resolvedCoords change
   useEffect(() => {
-    if (!mapInstanceRef.current || !layerGroupRef.current || !isMapReady) return
+    if (!mapInstanceRef.current || !layerGroupRef.current || !isMapReady || !corridor) return
 
     import('leaflet').then((LModule) => {
       const L = LModule.default
@@ -481,7 +626,7 @@ export function LiveRouteMap({
         })
       })
 
-      // Smooth pan and fit bounds
+      // Smooth pan and fit bounds around new origin & destination
       map.flyToBounds(corridor.bounds, {
         padding: [35, 35],
         duration: 0.7,
@@ -489,7 +634,7 @@ export function LiveRouteMap({
 
       setTimeout(() => map.invalidateSize(), 200)
     })
-  }, [activeMandi, isMapReady, corridor])
+  }, [corridor, isMapReady])
 
   const handleSelectCorridor = (mandiName: string) => {
     setActiveMandi(mandiName)
@@ -504,6 +649,16 @@ export function LiveRouteMap({
       })
     }
   }
+
+  // Display top 3 mandis in the switcher strip
+  const switcherMandis = useMemo(() => {
+    const keys = Object.keys(corridors)
+    if (activeMandi && keys.includes(activeMandi)) {
+      const rest = keys.filter((k) => k !== activeMandi)
+      return [activeMandi, ...rest.slice(0, 2)]
+    }
+    return keys.slice(0, 3)
+  }, [corridors, activeMandi])
 
   return (
     <>
@@ -557,11 +712,12 @@ export function LiveRouteMap({
           </div>
         </div>
 
-        {/* ── Dedicated 3-Column Mandi Switcher Strip (No Cutoff / No Ugly Scrollbar) ── */}
+        {/* ── Dedicated 3-Column Mandi Switcher Strip (Dynamic Distances from Origin) ── */}
         <div className="grid grid-cols-3 gap-1.5 p-2 bg-muted/40 border-b border-border z-20">
-          {Object.keys(corridorData).map((mandi) => {
+          {switcherMandis.map((mandi) => {
             const isSelected = activeMandi === mandi
-            const item = corridorData[mandi]
+            const item = corridors[mandi]
+            if (!item) return null
             return (
               <button
                 key={mandi}
@@ -653,7 +809,7 @@ export function LiveRouteMap({
 
           <div className="flex items-center gap-1.5 text-[9px] font-mono text-muted-foreground">
             <span className="size-1.5 rounded-full bg-emerald-500" />
-            <span>Backend GIS Telemetry: Ready for API Stream</span>
+            <span>GPS Calibrated: {resolvedCoords[0].toFixed(3)}°N, {resolvedCoords[1].toFixed(3)}°E</span>
           </div>
         </div>
       </div>
@@ -691,9 +847,10 @@ export function LiveRouteMap({
 
             {/* Modal Corridor Switcher */}
             <div className="grid grid-cols-3 gap-2 p-3 bg-muted/40 border-b border-border">
-              {Object.keys(corridorData).map((mandi) => {
+              {switcherMandis.map((mandi) => {
                 const isSelected = activeMandi === mandi
-                const item = corridorData[mandi]
+                const item = corridors[mandi]
+                if (!item) return null
                 return (
                   <button
                     key={mandi}
@@ -747,7 +904,7 @@ export function LiveRouteMap({
             {/* Modal Waypoints Table */}
             <div className="p-4 flex-1 overflow-y-auto">
               <h4 className="font-extrabold text-xs uppercase tracking-wider text-muted-foreground mb-3">
-                Corridor Telemetry & Waypoints
+                Corridor Telemetry & Waypoints (Origin: {originLocation})
               </h4>
               <div className="grid gap-2">
                 {corridor.waypoints.map((wp, i) => (
@@ -772,7 +929,7 @@ export function LiveRouteMap({
             {/* Modal Footer */}
             <div className="p-3 bg-card border-t border-border flex items-center justify-between text-xs">
               <span className="text-muted-foreground font-mono text-[11px]">
-                Backend GIS Router: Telematics stream will link to live vehicle GPS coordinates
+                Origin Coords: {resolvedCoords[0].toFixed(4)}°N, {resolvedCoords[1].toFixed(4)}°E
               </span>
               <button
                 type="button"
