@@ -377,6 +377,20 @@ async def _run_orchestration(sabha_id: str, draft: dict, user, provider: LLMProv
         ]
 
         if not mandi_prices:
+            # Match by district
+            mandi_prices = [
+                r for r in records
+                if mandi.district and (
+                    mandi.district.lower() in r.get("district", "").lower()
+                    or r.get("district", "").lower() in mandi.district.lower()
+                )
+            ]
+
+        if not mandi_prices and records:
+            # Fallback to state-level commodity record
+            mandi_prices = records
+
+        if not mandi_prices:
             continue
 
         # Use best (highest modal) record

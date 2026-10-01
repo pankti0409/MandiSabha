@@ -31,17 +31,37 @@ async def get_market_prices(
     from app.tools.mandi_prices import get_mandi_prices
     from app.services.mandi_directory import find_mandi_by_name, haversine_km
 
-    fetch_state = state or (current_user.state if current_user and current_user.state else "Maharashtra")
-    pr = await get_mandi_prices(crop, fetch_state, district)
+    from app.tools.mandi_prices import deduplicate_prices_by_mandi
+
+    target_states = [state] if state and state.lower() != "all" else [
+        "Gujarat", "Maharashtra", "Madhya Pradesh", "Rajasthan"
+    ]
+    all_price_data = []
+    source = "live"
+    stale = False
+
+    import asyncio
+    results = await asyncio.gather(*[get_mandi_prices(crop, st, district) for st in target_states], return_exceptions=True)
+    for pr in results:
+        if isinstance(pr, Exception):
+            continue
+        if pr.ok and pr.data:
+            all_price_data.extend(pr.data)
+            if pr.source == "fixture":
+                source = "fixture"
+            if pr.stale:
+                stale = True
+
+    all_price_data = deduplicate_prices_by_mandi(all_price_data)
 
     rows = []
     data_as_of = None
 
-    if pr.ok and pr.data:
+    if all_price_data:
         origin_lat = float(current_user.home_lat) if current_user and current_user.home_lat else None
         origin_lon = float(current_user.home_lon) if current_user and current_user.home_lon else None
 
-        for rec in pr.data:
+        for rec in all_price_data:
             if q and q.lower() not in rec.get("market", "").lower():
                 continue
 
@@ -58,7 +78,8 @@ async def get_market_prices(
             # Distance estimate
             dist_km = None
             freight_est = None
-            mandi_obj = await find_mandi_by_name(db, rec.get("market", ""), state=fetch_state)
+            rec_state = rec.get("state", state or "Gujarat")
+            mandi_obj = await find_mandi_by_name(db, rec.get("market", ""), state=rec_state)
             if mandi_obj and mandi_obj.lat and mandi_obj.lon and origin_lat:
                 straight_km = haversine_km(origin_lat, origin_lon, float(mandi_obj.lat), float(mandi_obj.lon))
                 dist_km = round(straight_km, 1)
@@ -73,20 +94,20 @@ async def get_market_prices(
                 mandi_id=mandi_obj.id if mandi_obj else None,
                 mandi=rec.get("market", ""),
                 district=rec.get("district", ""),
-                state=rec.get("state", fetch_state),
+                state=rec.get("state", rec_state),
                 crop=crop,
                 variety=rec.get("variety", ""),
                 min_price=rec.get("min_price"),
                 max_price=rec.get("max_price"),
                 modal_price=rec.get("modal_price"),
                 price_date=price_date,
-                change_pct=None,  # computed from trend history — not available without history
+                change_pct=None,
                 trend_5d=[],
                 arrivals_qty=rec.get("arrivals_qty"),
                 distance_km=dist_km,
                 freight_est_per_quintal=freight_est,
-                stale=pr.stale,
-                source=pr.source,
+                stale=stale,
+                source=source,
             ))
 
     # Sort

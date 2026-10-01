@@ -41,8 +41,8 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
-  const [selectedCrop, setSelectedCrop] = useState<string>('Onion')
-  const [selectedState, setSelectedState] = useState<string>('Maharashtra')
+  const [selectedCrop, setSelectedCrop] = useState<string>('Wheat')
+  const [selectedState, setSelectedState] = useState<string>('All')
   const [sortBy, setSortBy] = useState<'modal' | 'change' | 'volume'>('modal')
 
   // Head-to-Head Comparison State
@@ -351,7 +351,7 @@ export default function ExplorePage() {
 
           {/* Crop Selector Chips */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
-            {['Onion', 'Wheat', 'Soybean', 'Tomato', 'Garlic'].map((crop) => (
+            {['All', 'Wheat', 'Onion', 'Tomato', 'Soybean', 'Cotton', 'Potato', 'Garlic', 'Mustard', 'Maize'].map((crop) => (
               <button
                 key={crop}
                 onClick={() => setSelectedCrop(crop)}
@@ -379,6 +379,13 @@ export default function ExplorePage() {
               <option value="Maharashtra">{tData('geo', 'Maharashtra')}</option>
               <option value="Madhya Pradesh">{tData('geo', 'Madhya Pradesh')}</option>
               <option value="Rajasthan">{tData('geo', 'Rajasthan')}</option>
+              <option value="Punjab">Punjab</option>
+              <option value="Haryana">Haryana</option>
+              <option value="Uttar Pradesh">Uttar Pradesh</option>
+              <option value="Karnataka">Karnataka</option>
+              <option value="Telangana">Telangana</option>
+              <option value="Bihar">Bihar</option>
+              <option value="Delhi">Delhi</option>
             </select>
           </div>
         </section>

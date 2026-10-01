@@ -23,11 +23,35 @@ import {
   Calendar
 } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
-import { formatINR, formatNumber, evaluateSabhaCandidates, SabhaDraft, EvaluatedMandi } from '@/lib/api/sabha'
+import { formatINR, formatNumber, evaluateSabhaCandidates, SabhaDraft, EvaluatedMandi, allCrops, Crop } from '@/lib/api/sabha'
 import { useAuth } from '@/components/auth-provider'
 import { useLocale } from '@/components/locale-provider'
 import { cn } from '@/lib/utils'
 import { LiveRouteMap } from '@/components/live-route-map'
+
+function resolveCropName(queryCrop?: string | null, draftCrop?: string | null, userCrops?: string[]): Crop {
+  const candidate = (queryCrop && queryCrop.trim().toLowerCase() !== 'commodity' ? queryCrop.trim() : null)
+    || (draftCrop && (draftCrop as string).trim().toLowerCase() !== 'commodity' ? (draftCrop as string).trim() : null)
+    || userCrops?.[0]
+    || 'Wheat'
+
+  const matched = allCrops.find((c) => c.name.toLowerCase() === candidate.toLowerCase())
+  return (matched ? matched.name : 'Wheat') as Crop
+}
+
+function resolveOriginName(queryLoc?: string | null, draftLoc?: string | null, userVillage?: string, userDistrict?: string, userState?: string): string {
+  const candidate = (queryLoc && queryLoc.trim()) || (draftLoc && draftLoc.trim())
+  if (candidate && !candidate.toLowerCase().includes('your farm')) {
+    return candidate
+  }
+  if (userVillage) {
+    return `${userVillage}, ${userDistrict || userState || 'Gujarat'}`
+  }
+  if (userDistrict) {
+    return `${userDistrict}, ${userState || 'Gujarat'}`
+  }
+  return 'Rajkot, Gujarat'
+}
 
 export function SabhaLive({ id }: { id: string }) {
   const { user } = useAuth()
@@ -54,9 +78,8 @@ export function SabhaLive({ id }: { id: string }) {
     } catch {}
   }, [id])
 
-  const rawLoc = queryLoc || draft?.location || (user?.village ? `${user.village}, ${user.district || ''}` : (user?.district || 'Rajkot West Taluka, Rajkot'))
-  const originName = (!rawLoc || rawLoc.toLowerCase().includes('nashik') || rawLoc.toLowerCase().includes('your farm')) ? 'Rajkot West Taluka, Rajkot' : rawLoc
-  const cropName = (queryCrop || draft?.crop || (draft?.crop as string) === 'Commodity' ? '' : draft?.crop) || (user?.crops?.[0] || 'Onion')
+  const originName = resolveOriginName(queryLoc, draft?.location, user?.village, user?.district, user?.state)
+  const cropName = resolveCropName(queryCrop, draft?.crop, user?.crops)
   const quantity = queryQty || draft?.quantity || 20
   const vehicleType = queryVeh || draft?.vehicleType || 'pickup'
   const radius = queryRadius || draft?.radius || 200
@@ -363,7 +386,7 @@ export function SabhaLive({ id }: { id: string }) {
             {done && (
               <div className="mt-4 pt-3 border-t border-border">
                 <Link
-                  href={`/sabha/${id}/result`}
+                  href={`/sabha/${id}/result?crop=${encodeURIComponent(cropName)}&qty=${quantity}&loc=${encodeURIComponent(originName)}&rad=${radius}&veh=${vehicleType}`}
                   className="button-primary !min-h-[44px] w-full text-xs font-bold shadow-lg shadow-primary/25 hover:scale-105"
                 >
                   <span>{t('sabha.live.decision_title')}</span>
@@ -403,9 +426,8 @@ export function ResultPage({ id }: { id: string }) {
     } catch {}
   }, [id])
 
-  const rawLoc = queryLoc || draft?.location || (user?.village ? `${user.village}, ${user.district || ''}` : (user?.district || 'Rajkot West Taluka, Rajkot'))
-  const originName = (!rawLoc || rawLoc.toLowerCase().includes('nashik') || rawLoc.toLowerCase().includes('your farm')) ? 'Rajkot West Taluka, Rajkot' : rawLoc
-  const cropName = (queryCrop || draft?.crop || (draft?.crop as string) === 'Commodity' ? '' : draft?.crop) || (user?.crops?.[0] || 'Onion')
+  const originName = resolveOriginName(queryLoc, draft?.location, user?.village, user?.district, user?.state)
+  const cropName = resolveCropName(queryCrop, draft?.crop, user?.crops)
   const quantity = queryQty || draft?.quantity || 20
   const vehicleType = queryVeh || draft?.vehicleType || 'pickup'
   const radius = queryRadius || draft?.radius || 200

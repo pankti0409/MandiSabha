@@ -50,10 +50,10 @@ function NewSabhaContent() {
 
   const locParam = searchParams.get('location') || searchParams.get('origin')
   const defaultLoc = user?.village
-    ? `${user.village}, ${user.district || user.state || 'Maharashtra'}`
+    ? `${user.village}, ${user.district || user.state || 'Gujarat'}`
     : user?.district
-    ? `${user.district}, ${user.state || 'Maharashtra'}`
-    : 'Nashik, Maharashtra'
+    ? `${user.district}, ${user.state || 'Gujarat'}`
+    : (user?.state ? `Central ${user.state}` : 'Rajkot, Gujarat')
   const initialLoc = locParam || defaultLoc
 
   const urgencyParam = searchParams.get('urgency')
@@ -62,7 +62,7 @@ function NewSabhaContent() {
   const targetMandiParam = searchParams.get('targetMandi') || searchParams.get('mandi')
   const initialMandi = targetMandiParam || 'Surat APMC'
 
-  const [crop, setCrop] = useState<Crop>(matchedCrop || 'Onion')
+  const [crop, setCrop] = useState<Crop>(matchedCrop || (user?.crops?.[0] as Crop) || 'Wheat')
   const [quantity, setQuantity] = useState(initialQty)
   const [location, setLocation] = useState(initialLoc)
   const [urgency, setUrgency] = useState<'today' | 'soon' | 'week'>(initialUrgency)
